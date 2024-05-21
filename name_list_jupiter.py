@@ -56,14 +56,11 @@ num = round(Ar*(L**2)*Br2/np.pi)    # number of storms
 Lst = L * Ld2/Rst
 
 ################## engineering params ##########################
-
 AB = 2  # order of Adams-Bashforth scheme (2 or 3)
 layers = 2.5  # # of layers (2 or 2.5)
 n = 2  # order of Laplacian '2' is hyperviscosity
 kappa = 1e-6
-ord = (
-    2  # must equal 1 for Glenn's order, otherwise for Sadourney's (squares before avgs)
-)
+ord = 2  # must equal 1 for Glenn's order, otherwise for Sadourney's (squares before avgs)
 spongedrag1 = 0.1
 spongedrag2 = 0.1
 
@@ -117,7 +114,7 @@ rlim = (rdist <= outerlim).astype(
 
 
 sponge1 = np.ones(N) * np.maximum(rdist - outerlim, 0)
-sponge1 = sponge1 / np.max(sponge1)  #####
+sponge1 = sponge1 / np.max(sponge1)  
 spdrag1 = spongedrag1 * sponge1
 
 sponge2 = np.ones(N) * np.maximum(rdist - outerlim, 0)

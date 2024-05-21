@@ -24,16 +24,15 @@ p1p2 = 0.95  # ND upper to lower layer density ratio
 tstf = 6  # 48  # ND storm duration tst*f0
 tstpf = 15  # 60  # ND period between forced storms tstp*f0
 tradf = 2000  # ND Newtonian damping of layer thickness trad*f0
-dragf = 1000  # Cumulus drag time scale (Li and O'Neill) (D)
+dragf = 100000  # Cumulus drag time scale (Li and O'Neill) (D)
 Ar = 0.15  # ND areal storm coverage
 Re = 5e4  # ND Reynolds number
 Wsh = 0.03 / 2  # ND convective Rossby number
 
-#### Derived Quantities ###
-
+#### Derived Quantities ###  
 gm = p1p2 * c22h / c12h * H1H2  # ND reduced gravity
 aOLd = np.sqrt(1 / Bt / 2)  # ND planetary radius to deformation radius ratio ### adjust this
-L = 3 * np.pi / 9 * aOLd  ###???  # ND num = ceil(numfrc.*L.^2./Br2)
+L = 3 * np.pi / 9 * aOLd  # ND num = ceil(numfrc.*L.^2./Br2)
 num = round(Ar * (L**2) * Br2 / np.pi)  # number of storms
 deglim = 90 - 3 * L / 2 * aOLd * 180 / np.pi  # domain size [degrees]
 
@@ -55,7 +54,7 @@ EpHat = (
     * (Ar / np.sqrt(Br2))
 )
 
-dx = 1 / 5
+dx = 1 / 25
 dt = 1 / (2**8)
 dtinv = 1 / dt
 sampfreq = 5

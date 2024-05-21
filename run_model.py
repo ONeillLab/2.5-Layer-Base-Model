@@ -181,12 +181,11 @@ while t <= tmax + dt / 2:
     dv2dt = dv2dt - 0.25 * (zu2 + np.roll(zu2, -1, axis=1))
 
 
-
     ### Cumulus Drag (D) ###
-    du1dt = du1dt - (1 / dx) * u1 / dragf
-    du2dt = du2dt - (1 / dx) * u2 / dragf
-    dv1dt = dv1dt - (1 / dx) * v1 / dragf
-    dv2dt = dv2dt - (1 / dx) * v2 / dragf
+    #du1dt = du1dt - (1 / dx) * u1 / dragf
+    #du2dt = du2dt - (1 / dx) * u2 / dragf
+    #dv1dt = dv1dt - (1 / dx) * v1 / dragf
+    #dv2dt = dv2dt - (1 / dx) * v2 / dragf
 
 
     B1p, B2p = hf.BernN2(u1, v1, u2, v2, gm, c22h, c12h, h1, h2, ord)
@@ -287,27 +286,27 @@ while t <= tmax + dt / 2:
     v1 = v1sq
     v2 = v2sq
 
-    if tc % tpl == 0:
-        print(
-            f"t={t}, mean h1 is {round(np.mean(np.mean(h1)), 4)}. Time elapsed, {round(time.time()-timer, 3)}s"
-        )
-        ii += 1
-        ts.append(t)
+    #if tc % tpl == 0:
+    #    print(f"t={t}, mean h1 is {round(np.mean(np.mean(h1)), 4)}. Time elapsed, {round(time.time()-timer, 3)}s")
+    ii += 1
+    ts.append(t)
 
-        u1mat.append(u1)
-        u2mat.append(u2)
-        v1mat.append(v1)
-        v2mat.append(v2)
-        h1mat.append(h1)
-        h2mat.append(h2)
-        zeta1mat.append(zeta1)
-        zeta2mat.append(zeta2)
+    u1mat.append(u1)
+    u2mat.append(u2)
+    v1mat.append(v1)
+    v2mat.append(v2)
+    h1mat.append(h1)
+    h2mat.append(h2)
+    zeta1mat.append(zeta1)
+    zeta2mat.append(zeta2)
 
         # Wpulsemat.append(Wmat)
 
-        timer = time.time()
+    timer = time.time()
 
-    if math.isnan(h1[0, 0]):
+    print(ii)
+
+    if math.isnan(h1[0, 0]) or ii == 500:
         break
 
     tc += 1
@@ -315,11 +314,12 @@ while t <= tmax + dt / 2:
 
 
 #### Animation ####
-
 PV2 = zeta2mat - (1 - Bt * rdist**2)
 
-frames = PV2
+frames = h2mat
 
+fmax = np.max(frames)
+fmin = np.min(frames)
 
 fig = plt.figure()
 ax = fig.add_subplot(111)
@@ -329,6 +329,7 @@ cax = div.append_axes("right", "5%", "5%")
 cv0 = frames[0]
 im = ax.imshow(cv0, cmap="bwr")
 cb = fig.colorbar(im, cax=cax)
+im.set_clim(fmin, fmax)
 tx = ax.set_title(f"time: {ts[0]}")
 
 
@@ -338,11 +339,12 @@ def animate(i):
     vmax = np.max(arr)
     vmin = np.min(arr)
     im.set_data(arr)
-    im.set_clim(vmin, vmax)
+    im.set_clim(fmin, fmax)
     tx.set_text(f"time: {ts[i]}")
 
 
 ani = animation.FuncAnimation(fig, animate, interval=ani_interval, frames=len(frames))
 plt.show()
 
+#ani.save(f"Results/{round(time.time())}.mp4")
 #HTML(ani.to_html5_video())
