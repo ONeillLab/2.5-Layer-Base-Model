@@ -8,36 +8,53 @@ import pandas as pd
 tmax = 10000
 ani_interval = 100
 
-# fig = plt.figure()
-# ax = fig.add_subplot(111)
-# div = make_axes_locatable(ax)
-# cax = div.append_axes("right", "5%", "5%")
-# frames = []
-# times = []
 
-c22h = 3  # 9  # ND 2nd baroclinic gravity wave speed squared
-c12h = 4  # 10  # ND 1st baroclinic gravity wave speed squared
-H1H2 = 1  # ND upper to lower layer height ratio
-Bt = (1**2) / 2 / (30**2)  # ND scaled beta Ld2^2/4a^2 ### adjust this
-Br2 = 1  # 1.5  # ND scaled storm size: Burger number Ld2^2/Rst^2
-p1p2 = 0.95  # ND upper to lower layer density ratio
-tstf = 6  # 48  # ND storm duration tst*f0
-tstpf = 15  # 60  # ND period between forced storms tstp*f0
-tradf = 2000  # ND Newtonian damping of layer thickness trad*f0
-dragf = 1000  # Cumulus drag time scale (Li and O'Neill) (D)
-Ar = 0.15  # ND areal storm coverage
-Re = 5e4  # ND Reynolds number
-Wsh = 0.03 / 2  # ND convective Rossby number
+### Dimensional, collected from papers, used for normalization ###
+f0 = 3.517e-4     # coriolis parameter from Siegelman [s]
+a = 6.6854e7      # planetary radius from Siegelman [m]
+g = 24.79         # Jupiter's gravity [m/s^2] 
+H = 9e3           # Moist convection height anomoly scale [m] from Siegelman
+Ld2 = 1500e3      # 2nd baroclinic Rossby deformation radius [m] from Siegelman
+trad = 142858080  # 4.53 years from https://pds-atmospheres.nmsu.edu/education_and_outreach/encyclopedia/radiative_time_constant.htm [s]
+drag = 10000     # Cumulus Drag (Guess)
+
+### Dimensional, Storm parameters ###
+Rst = 1000e3       # Storm size [m] from Siegelman [m]
+tst = 260000      # 3 day storm duration from Siegelman [s]
+tstp = tst*1.1   # Period between forced storms (Guess)
+
+### Dimensonal, Atmosphere parameters, these are not known and must be adjusted ###
+p1p2 = 0.80
+H1H2 = 1
+
+# Dimensional, Derived Parameters ###
+Wst = H / tst
+H1 = ((1+H1H2)/((1-p1p2)*g)) * (Ld2 * f0)**2
+c2 = Ld2 * f0 # Second baroclinic gravity wave speed
+
+### ND Derived Parameters ###
+tstf = tst*f0
+tradf = trad*f0
+tstpf = tstp*f0
+dragf = drag*f0
+Br2 = Ld2**2 / Rst**2   # Burger Number
+c22h = 3 # ND 2nd baroclinic gravity wave speed squared
+c12h = 4 # ND 1st baroclinic gravity wave speed squared
+Bt = (Ld2**2)/(2*a**2) # scaled beta (for beta plane)
+Ar = 0.15
+Re = 5e4
+Wsh = Wst / (H1 * f0)
+
 
 #### Derived Quantities ###
+gm = p1p2*c22h/c12h*H1H2            # ND reduced gravity
+aOLd = a/Ld2;             # ND planetary radius to deformation radius ratio
 
-gm = p1p2 * c22h / c12h * H1H2  # ND reduced gravity
-aOLd = np.sqrt(
-    1 / Bt / 2
-)  # ND planetary radius to deformation radius ratio ### adjust this
-L = 3 * np.pi / 9 * aOLd  ###???  # ND num = ceil(numfrc.*L.^2./Br2)
-num = round(Ar * (L**2) * Br2 / np.pi)  # number of storms
-deglim = 90 - 3 * L / 2 * aOLd * 180 / np.pi  # domain size [degrees]
+deglim = 30  # domain size [degrees]
+L = (deglim * (np.pi/180) * a)/Ld2  # domain radius 30 deg from pole, normalized by deformation radius
+num = round(Ar*(L**2)*Br2/np.pi)    # number of storms
+
+Lst = L * Ld2/Rst
 
 ################## engineering params ##########################
 
