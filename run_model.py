@@ -180,6 +180,15 @@ while t <= tmax + dt / 2:
     dv1dt = dv1dt - 0.25 * (zu1 + np.roll(zu1, -1, axis=1))
     dv2dt = dv2dt - 0.25 * (zu2 + np.roll(zu2, -1, axis=1))
 
+
+
+    ### Cumulus Drag (D) ###
+    du1dt = du1dt - (1 / dx) * u1 / dragf
+    du2dt = du2dt - (1 / dx) * u2 / dragf
+    dv1dt = dv1dt - (1 / dx) * v1 / dragf
+    dv2dt = dv2dt - (1 / dx) * v2 / dragf
+
+
     B1p, B2p = hf.BernN2(u1, v1, u2, v2, gm, c22h, c12h, h1, h2, ord)
 
     du1dtsq = du1dt - (1 / dx) * (B1p - np.roll(B1p, 1, axis=1))
