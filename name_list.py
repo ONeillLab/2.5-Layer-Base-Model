@@ -32,9 +32,7 @@ Wsh = 0.03 / 2  # ND convective Rossby number
 #### Derived Quantities ###
 
 gm = p1p2 * c22h / c12h * H1H2  # ND reduced gravity
-aOLd = np.sqrt(
-    1 / Bt / 2
-)  # ND planetary radius to deformation radius ratio ### adjust this
+aOLd = np.sqrt(1 / Bt / 2)  # ND planetary radius to deformation radius ratio ### adjust this
 L = 3 * np.pi / 9 * aOLd  ###???  # ND num = ceil(numfrc.*L.^2./Br2)
 num = round(Ar * (L**2) * Br2 / np.pi)  # number of storms
 deglim = 90 - 3 * L / 2 * aOLd * 180 / np.pi  # domain size [degrees]
@@ -45,9 +43,7 @@ AB = 2  # order of Adams-Bashforth scheme (2 or 3)
 layers = 2.5  # # of layers (2 or 2.5)
 n = 2  # order of Laplacian '2' is hyperviscosity
 kappa = 1e-6
-ord = (
-    2  # must equal 1 for Glenn's order, otherwise for Sadourney's (squares before avgs)
-)
+ord = 2  # must equal 1 for Glenn's order, otherwise for Sadourney's (squares before avgs)
 spongedrag1 = 0.1
 spongedrag2 = 0.1
 
@@ -95,13 +91,11 @@ v2 = v1
 x, y = np.meshgrid(np.arange(0, N) * dx - L / 2, np.arange(0, N) * dx - L / 2)
 rdist = np.sqrt((x**2) + (y**2))
 outerlim = L / 2 - 0.5
-rlim = (rdist <= outerlim).astype(
-    float
-)  # 1* converts the Boolean values to integers 1 or 0
+rlim = (rdist <= outerlim).astype(float)  # 1* converts the Boolean values to integers 1 or 0
 
 
 sponge1 = np.ones(N) * np.maximum(rdist - outerlim, 0)
-sponge1 = sponge1 / np.max(sponge1)  #####
+sponge1 = sponge1 / np.max(sponge1)  
 spdrag1 = spongedrag1 * sponge1
 
 sponge2 = np.ones(N) * np.maximum(rdist - outerlim, 0)

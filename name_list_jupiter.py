@@ -49,7 +49,6 @@ Wsh = Wst / (H1 * f0)
 #### Derived Quantities ###
 gm = p1p2*c22h/c12h*H1H2            # ND reduced gravity
 aOLd = a/Ld2;             # ND planetary radius to deformation radius ratio
-
 deglim = 30  # domain size [degrees]
 L = (deglim * (np.pi/180) * a)/Ld2  # domain radius 30 deg from pole, normalized by deformation radius
 num = round(Ar*(L**2)*Br2/np.pi)    # number of storms
