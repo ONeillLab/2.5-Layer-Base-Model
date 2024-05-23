@@ -63,11 +63,6 @@ tpl = sampfreq * dtinv
 N = math.ceil(L / dx)  # resolve
 L = N * dx
 
-# l = np.concatenate((np.array([N]), np.arange(1, N)), axis=None)
-# l2 = np.concatenate((np.arange(N - 1, N + 1), np.arange(1, N - 1)), axis=None)
-# r = np.concatenate((np.arange(2, N + 1), np.array([1])), axis=None)
-# r2 = np.concatenate((np.arange(3, N + 1), np.arange(1, 3)), axis=None)
-
 x, y = np.meshgrid(
     np.arange(0.5, N + 0.5) * dx - L / 2, np.arange(0.5, N + 0.5) * dx - L / 2
 )
