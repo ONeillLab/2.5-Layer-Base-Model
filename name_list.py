@@ -37,6 +37,8 @@ L = 3 * np.pi / 9 * aOLd  ###???  # ND num = ceil(numfrc.*L.^2./Br2)
 num = round(Ar * (L**2) * Br2 / np.pi)  # number of storms
 deglim = 90 - 3 * L / 2 * aOLd * 180 / np.pi  # domain size [degrees]
 
+Lst = L * np.sqrt(Br2)  # Convert the length of domain per Ld2 to length of domain per Rst (Daniel)
+
 ################## engineering params ##########################
 
 AB = 2  # order of Adams-Bashforth scheme (2 or 3)
@@ -55,7 +57,7 @@ EpHat = (
     * (Ar / np.sqrt(Br2))
 )
 
-dx = 1 / 5
+dx = 1/5 * round(min(1, L/Lst), 3)  # Change dx from 5 grid points per Ld2 to 5 grid points per Rst (only if Rst < Ld2) (Daniel). Note this adds the bug for small dx which is unfixed when Br2 is large.
 dt = 1 / (2**8)
 dtinv = 1 / dt
 sampfreq = 5
