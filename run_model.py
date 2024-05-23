@@ -283,12 +283,11 @@ while t <= tmax + dt / 2:
     v1 = v1sq
     v2 = v2sq
 
-    #if tc % tpl == 0:
-    #    print(f"t={t}, mean h1 is {round(np.mean(np.mean(h1)), 4)}. Time elapsed, {round(time.time()-timer, 3)}s")
+    if tc % tpl == 0:
+        print(f"t={t}, mean h1 is {round(np.mean(np.mean(h1)), 4)}. Time elapsed, {round(time.time()-timer, 3)}s")
 
-    ii += 1
+        ii += 1
     
-    if ii % 100 == 0:
         ts.append(t)
 
         #u1mat.append(u1)
@@ -300,13 +299,13 @@ while t <= tmax + dt / 2:
         #zeta1mat.append(zeta1)
         zeta2mat.append(zeta2)
 
-            # Wpulsemat.append(Wmat)
+        # Wpulsemat.append(Wmat)
 
         timer = time.time()
 
         print(ii)
 
-    if math.isnan(h1[0, 0]) or ii == 10000:
+    if math.isnan(h1[0, 0]):
         break
 
     tc += 1
@@ -317,7 +316,6 @@ while t <= tmax + dt / 2:
 PV2 = zeta2mat - (1 - Bt*rdist**2)
 
 np.save(f"Run_{round(time.time())}", [u2mat,h2mat,PV2])
-
 
 
 """
