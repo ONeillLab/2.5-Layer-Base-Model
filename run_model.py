@@ -288,7 +288,7 @@ while t <= tmax + dt / 2:
 
     ii += 1
     
-    if ii % 10 == 0:
+    if ii % 100 == 0:
         ts.append(t)
 
         #u1mat.append(u1)
@@ -306,7 +306,7 @@ while t <= tmax + dt / 2:
 
         print(ii)
 
-    if math.isnan(h1[0, 0]) or ii == 100:
+    if math.isnan(h1[0, 0]) or ii == 10000:
         break
 
     tc += 1
