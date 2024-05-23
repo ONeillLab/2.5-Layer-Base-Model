@@ -288,7 +288,7 @@ while t <= tmax + dt / 2:
 
     ii += 1
     
-    if ii % 100 == 0:
+    if ii % 10 == 0:
         ts.append(t)
 
         #u1mat.append(u1)
@@ -306,16 +306,22 @@ while t <= tmax + dt / 2:
 
         print(ii)
 
-    if math.isnan(h1[0, 0]) or ii == 10000:
+    if math.isnan(h1[0, 0]) or ii == 100:
         break
 
     tc += 1
     t = tc * dt
 
 
-#### Animation ####
-PV2 = zeta2mat - (1 - Bt * rdist**2)
+### Saving ###
+PV2 = zeta2mat - (1 - Bt*rdist**2)
 
+np.save(f"Run_{round(time.time())}", [u2mat,h2mat,PV2])
+
+
+
+"""
+#### Animation ####
 frames = h2mat
 
 fmax = np.max(frames)
@@ -348,3 +354,4 @@ plt.show()
 
 #ani.save(f"Results/{round(time.time())}.mp4")
 #HTML(ani.to_html5_video())
+"""
