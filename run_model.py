@@ -303,8 +303,6 @@ while t <= tmax + dt / 2:
 
         timer = time.time()
 
-        print(ii)
-
     if math.isnan(h1[0, 0]):
         break
 
