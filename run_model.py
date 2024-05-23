@@ -18,21 +18,18 @@ plt.rcParams['figure.dpi'] = 150
 locs = hf.paircountN2(num, N - 1)
 mode = 1
 
-match mode:
+pulse = "off"
 
-    case 1:
-        pulse = "off"
+wlayer = hf.pairshapeN2(locs, x, y, Br2, Wsh, N)
+Wmat = hf.pairfieldN2(L, h1, wlayer)
 
-        wlayer = hf.pairshapeN2(locs, x, y, Br2, Wsh, N)
-        Wmat = hf.pairfieldN2(L, h1, wlayer)
+Wmatorig = Wmat
 
-        Wmatorig = Wmat
+tpulseper = tstpf
+tpulsedur = tstf
+tclock = 0
 
-        tpulseper = tstpf
-        tpulsedur = tstf
-        tclock = 0
-
-        FreeGrid = np.sum(spdrag1 == 0) / (N**2)
+FreeGrid = np.sum(spdrag1 == 0) / (N**2)
 
 t = 0
 tc = 0
@@ -288,25 +285,28 @@ while t <= tmax + dt / 2:
 
     #if tc % tpl == 0:
     #    print(f"t={t}, mean h1 is {round(np.mean(np.mean(h1)), 4)}. Time elapsed, {round(time.time()-timer, 3)}s")
+
     ii += 1
-    ts.append(t)
+    
+    if ii % 100 == 0:
+        ts.append(t)
 
-    u1mat.append(u1)
-    u2mat.append(u2)
-    v1mat.append(v1)
-    v2mat.append(v2)
-    h1mat.append(h1)
-    h2mat.append(h2)
-    zeta1mat.append(zeta1)
-    zeta2mat.append(zeta2)
+        #u1mat.append(u1)
+        u2mat.append(u2)
+        #v1mat.append(v1)
+        #v2mat.append(v2)
+        #h1mat.append(h1)
+        h2mat.append(h2)
+        #zeta1mat.append(zeta1)
+        zeta2mat.append(zeta2)
 
-        # Wpulsemat.append(Wmat)
+            # Wpulsemat.append(Wmat)
 
-    timer = time.time()
+        timer = time.time()
 
-    print(ii)
+        print(ii)
 
-    if math.isnan(h1[0, 0]) or ii == 500:
+    if math.isnan(h1[0, 0]) or ii == 10000:
         break
 
     tc += 1

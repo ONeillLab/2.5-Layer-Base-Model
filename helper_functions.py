@@ -100,7 +100,7 @@ def pairshapeN2(locs, x, y, Br2, Wsh, N):
     """
     Create Gaussians on smaller scales and then convolve them with the weather layer.
     """
-    rad = int(np.ceil(np.sqrt(1 / Br2) / dx))
+    rad = 3*int(np.ceil(np.sqrt(1 / Br2) / dx))  # CHANGED TO 3 TIMES TO IMPROVE NUMERICAL STAILITY
     xg, yg = np.meshgrid(range(-rad, rad + 1), range(-rad, rad + 1))
     gaus = Wsh * np.exp(-(Br2 * dx**2) / 0.3606 * ((xg + 0.5) ** 2 + (yg + 0.5) ** 2))
 
