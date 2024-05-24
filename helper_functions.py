@@ -97,6 +97,7 @@ def viscND(vel, Re, n):
 
 
 
+### New pairshapeN2 function. Generates Gaussians using entire domain instead of creating sub-domains. (Daniel) ###
 def pairshapeN2(locs, x, y, Br2, Wsh, N):
 
     wlayer = np.zeros_like(x)
