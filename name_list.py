@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import pandas as pd
+from mpi4py import MPI
 
 tmax = 100
 ani_interval = 100

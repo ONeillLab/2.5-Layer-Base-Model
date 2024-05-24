@@ -8,6 +8,8 @@ from IPython.display import HTML
 import time
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from name_list import *
+from mpi4py import MPI
+
 
 plt.rc('animation', html='html5')
 
