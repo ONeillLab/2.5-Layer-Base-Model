@@ -21,8 +21,8 @@ H1H2 = 1  # ND upper to lower layer height ratio
 Bt = (1**2) / 2 / (30**2)  # ND scaled beta Ld2^2/4a^2 ### adjust this
 Br2 = 1  # 1.5  # ND scaled storm size: Burger number Ld2^2/Rst^2
 p1p2 = 0.95  # ND upper to lower layer density ratio
-tstf = 6  # 48  # ND storm duration tst*f0
-tstpf = 15  # 60  # ND period between forced storms tstp*f0
+tstf = 48  # 6  # ND storm duration tst*f0
+tstpf = 60  # 15  # ND period between forced storms tstp*f0
 tradf = 2000  # ND Newtonian damping of layer thickness trad*f0
 dragf = 100000  # Cumulus drag time scale (Li and O'Neill) (D)
 Ar = 0.15  # ND areal storm coverage
@@ -54,7 +54,7 @@ EpHat = (
     * (Ar / np.sqrt(Br2))
 )
 
-dx = 1 / 25
+dx = 1 / 5
 dt = dx / (10 * c12h) #1 / (2**8) # CHANGED TO dx/(10*c12h) SO THAT dt CHANGES TO MATCH dx
 dtinv = 1 / dt
 sampfreq = 1

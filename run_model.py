@@ -179,10 +179,10 @@ while t <= tmax + dt / 2:
 
 
     ### Cumulus Drag (D) ###
-    #du1dt = du1dt - (1 / dx) * u1 / dragf
-    #du2dt = du2dt - (1 / dx) * u2 / dragf
-    #dv1dt = dv1dt - (1 / dx) * v1 / dragf
-    #dv2dt = dv2dt - (1 / dx) * v2 / dragf
+    du1dt = du1dt - (1 / dx) * u1 / dragf
+    du2dt = du2dt - (1 / dx) * u2 / dragf
+    dv1dt = dv1dt - (1 / dx) * v1 / dragf
+    dv2dt = dv2dt - (1 / dx) * v2 / dragf
 
 
     B1p, B2p = hf.BernN2(u1, v1, u2, v2, gm, c22h, c12h, h1, h2, ord)
@@ -309,16 +309,14 @@ while t <= tmax + dt / 2:
     tc += 1
     t = tc * dt
 
-
 ### Saving ###
 PV2 = zeta2mat - (1 - Bt*rdist**2)
 
-np.save(f"Run_{round(time.time())}", [u2mat,h2mat,PV2])
+#np.save(f"Run_{round(time.time())}", [u2mat,h2mat,PV2])
 
 
-"""
 #### Animation ####
-frames = h2mat
+frames = PV2
 
 fmax = np.max(frames)
 fmin = np.min(frames)
@@ -350,4 +348,3 @@ plt.show()
 
 #ani.save(f"Results/{round(time.time())}.mp4")
 #HTML(ani.to_html5_video())
-"""
