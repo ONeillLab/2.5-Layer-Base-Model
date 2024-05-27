@@ -16,23 +16,6 @@ plt.rc('animation', html='html5')
 plt.rcParams["animation.html"] = "jshtml"
 plt.rcParams['figure.dpi'] = 150  
 
-"""
-comm = MPI.COMM_WORLD
-size = comm.Get_size()
-rank = comm.Get_rank()
-
-if size == 1:
-    Ndiv = math.floor(np.sqrt(N*N)/(size))
-    Pind = 0
-
-if size != 1:
-    Ndiv = math.floor(np.sqrt(N*N)/(size))
-    Pind = rank*Ndiv
-
-
-print(f"This is rank, {rank}, starting index, {Pind}, subsize {Ndiv}")
-"""
-
 
 locs = hf.paircountN2(num, N - 1)
 mode = 1
@@ -256,9 +239,10 @@ while t <= tmax + dt / 2:
 ### Saving ###
 PV2 = zeta2mat - (1 - Bt*rdist**2)
 
-#np.save(f"Run_{round(time.time())}", [u2mat,h2mat,PV2])
+np.save(f"Run_{round(time.time())}", [u2mat,h2mat,PV2])
 
 
+"""
 #### Animation ####
 frames = PV2
 
@@ -292,3 +276,4 @@ plt.show()
 
 #ani.save(f"Results/{round(time.time())}.mp4")
 #HTML(ani.to_html5_video())
+"""
