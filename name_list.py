@@ -1,19 +1,10 @@
 import math
 import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.animation as animation
-from mpl_toolkits.axes_grid1 import make_axes_locatable
+
 import pandas as pd
 
 tmax = 100
 ani_interval = 100
-
-# fig = plt.figure()
-# ax = fig.add_subplot(111)
-# div = make_axes_locatable(ax)
-# cax = div.append_axes("right", "5%", "5%")
-# frames = []
-# times = []
 
 c22h = 3  # 9  # ND 2nd baroclinic gravity wave speed squared
 c12h = 4  # 10  # ND 1st baroclinic gravity wave speed squared

@@ -1,20 +1,9 @@
 import numpy as np
 import math
 import helper_functions as hf
-import matplotlib.pyplot as plt
-import matplotlib.cm as cm
-import matplotlib.animation as animation
-from IPython.display import HTML
 import time
-from mpl_toolkits.axes_grid1 import make_axes_locatable
 from name_list import *
 from numba import jit, objmode
-
-plt.rc('animation', html='html5')
-
-
-plt.rcParams["animation.html"] = "jshtml"
-plt.rcParams['figure.dpi'] = 150  
 
 
 @jit(nopython=True, parallel=True)
@@ -176,7 +165,6 @@ def run_sim(u1, u2, v1, v2, h1, h2):
             h1 = h1_p + dt * dh1dt
             if layers == 2.5:
                 h2 = h2_p + dt * dh2dt
-                # eta = (g31.*h1+g32.*h2)./g;
 
         u1 = u1sq
         u2 = u2sq
@@ -210,40 +198,3 @@ u2mat, h2mat, zeta2mat = run_sim(u1,u2,v1,v2,h1,h2)
 PV2 = zeta2mat - (1 - Bt*rdist**2)
 
 np.save(f"Run_{round(time.time())}", [u2mat,h2mat,PV2])
-
-
-"""
-#### Animation ####
-frames = PV2
-
-fmax = np.max(frames)
-fmin = np.min(frames)
-
-fig = plt.figure()
-ax = fig.add_subplot(111)
-div = make_axes_locatable(ax)
-cax = div.append_axes("right", "5%", "5%")
-
-cv0 = frames[0]
-im = ax.imshow(cv0, cmap="bwr")
-cb = fig.colorbar(im, cax=cax)
-im.set_clim(fmin, fmax)
-tx = ax.set_title(f"time: {ts[0]}")
-
-
-def animate(i):
-    arr = frames[i]
-
-    vmax = np.max(arr)
-    vmin = np.min(arr)
-    im.set_data(arr)
-    im.set_clim(fmin, fmax)
-    tx.set_text(f"time: {ts[i]}")
-
-
-ani = animation.FuncAnimation(fig, animate, interval=ani_interval, frames=len(frames))
-plt.show()
-
-#ani.save(f"Results/{round(time.time())}.mp4")
-#HTML(ani.to_html5_video())
-"""
