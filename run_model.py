@@ -92,6 +92,15 @@ v2mat = []
 
 timer = time.time()
 
+j = 0
+resets = int(tmax)
+nstorms = np.random.randint(1, num+1, resets)
+tpulsedurdis = np.random.randint(1, 15, resets).tolist()
+tpulseperdis = []
+for k in tpulsedurdis:
+    l = np.random.randint(1,4*k + 1)
+    tpulseperdis.append(l)
+
 while t <= tmax + dt / 2:
 
     if AB == 2:
@@ -204,18 +213,35 @@ while t <= tmax + dt / 2:
         v1sq = v1_p + dt * dv1dtsq
         v2sq = v2_p + dt * dv2dtsq
 
+
+    ### smooth forcing ###
+
     if mode == 1:
-        if t % tpulseper == 0 and t != 0:
+        if t % tpulseper == 0 and t != 0: # if t is a multiple of tstpf, reset step function
             tclock = t
-            locs = hf.paircountN2(num, N - 1)
+            locs = hf.paircountN2(nstorms[j], N - 1)
             wlayer = hf.pairshapeN2(locs, x, y, Br2, Wsh, N)
             newWmat = hf.pairfieldN2(L, h1, wlayer)
-
-        if tclock + tpulsedur > t and tclock != 0:
+            tpulseper = tpulseperdis[j]
+            tpulsedur = tpulsedurdis[j]
+            j += 1
+        if t < tclock + tpulsedur and tclock != 0: # if t is less than tst
             Wmat = newWmat
-        elif t > tpulsedur:
+        elif tclock + tpulsedur < t and t < tclock + tpulseper: # if t is between tst and tstpf
             Wmat = np.zeros_like(x * y)
-            tclock = 0
+
+    #if mode == 1:
+    #    if t % tpulseper == 0 and t != 0:
+    #        tclock = t
+    #        locs = hf.paircountN2(num, N - 1)
+    #        wlayer = hf.pairshapeN2(locs, x, y, Br2, Wsh, N)
+    #        newWmat = hf.pairfieldN2(L, h1, wlayer)
+
+    #    if tclock + tpulsedur > t and tclock != 0:
+    #        Wmat = newWmat
+    #    elif t > tpulsedur:
+    #        Wmat = np.zeros_like(x * y)
+    #        tclock = 0
 
     Fx1 = hf.xflux(h1, u1) - kappa / dx * (h1 - np.roll(h1, 1, axis=1))
     Fy1 = hf.yflux(h1, v1) - kappa / dx * (h1 - np.roll(h1, 1, axis=0))
@@ -327,7 +353,15 @@ div = make_axes_locatable(ax)
 cax = div.append_axes("right", "5%", "5%")
 
 cv0 = frames[0]
-im = ax.imshow(cv0, cmap="bwr")
+#im = ax.imshow(cv0, cmap="bwr")
+vminlist = []
+vmaxlist = []
+for j in frames:
+    vminlist.append(np.min(j))
+    vmaxlist.append(np.max(j))
+vmin = np.min(vminlist)
+vmax = np.max(vmaxlist)
+im = ax.imshow(cv0, cmap="bwr", vmin=vmin, vmax=vmax)
 cb = fig.colorbar(im, cax=cax)
 tx = ax.set_title(f"time: {ts[0]}")
 
@@ -335,14 +369,15 @@ tx = ax.set_title(f"time: {ts[0]}")
 def animate(i):
     arr = frames[i]
 
-    vmax = np.max(arr)
-    vmin = np.min(arr)
+    #vmax = np.max(arr)
+    #vmin = np.min(arr)
     im.set_data(arr)
-    im.set_clim(vmin, vmax)
+    #im.set_clim(vmin, vmax)
     tx.set_text(f"time: {ts[i]}")
 
 
 ani = animation.FuncAnimation(fig, animate, interval=ani_interval, frames=len(frames))
 plt.show()
+ani.save("testing.mp4")
 
 #HTML(ani.to_html5_video())

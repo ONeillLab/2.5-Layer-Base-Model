@@ -5,7 +5,7 @@ import matplotlib.animation as animation
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import pandas as pd
 
-tmax = 10000
+tmax = 1000
 ani_interval = 100
 
 # fig = plt.figure()
@@ -27,7 +27,7 @@ tradf = 2000  # ND Newtonian damping of layer thickness trad*f0
 dragf = 1000  # Cumulus drag time scale (Li and O'Neill) (D)
 Ar = 0.15  # ND areal storm coverage
 Re = 5e4  # ND Reynolds number
-Wsh = 0.03 / 2  # ND convective Rossby number
+Wsh = 0.03 / 0.5  # ND convective Rossby number
 
 #### Derived Quantities ###
 
@@ -103,3 +103,6 @@ spdrag1 = spongedrag1 * sponge1
 sponge2 = np.ones(N) * np.maximum(rdist - outerlim, 0)
 sponge2 = sponge2 / np.max(sponge1)
 spdrag2 = spongedrag2 * sponge2
+
+print("EpHat =",EpHat)
+print("aOLd =",aOLd)
