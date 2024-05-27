@@ -54,7 +54,7 @@ EpHat = (
     * (Ar / np.sqrt(Br2))
 )
 
-dx = 1 / 15
+dx = 1 / 5
 dt = dx / (10 * c12h) #1 / (2**8) # CHANGED TO dx/(10*c12h) SO THAT dt CHANGES TO MATCH dx
 dtinv = 1 / dt
 sampfreq = 1
@@ -68,8 +68,8 @@ x, y = np.meshgrid(
 )
 H = 1 + 0 * x
 eta = 0 * x
-h1 = 0 * x + 1
-h2 = 0 * x + 1
+h1 = (0 * x + 1).astype(np.float64)
+h2 = (0 * x + 1).astype(np.float64)
 
 # u grid
 x, y = np.meshgrid(np.arange(0, N) * dx - L / 2, np.arange(0.5, N + 0.5) * dx - L / 2)
