@@ -116,6 +116,11 @@ while t <= tmax + dt / 2:
             h2 = 1.5 * h2 - 0.5 * h2_p
             h2_p = tmp
     
+    du1dt = np.zeros_like(u1)
+    du2dt = np.zeros_like(u2)
+    dv1dt = np.zeros_like(v1)
+    dv2dt = np.zeros_like(v2)
+
     # add friction
     du1dt = hf.viscND(u1, Re, n)
     du2dt = hf.viscND(u2, Re, n)

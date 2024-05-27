@@ -36,7 +36,7 @@ def pairfieldN2(L, h1, wlayer):
     return Wmat
 
 
-#@jit(nopython=True, parallel=True)
+@jit(nopython=True, parallel=True)
 def viscND(vel, Re, n):
     """
     n is exponent of Laplacian operator
@@ -46,43 +46,20 @@ def viscND(vel, Re, n):
     TODO: for n=1 nu is not defined...
     """
 
-    if n == 1:
-
-        field = (
-            -4 * vel
-            + np.roll(vel, 1, axis=0)
-            + np.roll(vel, -1, axis=0)
-            + np.roll(vel, 1, axis=1)
-            + np.roll(vel, -1, axis=1)
-        )
-        field = (n / dx**2) * field
-
-        # in Morgan's code the n here is 'nu', but that's never defined; I think it's a typo
-
-        # replaced n==1 case with my code
+    field = np.zeros_like(vel)
 
     if n == 2:
-
-        field = (
-            2 * np.roll(vel, (1, 1), axis=(0, 1))
-            + 2 * np.roll(vel, (1, -1), axis=(0, 1))
-            + 2 * np.roll(vel, (-1, 1), axis=(0, 1))
-            + 2 * np.roll(vel, (-1, -1), axis=(0, 1))
-            - 8 * np.roll(vel, 1, axis=0)
-            - 8 * np.roll(vel, -1, axis=0)
-            - 8 * np.roll(vel, 1, axis=1)
-            - 8 * np.roll(vel, -1, axis=1)
-            + np.roll(vel, 2, axis=0)
-            + np.roll(vel, -2, axis=0)
-            + np.roll(vel, 2, axis=1)
-            + np.roll(vel, -2, axis=1)
-            + 20 * vel
+   
+        field = (2*vel[:,l][l,:] + 2*vel[:,r][l,:] + 2*vel[:,l][r,:] + 2*vel[:,r][r,:]
+                 - 8*vel[l,:] - 8*vel[r,:] - 8*vel[:,l] - 8*vel[:,r]
+                 + vel[l2,:] + vel[r2,:] + vel[:,l2] + vel[:,r2]
+                 + 20*vel
         )
 
         field = -1 / Re * (1 / dx**4) * field
 
-        return field
-
+    
+    return field
 
 
 ### New pairshapeN2 function. Generates Gaussians using entire domain instead of creating sub-domains. (Daniel) ###
