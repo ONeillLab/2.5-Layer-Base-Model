@@ -8,14 +8,33 @@ from IPython.display import HTML
 import time
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from name_list import *
-from mpi4py import MPI
-
+#from mpi4py import MPI
+import sys
+from numba import jit
 
 plt.rc('animation', html='html5')
 
 
 plt.rcParams["animation.html"] = "jshtml"
 plt.rcParams['figure.dpi'] = 150  
+
+"""
+comm = MPI.COMM_WORLD
+size = comm.Get_size()
+rank = comm.Get_rank()
+
+if size == 1:
+    Ndiv = math.floor(np.sqrt(N*N)/(size))
+    Pind = 0
+
+if size != 1:
+    Ndiv = math.floor(np.sqrt(N*N)/(size))
+    Pind = rank*Ndiv
+
+
+print(f"This is rank, {rank}, starting index, {Pind}, subsize {Ndiv}")
+"""
+
 
 locs = hf.paircountN2(num, N - 1)
 mode = 1
@@ -26,15 +45,6 @@ wlayer = hf.pairshapeN2(locs, x, y, Br2, Wsh, N)
 Wmat = hf.pairfieldN2(L, h1, wlayer)
 
 Wmatorig = Wmat
-
-tpulseper = tstpf
-tpulsedur = tstf
-tclock = 0
-
-FreeGrid = np.sum(spdrag1 == 0) / (N**2)
-
-t = 0
-tc = 0
 
 # test
 uhatvec = 0
@@ -51,19 +61,6 @@ if AB == 2:
     u2_p = u2.copy()
     v2_p = v2.copy()
     h2_p = h2.copy()
-
-if AB == 3:
-    u1_p = np.zeros_like(u1)
-    v1_p = np.zeros_like(v1)
-    h1_p = np.zeros_like(h1)
-    u2_p = np.zeros_like(u2)
-    v2_p = np.zeros_like(v2)
-    h2_p = np.zeros_like(h2)
-
-    u1sq = np.zeros_like(u1)
-    u2sq = np.zeros_like(u2)
-    v1sq = np.zeros_like(v1)
-    v2sq = np.zeros_like(v2)
 
 ts = []
 hm = []  # height max min!
@@ -91,6 +88,13 @@ v2mat = []
 
 timer = time.time()
 
+
+tpulseper = tstpf
+tpulsedur = tstf
+tclock = 0
+t = 0
+tc = 0
+
 while t <= tmax + dt / 2:
 
     if AB == 2:
@@ -113,35 +117,7 @@ while t <= tmax + dt / 2:
             tmp = h2.copy()
             h2 = 1.5 * h2 - 0.5 * h2_p
             h2_p = tmp
-
-    if AB == 3:
-        if tc > 1:
-            u1s = u1.copy()
-            u1 = 23 / 12 * u1 - 16 / 12 * u1_p + 5 / 12 * u1_pp
-            u1_pp = u1_p.copy()
-            u1_p = u1s.copy()
-            v1s = v1.copy()
-            v1 = 23 / 12 * v1 - 16 / 12 * v1_p + 5 / 12 * v1_pp
-            v1_pp = v1_p.copy()
-            v1_p = v1s.copy()
-            h1s = h1.copy()
-            h1 = 23 / 12 * h1 - 16 / 12 * h1_p + 5 / 12 * h1_pp
-            h1_pp = h1_p.copy()
-            h1_p = h1s.copy()
-            u2s = u2.copy()
-            u2 = 23 / 12 * u2 - 16 / 12 * u2_p + 5 / 12 * u2_pp
-            u2_pp = u2_p.copy()
-            u2_p = u2s.copy()
-            v2s = v2.copy()
-            v2 = 23 / 12 * v2 - 16 / 12 * v2_p + 5 / 12 * v2_pp
-            v2_pp = v2_p.copy()
-            v2_p = v2s.copy()
-            if layers == 2.5:
-                h2s = h2.copy()
-                h2 = 23 / 12 * h2 - 16 / 12 * h2_p + 5 / 12 * h2_pp
-                h2_pp = h2_p.copy()
-                h2_p = h2s.copy()
-
+    
     # add friction
     du1dt = hf.viscND(u1, Re, n)
     du2dt = hf.viscND(u2, Re, n)
@@ -236,43 +212,6 @@ while t <= tmax + dt / 2:
         dh1dt = dh1dt + Wmat
         if layers == 2.5:
             dh2dt = dh2dt - H1H2 * Wmat
-
-    if AB == 3:
-        if tc >= 1:
-            du1dt1 = u1sq + dt * du1dtsq
-            du2dt1 = u2sq + dt * du2dtsq
-            dv1dt1 = v1sq + dt * dv1dtsq
-            dv2dt1 = v2sq + dt * dv2dtsq
-            dh1dt1 = h1 + dt * dh1dt
-            if layers == 2.5:
-                dh2dt1 = h2 + dt * dh2dt
-
-            u1_pp = u1_p.copy()
-            u1_p = u1.copy()
-            v1_pp = v1_p.copy()
-            v1_p = v1.copy()
-            u2_pp = u2_p.copy()
-            u2_p = u2.copy()
-            v2_pp = v2_p.copy()
-            v2_p = v2.copy()
-            h1_pp = h1_p.copy()
-            h1_p = h1.copy()
-            if layers == 2.5:
-                h2_pp = h2_p.copy()
-                h2_p = h2.copy()
-
-            u1sq = u1sq + dt / 2 * (du1dtsq + du1dt1)
-            u2sq = u2sq + dt / 2 * (du2dtsq + du2dt1)
-            v1sq = v1sq + dt / 2 * (dv1dtsq + dv1dt1)
-            v2sq = v2sq + dt / 2 * (dv2dtsq + dv2dt1)
-            h1 = h1 + dt / 2 * (dh1dt + dh1dt1)
-            if layers == 2.5:
-                h2 = h2 + dt / 2 * (dh2dt + dh2dt1)
-
-        else:
-            h1 = h1_p + dt * dh1dt
-            if layers == 2.5:
-                h2 = h2_p + dt * dh2dt
 
     if AB == 2:
         h1 = h1_p + dt * dh1dt

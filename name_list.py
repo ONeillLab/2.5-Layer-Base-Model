@@ -96,3 +96,10 @@ spdrag1 = spongedrag1 * sponge1
 sponge2 = np.ones(N) * np.maximum(rdist - outerlim, 0)
 sponge2 = sponge2 / np.max(sponge1)
 spdrag2 = spongedrag2 * sponge2
+
+x,y = np.meshgrid(np.arange(0,N), np.arange(0,N))
+
+l = np.concatenate((np.array([N]), np.arange(1, N)), axis=None) - 1
+l2 = np.concatenate((np.arange(N - 1, N + 1), np.arange(1, N - 1)), axis=None) - 1 
+r = np.concatenate((np.arange(2, N + 1), np.array([1])), axis=None) - 1
+r2 = np.concatenate((np.arange(3, N + 1), np.arange(1, 3)), axis=None) - 1
