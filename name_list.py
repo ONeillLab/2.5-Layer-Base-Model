@@ -3,7 +3,7 @@ import numpy as np
 
 import pandas as pd
 
-tmax = 100
+tmax = 10
 ani_interval = 100
 
 c22h = 3  # 9  # ND 2nd baroclinic gravity wave speed squared
@@ -45,7 +45,7 @@ EpHat = (
     * (Ar / np.sqrt(Br2))
 )
 
-dx = 1 / 10
+dx = 1 / 25
 dt = dx / (10 * c12h) #1 / (2**8) # CHANGED TO dx/(10*c12h) SO THAT dt CHANGES TO MATCH dx
 dtinv = 1 / dt
 sampfreq = 1

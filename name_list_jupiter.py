@@ -5,7 +5,7 @@ import matplotlib.animation as animation
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import pandas as pd
 
-tmax = 10000
+tmax = 100
 ani_interval = 100
 
 
@@ -19,7 +19,7 @@ trad = 142858080  # 4.53 years from https://pds-atmospheres.nmsu.edu/education_a
 drag = 10000     # Cumulus Drag (Guess)
 
 ### Dimensional, Storm parameters ###
-Rst = 1000e3       # Storm size [m] from Siegelman [m]
+Rst = 300e3       # Storm size [m] from Siegelman [m]
 tst = 260000      # 3 day storm duration from Siegelman [s]
 tstp = tst*1.1   # Period between forced storms (Guess)
 
@@ -72,29 +72,24 @@ EpHat = (
     * (Ar / np.sqrt(Br2))
 )
 
-dx = 1 / 5
-dt = 1 / (2**8)
+dx = 1 / 5 * round(min(1,L/Lst), 3)
+dt = dx / (10 * c12h) #1 / (2**8) # CHANGED TO dx/(10*c12h) SO THAT dt CHANGES TO MATCH dx
 dtinv = 1 / dt
-sampfreq = 5
+sampfreq = 1
 tpl = sampfreq * dtinv
 
 N = math.ceil(L / dx)  # resolve
 L = N * dx
-
-# l = np.concatenate((np.array([N]), np.arange(1, N)), axis=None)
-# l2 = np.concatenate((np.arange(N - 1, N + 1), np.arange(1, N - 1)), axis=None)
-# r = np.concatenate((np.arange(2, N + 1), np.array([1])), axis=None)
-# r2 = np.concatenate((np.arange(3, N + 1), np.arange(1, 3)), axis=None)
 
 x, y = np.meshgrid(
     np.arange(0.5, N + 0.5) * dx - L / 2, np.arange(0.5, N + 0.5) * dx - L / 2
 )
 H = 1 + 0 * x
 eta = 0 * x
-h1 = 0 * x + 1
-h2 = 0 * x + 1
+h1 = (0 * x + 1).astype(np.float64)
+h2 = (0 * x + 1).astype(np.float64)
 
-# u grid
+# u grid 
 x, y = np.meshgrid(np.arange(0, N) * dx - L / 2, np.arange(0.5, N + 0.5) * dx - L / 2)
 u1 = 0 * x * y
 u2 = u1
@@ -108,9 +103,7 @@ v2 = v1
 x, y = np.meshgrid(np.arange(0, N) * dx - L / 2, np.arange(0, N) * dx - L / 2)
 rdist = np.sqrt((x**2) + (y**2))
 outerlim = L / 2 - 0.5
-rlim = (rdist <= outerlim).astype(
-    float
-)  # 1* converts the Boolean values to integers 1 or 0
+rlim = (rdist <= outerlim).astype(float)  # 1* converts the Boolean values to integers 1 or 0
 
 
 sponge1 = np.ones(N) * np.maximum(rdist - outerlim, 0)
@@ -120,3 +113,10 @@ spdrag1 = spongedrag1 * sponge1
 sponge2 = np.ones(N) * np.maximum(rdist - outerlim, 0)
 sponge2 = sponge2 / np.max(sponge1)
 spdrag2 = spongedrag2 * sponge2
+
+x,y = np.meshgrid(np.arange(0,N), np.arange(0,N))
+
+l = np.concatenate((np.array([N]), np.arange(1, N)), axis=None) - 1
+l2 = np.concatenate((np.arange(N - 1, N + 1), np.arange(1, N - 1)), axis=None) - 1 
+r = np.concatenate((np.arange(2, N + 1), np.array([1])), axis=None) - 1
+r2 = np.concatenate((np.arange(3, N + 1), np.arange(1, 3)), axis=None) - 1

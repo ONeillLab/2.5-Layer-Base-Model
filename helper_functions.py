@@ -8,7 +8,7 @@ from name_list import *
 @jit(nopython=True, parallel=True)
 def gauss(x, y, L):
     """
-    Generates a Gaussian.
+    Generates a Gaussian
     """
     g = np.exp(-0.5 * (x**2 + y**2) / L**2)
     return g

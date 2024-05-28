@@ -2,6 +2,8 @@ import numpy as np
 import math
 import helper_functions as hf
 import time
+import matplotlib.pyplot as plt
+import matplotlib.animation as animation
 from name_list import *
 from numba import jit, objmode
 
@@ -68,13 +70,6 @@ def run_sim(u1, u2, v1, v2, h1, h2):
                 tmp = h2.copy()
                 h2 = 1.5 * h2 - 0.5 * h2_p
                 h2_p = tmp
-        
-        du1dt = np.zeros_like(u1)
-        du2dt = np.zeros_like(u2)
-        dv1dt = np.zeros_like(v1)
-        dv2dt = np.zeros_like(v2)
-        dh1dt = np.zeros_like(h1)
-        dh2dt = np.zeros_like(h2)
 
         # add friction
         du1dt = hf.viscND(u1, Re, n)
@@ -112,7 +107,6 @@ def run_sim(u1, u2, v1, v2, h1, h2):
         du2dt = du2dt - (1 / dx) * u2 / dragf
         dv1dt = dv1dt - (1 / dx) * v1 / dragf
         dv2dt = dv2dt - (1 / dx) * v2 / dragf
-
 
         B1p, B2p = hf.BernN2(u1, v1, u2, v2, gm, c22h, c12h, h1, h2, ord)
 
@@ -198,3 +192,32 @@ u2mat, h2mat, zeta2mat = run_sim(u1,u2,v1,v2,h1,h2)
 PV2 = zeta2mat - (1 - Bt*rdist**2)
 
 np.save(f"Run_{round(time.time())}", [u2mat,h2mat,PV2])
+
+"""
+frames = PV2
+
+fmin = np.min(frames)
+fmax = np.max(frames)
+
+fig = plt.figure()
+ax = fig.add_subplot(111)
+
+cv0 = frames[0]
+im = ax.imshow(cv0, cmap="bwr")
+cb = fig.colorbar(im)
+tx = ax.set_title(f"time: {0}")
+
+
+def animate(i):
+    arr = frames[i]
+
+    vmax = np.max(arr)
+    vmin = np.min(arr)
+    im.set_data(arr)
+    im.set_clim(fmin, fmax)
+    tx.set_text(f"time: {i}")
+
+
+ani = animation.FuncAnimation(fig, animate, interval=ani_interval, frames=len(frames))
+plt.show()
+"""
