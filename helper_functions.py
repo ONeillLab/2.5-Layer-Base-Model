@@ -2,8 +2,6 @@ import numpy as np
 import math
 from name_list import dx
 
-# removed dx from inputs
-
 
 def gauss(x, y, L):
     """
@@ -97,9 +95,19 @@ def viscND(vel, Re, n):
 
 
 def pairshapeN2(locs, x, y, Br2, Wsh, N):
-    """
-    Create Gaussians on smaller scales and then convolve them with the weather layer.
-    """
+    
+    wlayer = np.zeros_like(x).astype(np.float64)
+    
+    for loc in locs:
+        layer = Wsh * np.exp( - (Br2*dx**2)/0.3606 * ( (x-loc[0])**2 + (y-loc[1])**2))
+        wlayer = wlayer + layer
+
+    return wlayer
+
+
+"""
+def pairshapeN2(locs, x, y, Br2, Wsh, N):
+    #Create Gaussians on smaller scales and then convolve them with the weather layer.
     rad = int(np.ceil(np.sqrt(1 / Br2) / dx))
     xg, yg = np.meshgrid(range(-rad, rad + 1), range(-rad, rad + 1))
     gaus = Wsh * np.exp(-(Br2 * dx**2) / 0.3606 * ((xg + 0.5) ** 2 + (yg + 0.5) ** 2))
@@ -152,7 +160,7 @@ def pairshapeN2(locs, x, y, Br2, Wsh, N):
 
     layersum = np.sum(wlayer)  # redundant ?
     return wlayer
-
+"""
 
 def BernN2(u1, v1, u2, v2, gm, c22h, c12h, h1, h2, ord):
     """
