@@ -90,6 +90,9 @@ u2mat = []
 v1mat = []
 v2mat = []
 
+KEmat = []
+APEmat = []
+
 timer = time.time()
 
 while t <= tmax + dt / 2:
@@ -303,7 +306,8 @@ while t <= tmax + dt / 2:
         zeta1mat.append(zeta1)
         zeta2mat.append(zeta2)
 
-        # Wpulsemat.append(Wmat)
+        KEmat.append(hf.calculate_KE(u1,u2,v1,v2,h1,h2))
+        APEmat.append(hf.calculate_APE(h1,h2))
 
         timer = time.time()
 
@@ -343,6 +347,11 @@ def animate(i):
 
 
 ani = animation.FuncAnimation(fig, animate, interval=ani_interval, frames=len(frames))
+plt.show()
+
+plt.plot(KEmat, label="KE")
+plt.plot(APEmat, label="APE")
+plt.legend(frameon=True)
 plt.show()
 
 #HTML(ani.to_html5_video())
