@@ -324,6 +324,8 @@ PV2 = zeta2mat - (1 - Bt * rdist**2)
 
 frames = PV2
 
+fmax = np.max(frames)
+fmin = np.min(frames)
 
 fig = plt.figure()
 ax = fig.add_subplot(111)
@@ -342,7 +344,7 @@ def animate(i):
     vmax = np.max(arr)
     vmin = np.min(arr)
     im.set_data(arr)
-    im.set_clim(vmin, vmax)
+    im.set_clim(fmin, fmax)
     tx.set_text(f"time: {ts[i]}")
 
 
