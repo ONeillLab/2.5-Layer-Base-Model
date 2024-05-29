@@ -2,18 +2,10 @@ import numpy as np
 import math
 import helper_functions as hf
 import matplotlib.pyplot as plt
-import matplotlib.cm as cm
 import matplotlib.animation as animation
-from IPython.display import HTML
 import time
-from mpl_toolkits.axes_grid1 import make_axes_locatable
 from name_list import *
 
-plt.rc('animation', html='html5')
-
-
-plt.rcParams["animation.html"] = "jshtml"
-plt.rcParams['figure.dpi'] = 150  
 
 locs = hf.paircountN2(num, N - 1)
 mode = 1
@@ -86,6 +78,8 @@ u1mat = []
 u2mat = []
 v1mat = []
 v2mat = []
+KEmat = []
+APEmat = []
 
 timer = time.time()
 
@@ -290,6 +284,9 @@ while t <= tmax + dt / 2:
     
         ts.append(t)
 
+        KEmat.append(hf.calculate_KE(u1,u2,v1,v2,h1,h2))
+        APEmat.append(hf.calculate_APE(h1,h2))
+
         #u1mat.append(u1)
         u2mat.append(u2)
         #v1mat.append(v1)
@@ -298,7 +295,6 @@ while t <= tmax + dt / 2:
         h2mat.append(h2)
         #zeta1mat.append(zeta1)
         zeta2mat.append(zeta2)
-
         # Wpulsemat.append(Wmat)
 
         timer = time.time()
@@ -322,15 +318,13 @@ fmax = np.max(frames)
 fmin = np.min(frames)
 
 fig = plt.figure()
-ax = fig.add_subplot(111)
-div = make_axes_locatable(ax)
-cax = div.append_axes("right", "5%", "5%")
+ax1 = fig.add_subplot(111)
 
-cv0 = frames[0]
-im = ax.imshow(cv0, cmap="bwr")
-cb = fig.colorbar(im, cax=cax)
+cv = frames[0]
+im = ax1.imshow(cv, cmap="bwr")
+cb = fig.colorbar(im)
 im.set_clim(fmin, fmax)
-tx = ax.set_title(f"time: {ts[0]}")
+tx = ax1.set_title(f"time: {ts[0]}")
 
 
 def animate(i):
@@ -342,8 +336,12 @@ def animate(i):
     im.set_clim(fmin, fmax)
     tx.set_text(f"time: {ts[i]}")
 
-
 ani = animation.FuncAnimation(fig, animate, interval=ani_interval, frames=len(frames))
+plt.show()
+
+plt.plot(KEmat, label="KE")
+plt.plot(APEmat, label="APE")
+plt.legend(frameon=True)
 plt.show()
 
 #ani.save(f"Results/{round(time.time())}.mp4")

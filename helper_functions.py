@@ -1,6 +1,6 @@
 import numpy as np
 import math
-from name_list import dx
+from name_list import dx, p1p2, H1H2, c12h, c22h
 
 # removed dx from inputs
 
@@ -109,63 +109,6 @@ def pairshapeN2(locs, x, y, Br2, Wsh, N):
 
     return wlayer
 
-
-"""
-def pairshapeN2(locs, x, y, Br2, Wsh, N):
-    rad = int(np.ceil(np.sqrt(1 / Br2) / dx))  # CHANGED TO 3 TIMES TO IMPROVE NUMERICAL STAILITY
-    xg, yg = np.meshgrid(range(-rad, rad + 1), range(-rad, rad + 1))
-    gaus = Wsh * np.exp(-(Br2 * dx**2) / 0.3606 * ((xg + 0.5) ** 2 + (yg + 0.5) ** 2))
-
-    wlayer = np.zeros(x.shape)
-
-    buf = rad
-    bufmat = np.zeros((N + 2 * rad, N + 2 * rad))
-    nlocs = locs + rad
-
-    corners = nlocs - rad
-
-    for jj in range(locs.shape[0]):
-        bufmat[
-            corners[jj, 0] : corners[jj, 0] + gaus.shape[0],
-            corners[jj, 1] : corners[jj, 1] + gaus.shape[1],
-        ] += gaus
-
-    wlayer = bufmat[buf : buf + N, buf : buf + N]
-
-    addlayer1 = np.zeros_like(wlayer)
-    addlayer2 = np.zeros_like(wlayer)
-    addlayer3 = np.zeros_like(wlayer)
-    addlayer4 = np.zeros_like(wlayer)
-    addcorn1 = np.zeros_like(wlayer)
-    addcorn2 = np.zeros_like(wlayer)
-    addcorn3 = np.zeros_like(wlayer)
-    addcorn4 = np.zeros_like(wlayer)
-
-    addlayer1[:buf, :] = bufmat[buf + N :, buf : buf + N]
-    addlayer2[:, :buf] = bufmat[buf : buf + N, buf + N :]
-    addlayer3[-buf:, :] = bufmat[:buf, buf : buf + N]
-    addlayer4[:, -buf:] = bufmat[buf : buf + N, :buf]
-
-    addcorn1[:buf, :buf] = bufmat[buf + N :, buf + N :]
-    addcorn2[-buf:, -buf:] = bufmat[:buf, :buf]
-    addcorn3[:buf, -buf:] = bufmat[buf + N :, :buf]
-    addcorn4[-buf:, :buf] = bufmat[:buf, buf + N :]
-
-    wlayer += (
-        addlayer1
-        + addlayer2
-        + addlayer3
-        + addlayer4
-        + addcorn1
-        + addcorn2
-        + addcorn3
-        + addcorn4
-    )
-
-    layersum = np.sum(wlayer)  # redundant ?
-    return wlayer
-"""
-
 def BernN2(u1, v1, u2, v2, gm, c22h, c12h, h1, h2, ord):
     """
     Bernoulli
@@ -217,3 +160,17 @@ def yflux(f, v):  # removed dx, dt from input
     fa = 0.5 * v * (fl + fr)
 
     return fa
+
+
+def calculate_KE(u1,u2,v1,v2,h1,h2):
+    first = p1p2*H1H2*h1*(u1**2 + v1**2)
+    second = h2*(u2**2 + v2**2)
+
+    return 0.5 * np.sum(first + second)
+
+def calculate_APE(h1, h2):
+    first = 0.5*p1p2*H1H2*c12h*(h1-1)**2
+    second = 0.5*c22h*(h2-1)**2
+    third = p1p2*H1H2*(c22h/c12h)*c12h*(h1-1)*(h2-1)
+
+    return np.sum(first + second + third)
