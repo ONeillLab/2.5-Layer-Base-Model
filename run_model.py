@@ -10,8 +10,7 @@ import numba
 import psutil
 
 
-
-config.THREADING_LAYER = 'threadsafe'
+config.THREADING_LAYER = 'omp'
 
 @jit(nopython=True, parallel=True)
 def run_sim(u1, u2, v1, v2, h1, h2):
