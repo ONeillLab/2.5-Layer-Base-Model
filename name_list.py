@@ -48,7 +48,7 @@ EpHat = (
 dx = 1 / 25
 dt = dx / (10 * c12h) #1 / (2**8) # CHANGED TO dx/(10*c12h) SO THAT dt CHANGES TO MATCH dx
 dtinv = 1 / dt
-sampfreq = 1
+sampfreq = 10
 tpl = sampfreq * dtinv
 
 N = math.ceil(L / dx)  # resolve
