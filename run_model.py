@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 from name_list import *
 from numba import jit, objmode
+import psutil
 
 
 @jit(nopython=True, parallel=True)
@@ -167,7 +168,7 @@ def run_sim(u1, u2, v1, v2, h1, h2):
 
         if tc % tpl == 0:
             with objmode(timer='f8'):
-                print(f"t={t}, mean h1 is {round(np.mean(np.mean(h1)), 4)}. Time elapsed, {round(time.perf_counter()-timer, 3)}s")
+                print(f"t={t}, mean h1 is {round(np.mean(np.mean(h1)), 4)}. Time elapsed, {round(time.perf_counter()-timer, 3)}s. CPU usage, {psutil.cpu_percent()}")
                 timer = time.perf_counter()
 
             ii += 1
