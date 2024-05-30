@@ -5,7 +5,7 @@ import matplotlib.animation as animation
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import pandas as pd
 
-tmax = 100
+tmax = 1000
 ani_interval = 100
 
 
@@ -75,7 +75,7 @@ EpHat = (
 dx = 1 / 5 * round(min(1,L/Lst), 3)
 dt = dx / (10 * c12h) #1 / (2**8) # CHANGED TO dx/(10*c12h) SO THAT dt CHANGES TO MATCH dx
 dtinv = 1 / dt
-sampfreq = 1
+sampfreq = 10
 tpl = sampfreq * dtinv
 
 N = math.ceil(L / dx)  # resolve

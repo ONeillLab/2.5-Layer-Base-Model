@@ -1,6 +1,6 @@
 import numpy as np
 import math
-from name_list import dx
+from name_list_jupiter import dx
 from numba import jit
 from name_list import *
 

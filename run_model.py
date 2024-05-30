@@ -4,9 +4,8 @@ import helper_functions as hf
 import time
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
-from name_list import *
+from name_list_jupiter import *
 from numba import jit, objmode, threading_layer, config
-import numba
 import psutil
 
 
