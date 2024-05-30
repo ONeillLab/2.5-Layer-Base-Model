@@ -3,7 +3,7 @@ import numpy as np
 
 import pandas as pd
 
-tmax = 10
+tmax = 100
 ani_interval = 100
 
 c22h = 3  # 9  # ND 2nd baroclinic gravity wave speed squared
