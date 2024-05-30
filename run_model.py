@@ -9,7 +9,7 @@ from numba import jit, objmode
 import psutil
 
 
-@jit(nopython=True, parallel=True)
+@jit(nopython=True)
 def run_sim(u1, u2, v1, v2, h1, h2):
     locs = hf.paircountN2(num, N - 1)
     mode = 1
