@@ -45,7 +45,7 @@ EpHat = (
     * (Ar / np.sqrt(Br2))
 )
 
-dx = 1 / 25
+dx = 1 / 5
 dt = dx / (10 * c12h) #1 / (2**8) # CHANGED TO dx/(10*c12h) SO THAT dt CHANGES TO MATCH dx
 dtinv = 1 / dt
 sampfreq = 1

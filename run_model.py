@@ -5,9 +5,13 @@ import time
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 from name_list import *
-from numba import jit, objmode
+from numba import jit, objmode, threading_layer, config
+import numba
 import psutil
 
+
+
+config.THREADING_LAYER = 'threadsafe'
 
 @jit(nopython=True, parallel=True)
 def run_sim(u1, u2, v1, v2, h1, h2):
@@ -189,10 +193,14 @@ def run_sim(u1, u2, v1, v2, h1, h2):
 
 u2mat, h2mat, zeta2mat = run_sim(u1,u2,v1,v2,h1,h2)
 
+
+print("Threading layer chosen: %s" % threading_layer())
+print("Num Threads: %s" % config.NUMBA_NUM_THREADS)
+
 ### Saving ###
 PV2 = zeta2mat - (1 - Bt*rdist**2)
 
-np.save(f"Run_{round(time.time())}", [u2mat,h2mat,PV2])
+#np.save(f"Run_{round(time.time())}", [u2mat,h2mat,PV2])
 
 """
 frames = PV2
