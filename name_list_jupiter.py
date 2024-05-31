@@ -5,7 +5,7 @@ import matplotlib.animation as animation
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import pandas as pd
 
-tmax = 10
+tmax = 700
 ani_interval = 100
 
 
@@ -19,7 +19,7 @@ trad = 142858080  # 4.53 years from https://pds-atmospheres.nmsu.edu/education_a
 drag = 10000     # Cumulus Drag (Guess)
 
 ### Dimensional, Storm parameters ###
-Rst = 1000e3       # Storm size [m] from Siegelman [m]
+Rst = 300e3       # Storm size [m] from Siegelman [m]
 tst = 260000      # 3 day storm duration from Siegelman [s]
 tstp = tst*1.1   # Period between forced storms (Guess)
 
@@ -75,7 +75,7 @@ EpHat = (
 dx = 1 / 5 * round(min(1,L/Lst), 3)
 dt = dx / (10 * c12h) #1 / (2**8) # CHANGED TO dx/(10*c12h) SO THAT dt CHANGES TO MATCH dx
 dtinv = 1 / dt
-sampfreq = 1
+sampfreq = 10
 tpl = round(sampfreq * dtinv)
 
 N = math.ceil(L / dx)  # resolve
