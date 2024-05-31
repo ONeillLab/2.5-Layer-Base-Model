@@ -9,9 +9,9 @@ from numba import jit, objmode, threading_layer, config
 import psutil
 
 
-#config.THREADING_LAYER = 'omp'
+config.THREADING_LAYER = 'omp'
 
-#@jit(nopython=True, parallel=True)
+@jit(nopython=True, parallel=True)
 def run_sim(u1, u2, v1, v2, h1, h2):
     locs = hf.paircountN2(num, N - 1)
     mode = 1
