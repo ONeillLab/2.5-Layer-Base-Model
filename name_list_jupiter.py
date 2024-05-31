@@ -76,7 +76,7 @@ dx = 1 / 5 * round(min(1,L/Lst), 3)
 dt = dx / (10 * c12h) #1 / (2**8) # CHANGED TO dx/(10*c12h) SO THAT dt CHANGES TO MATCH dx
 dtinv = 1 / dt
 sampfreq = 1
-tpl = sampfreq * dtinv
+tpl = round(sampfreq * dtinv)
 
 N = math.ceil(L / dx)  # resolve
 L = N * dx

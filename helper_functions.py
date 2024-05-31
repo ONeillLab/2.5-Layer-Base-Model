@@ -1,5 +1,4 @@
 import numpy as np
-import math
 from numba import jit
 from name_list_jupiter import *
 

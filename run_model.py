@@ -9,9 +9,9 @@ from numba import jit, objmode, threading_layer, config
 import psutil
 
 
-#config.THREADING_LAYER = 'omp'
+config.THREADING_LAYER = 'omp'
 
-#@jit(nopython=True, parallel=True)
+@jit(nopython=True, parallel=True)
 def run_sim(u1, u2, v1, v2, h1, h2):
     locs = hf.paircountN2(num, N - 1)
     mode = 1
@@ -198,6 +198,7 @@ print("Num Threads: %s" % config.NUMBA_NUM_THREADS)
 ### Saving ###
 PV2 = zeta2mat - (1 - Bt*rdist**2)
 
+print(PV2.shape)
 np.save(f"Run_{round(time.time())}", [u2mat,h2mat,PV2])
 
 """
