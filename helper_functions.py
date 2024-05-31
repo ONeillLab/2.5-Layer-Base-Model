@@ -66,7 +66,6 @@ def viscND(vel, Re, n):
 def pairshapeN2(locs, x, y, Br2, Wsh, N):
 
     wlayer = np.zeros_like(x).astype(np.float64)
-    #x,y = np.meshgrid(np.arange(0,N), np.arange(0,N))
     
     for loc in locs:
         layer = Wsh * np.exp( - (Br2*dx**2)/0.3606 * ( (x-loc[0])**2 + (y-loc[1])**2))
@@ -80,11 +79,9 @@ def BernN2(u1, v1, u2, v2, gm, c22h, c12h, h1, h2, ord):
     """
     Bernoulli
     """
-    #B1 = c12h * h1 + c22h * h2 + 0.25 * (u1**2 + np.roll(u1, -1, axis=1)**2 + v1**2 + np.roll(v1, -1, axis=0)**2)
     B1 = c12h * h1 + c22h * h2 + 0.25 * (u1**2 + u1[:,r]**2 + v1**2 + v1[r,:]**2)
 
 
-    #B2 = gm * c12h * h1 + c22h * h2 + 0.25 * (u1**2 + np.roll(u1, -1, axis=1)**2 + v1**2 + np.roll(v1, -1, axis=0)**2)
     B2 = gm * c12h * h1 + c22h * h2 + 0.25 * (u1**2 + u1[:,r]**2 + v1**2 + v1[r,:]**2)
 
     return B1, B2
@@ -92,7 +89,6 @@ def BernN2(u1, v1, u2, v2, gm, c22h, c12h, h1, h2, ord):
 
 @jit(nopython=True, parallel=True)
 def xflux(f, u):  # removed dx, dt from input
-    #fl = np.roll(f, 1, axis=1)
     fl = f[:,l]
     fr = f
 
@@ -103,7 +99,6 @@ def xflux(f, u):  # removed dx, dt from input
 
 @jit(nopython=True, parallel=True)
 def yflux(f, v):  # removed dx, dt from input
-    #fl = np.roll(f, 1, axis=0)
     fl = f[l,:]
     fr = f
 
