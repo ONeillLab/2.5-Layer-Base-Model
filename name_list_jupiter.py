@@ -19,7 +19,7 @@ trad = 142858080  # 4.53 years from https://pds-atmospheres.nmsu.edu/education_a
 drag = 10000     # Cumulus Drag (Guess)
 
 ### Dimensional, Storm parameters ###
-Rst = 300e3       # Storm size [m] from Siegelman [m]
+Rst = 1000e3       # Storm size [m] from Siegelman [m]
 tst = 260000      # 3 day storm duration from Siegelman [s]
 tstp = tst*1.1   # Period between forced storms (Guess)
 
