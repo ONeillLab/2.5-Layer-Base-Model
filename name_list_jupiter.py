@@ -5,7 +5,7 @@ import matplotlib.animation as animation
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import pandas as pd
 
-tmax = 700
+tmax = 900
 ani_interval = 100
 
 
@@ -25,7 +25,7 @@ tstp = tst*1.1   # Period between forced storms (Guess)
 
 ### Dimensonal, Atmosphere parameters, these are not known and must be adjusted ###
 p1p2 = 0.80
-H1H2 = 1
+H1H2 = 0.80
 
 # Dimensional, Derived Parameters ###
 Wst = H / tst
@@ -33,9 +33,9 @@ H1 = ((1+H1H2)/((1-p1p2)*g)) * (Ld2 * f0)**2
 c2 = Ld2 * f0 # Second baroclinic gravity wave speed
 
 ### ND Derived Parameters ###
-tstf = tst*f0
+tstf = round(tst*f0)
 tradf = trad*f0
-tstpf = tstp*f0
+tstpf = round(tstp*f0)
 dragf = drag*f0
 Br2 = Ld2**2 / Rst**2   # Burger Number
 c22h = 3 # ND 2nd baroclinic gravity wave speed squared
@@ -57,7 +57,7 @@ Lst = L * Ld2/Rst
 
 ################## engineering params ##########################
 AB = 2  # order of Adams-Bashforth scheme (2 or 3)
-layers = 2.5  # # of layers (2 or 2.5)
+layers = 2.5  # of layers (2 or 2.5)
 n = 2  # order of Laplacian '2' is hyperviscosity
 kappa = 1e-6
 ord = 2  # must equal 1 for Glenn's order, otherwise for Sadourney's (squares before avgs)

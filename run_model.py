@@ -198,7 +198,7 @@ print("Num Threads: %s" % config.NUMBA_NUM_THREADS)
 ### Saving ###
 PV2 = zeta2mat - (1 - Bt*rdist**2)
 
-print(PV2.shape)
+#print(PV2.shape)
 np.save(f"Run_{round(time.time())}", [u2mat,h2mat,PV2])
 
 """
