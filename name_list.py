@@ -1,19 +1,8 @@
 import math
 import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.animation as animation
-from mpl_toolkits.axes_grid1 import make_axes_locatable
-import pandas as pd
 
 tmax = 1000
 ani_interval = 100
-
-# fig = plt.figure()
-# ax = fig.add_subplot(111)
-# div = make_axes_locatable(ax)
-# cax = div.append_axes("right", "5%", "5%")
-# frames = []
-# times = []
 
 c22h = 3  # 9  # ND 2nd baroclinic gravity wave speed squared
 c12h = 4  # 10  # ND 1st baroclinic gravity wave speed squared
@@ -24,16 +13,15 @@ p1p2 = 0.95  # ND upper to lower layer density ratio
 tstf = 48  # 6  # ND storm duration tst*f0
 tstpf = 60  # 15  # ND period between forced storms tstp*f0
 tradf = 2000  # ND Newtonian damping of layer thickness trad*f0
-dragf = 1000  # Cumulus drag time scale (Li and O'Neill) (D)
+dragf = 100000  # Cumulus drag time scale (Li and O'Neill) (D)
 Ar = 0.15  # ND areal storm coverage
 Re = 5e4  # ND Reynolds number
 Wsh = 0.03 / 2  # ND convective Rossby number
 
-#### Derived Quantities ###
-
+#### Derived Quantities ###  
 gm = p1p2 * c22h / c12h * H1H2  # ND reduced gravity
 aOLd = np.sqrt(1 / Bt / 2)  # ND planetary radius to deformation radius ratio ### adjust this
-L = 3 * np.pi / 9 * aOLd  ###???  # ND num = ceil(numfrc.*L.^2./Br2)
+L = 3 * np.pi / 9 * aOLd  # ND num = ceil(numfrc.*L.^2./Br2)
 num = round(Ar * (L**2) * Br2 / np.pi)  # number of storms
 deglim = 90 - 3 * L / 2 * aOLd * 180 / np.pi  # domain size [degrees]
 
@@ -66,14 +54,7 @@ tpl = sampfreq * dtinv
 N = math.ceil(L / dx)  # resolve
 L = N * dx
 
-# l = np.concatenate((np.array([N]), np.arange(1, N)), axis=None)
-# l2 = np.concatenate((np.arange(N - 1, N + 1), np.arange(1, N - 1)), axis=None)
-# r = np.concatenate((np.arange(2, N + 1), np.array([1])), axis=None)
-# r2 = np.concatenate((np.arange(3, N + 1), np.arange(1, 3)), axis=None)
-
-x, y = np.meshgrid(
-    np.arange(0.5, N + 0.5) * dx - L / 2, np.arange(0.5, N + 0.5) * dx - L / 2
-)
+x, y = np.meshgrid(np.arange(0.5, N + 0.5) * dx - L / 2, np.arange(0.5, N + 0.5) * dx - L / 2)
 H = 1 + 0 * x
 eta = 0 * x
 h1 = (0 * x + 1).astype(np.float64)
@@ -94,7 +75,6 @@ x, y = np.meshgrid(np.arange(0, N) * dx - L / 2, np.arange(0, N) * dx - L / 2)
 rdist = np.sqrt((x**2) + (y**2))
 outerlim = L / 2 - 0.5
 rlim = (rdist <= outerlim).astype(float)  # 1* converts the Boolean values to integers 1 or 0
-
 
 sponge1 = np.ones(N) * np.maximum(rdist - outerlim, 0)
 sponge1 = sponge1 / np.max(sponge1)  

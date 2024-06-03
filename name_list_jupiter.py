@@ -1,11 +1,7 @@
 import math
 import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.animation as animation
-from mpl_toolkits.axes_grid1 import make_axes_locatable
-import pandas as pd
 
-tmax = 10000
+tmax = 900
 ani_interval = 100
 
 
@@ -19,13 +15,13 @@ trad = 142858080  # 4.53 years from https://pds-atmospheres.nmsu.edu/education_a
 drag = 10000     # Cumulus Drag (Guess)
 
 ### Dimensional, Storm parameters ###
-Rst = 1000e3       # Storm size [m] from Siegelman [m]
+Rst = 300e3       # Storm size [m] from Siegelman [m]
 tst = 260000      # 3 day storm duration from Siegelman [s]
 tstp = tst*1.1   # Period between forced storms (Guess)
 
 ### Dimensonal, Atmosphere parameters, these are not known and must be adjusted ###
 p1p2 = 0.80
-H1H2 = 1
+H1H2 = 0.80
 
 # Dimensional, Derived Parameters ###
 Wst = H / tst
@@ -33,9 +29,9 @@ H1 = ((1+H1H2)/((1-p1p2)*g)) * (Ld2 * f0)**2
 c2 = Ld2 * f0 # Second baroclinic gravity wave speed
 
 ### ND Derived Parameters ###
-tstf = tst*f0
+tstf = round(tst*f0)
 tradf = trad*f0
-tstpf = tstp*f0
+tstpf = round(tstp*f0)
 dragf = drag*f0
 Br2 = Ld2**2 / Rst**2   # Burger Number
 c22h = 3 # ND 2nd baroclinic gravity wave speed squared
@@ -56,14 +52,11 @@ num = round(Ar*(L**2)*Br2/np.pi)    # number of storms
 Lst = L * Ld2/Rst
 
 ################## engineering params ##########################
-
 AB = 2  # order of Adams-Bashforth scheme (2 or 3)
-layers = 2.5  # # of layers (2 or 2.5)
+layers = 2.5  # of layers (2 or 2.5)
 n = 2  # order of Laplacian '2' is hyperviscosity
 kappa = 1e-6
-ord = (
-    2  # must equal 1 for Glenn's order, otherwise for Sadourney's (squares before avgs)
-)
+ord = 2  # must equal 1 for Glenn's order, otherwise for Sadourney's (squares before avgs)
 spongedrag1 = 0.1
 spongedrag2 = 0.1
 
@@ -75,30 +68,22 @@ EpHat = (
     * (Ar / np.sqrt(Br2))
 )
 
-
-dx = 1/5 * round(min(1, L/Lst), 3)  # Change dx from 5 grid points per Ld2 to 5 grid points per Rst (only if Rst < Ld2) (Daniel). Note this adds the bug for small dx which is unfixed when Br2 is large.
+dx = 1 / 5 * round(min(1,L/Lst), 3)
 dt = dx / (10 * c12h) #1 / (2**8) # CHANGED TO dx/(10*c12h) SO THAT dt CHANGES TO MATCH dx
 dtinv = 1 / dt
-sampfreq = 5
-tpl = sampfreq * dtinv
+sampfreq = 10
+tpl = round(sampfreq * dtinv)
 
 N = math.ceil(L / dx)  # resolve
 L = N * dx
 
-# l = np.concatenate((np.array([N]), np.arange(1, N)), axis=None)
-# l2 = np.concatenate((np.arange(N - 1, N + 1), np.arange(1, N - 1)), axis=None)
-# r = np.concatenate((np.arange(2, N + 1), np.array([1])), axis=None)
-# r2 = np.concatenate((np.arange(3, N + 1), np.arange(1, 3)), axis=None)
-
-x, y = np.meshgrid(
-    np.arange(0.5, N + 0.5) * dx - L / 2, np.arange(0.5, N + 0.5) * dx - L / 2
-)
+x, y = np.meshgrid(np.arange(0.5, N + 0.5) * dx - L / 2, np.arange(0.5, N + 0.5) * dx - L / 2)
 H = 1 + 0 * x
 eta = 0 * x
 h1 = (0 * x + 1).astype(np.float64)
 h2 = (0 * x + 1).astype(np.float64)
 
-# u grid
+# u grid 
 x, y = np.meshgrid(np.arange(0, N) * dx - L / 2, np.arange(0.5, N + 0.5) * dx - L / 2)
 u1 = 0 * x * y
 u2 = u1
