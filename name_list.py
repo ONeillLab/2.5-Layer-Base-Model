@@ -90,3 +90,9 @@ l = np.concatenate((np.array([N]), np.arange(1, N)), axis=None) - 1
 l2 = np.concatenate((np.arange(N - 1, N + 1), np.arange(1, N - 1)), axis=None) - 1 
 r = np.concatenate((np.arange(2, N + 1), np.array([1])), axis=None) - 1
 r2 = np.concatenate((np.arange(3, N + 1), np.arange(1, 3)), axis=None) - 1
+
+##### updated name list stuff -P #####
+
+rad = int(np.ceil(np.sqrt(1 / Br2) / dx))
+xg, yg = np.meshgrid(range(-rad, rad + 1), range(-rad, rad + 1))
+gaus = Wsh * np.exp(-(Br2 * dx**2) / 0.3606 * ((xg + 0.5) ** 2 + (yg + 0.5) ** 2))
