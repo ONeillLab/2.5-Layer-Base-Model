@@ -8,6 +8,7 @@ from IPython.display import HTML
 import time
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from name_list import *
+import sys
 
 plt.rc('animation', html='html5')
 
@@ -15,7 +16,6 @@ plt.rc('animation', html='html5')
 plt.rcParams["animation.html"] = "jshtml"
 plt.rcParams['figure.dpi'] = 150  
 
-locslayers = [] ### all weather matrix layers are stored here
 locs = hf.genlocs(num, N - 1) ### use genlocs instead of paircount
 mode = 1
 
@@ -24,7 +24,7 @@ match mode:
     case 1:
         pulse = "off"
 
-        wlayer = hf.pairshapeBEGIN(locs, x, y, Br2, Wsh, N, locslayers) ### use pairshapeBEGIN instead of pairshape
+        wlayer = hf.pairshapeN2(locs, x, y, Br2, Wsh, N) ### use pairshapeBEGIN instead of pairshape
         Wmat = hf.pairfieldN2(L, h1, wlayer)
 
 t = 0
@@ -203,10 +203,9 @@ while t <= tmax + dt / 2:
     ##### new storm forcing -P #####
 
     remove_layers = [] # store weather layers that need to be removed here
-    locs = locs.tolist()
 
     if mode == 1:
-        for i in locs:
+        for i in range(len(locs)):
             if (t-i[-1]) % i[3] == 0 and t != 0:
                 remove_layers.append(locs.index(i)) # tag layer for removal if a storm's 
                 locs.remove(i)                      # internal clock has reached the end of its tstpf

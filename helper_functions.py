@@ -107,67 +107,6 @@ def calculate_APE(h1, h2):
 ######### new helper functions for new storm forcing ##########
 
 #@jit(nopython=True, parallel=True)
-def pairshapeBEGIN(locs, x, y, Br2, Wsh, N, locslayers):
-    rad = int(np.ceil(np.sqrt(1 / Br2) / dx))
-    xg, yg = np.meshgrid(range(-rad, rad + 1), range(-rad, rad + 1))
-    gaus = Wsh * np.exp(-(Br2 * dx**2) / 0.3606 * ((xg + 0.5) ** 2 + (yg + 0.5) ** 2))
-
-    wlayer = np.zeros(x.shape)
-
-    buf = rad
-    bufmat = np.zeros((N + 2 * rad, N + 2 * rad))
-    nlocs = locs + rad
-
-    corners = nlocs - rad
-
-    for jj in range(locs.shape[0]):
-        tempbufmat = np.zeros((N + 2 * rad, N + 2 * rad))
-        tempbufmat[
-            corners[jj, 0] : corners[jj, 0] + gaus.shape[0],
-            corners[jj, 1] : corners[jj, 1] + gaus.shape[1],
-        ] += gaus
-
-        tempmainlayer = tempbufmat[buf : buf + N, buf : buf + N].copy()
-
-        addlayer11 = np.zeros_like(tempmainlayer)
-        addlayer22 = np.zeros_like(tempmainlayer)
-        addlayer33 = np.zeros_like(tempmainlayer)
-        addlayer44 = np.zeros_like(tempmainlayer)
-        addcorn11 = np.zeros_like(tempmainlayer)
-        addcorn22 = np.zeros_like(tempmainlayer)
-        addcorn33 = np.zeros_like(tempmainlayer)
-        addcorn44 = np.zeros_like(tempmainlayer)
-
-        addlayer11[:buf, :] = tempbufmat[buf + N :, buf : buf + N].copy()
-        addlayer22[:, :buf] = tempbufmat[buf : buf + N, buf + N :].copy()
-        addlayer33[-buf:, :] = tempbufmat[:buf, buf : buf + N].copy()
-        addlayer44[:, -buf:] = tempbufmat[buf : buf + N, :buf].copy()
-
-        addcorn11[:buf, :buf] = tempbufmat[buf + N :, buf + N :].copy()
-        addcorn22[-buf:, -buf:] = tempbufmat[:buf, :buf].copy()
-        addcorn33[:buf, -buf:] = tempbufmat[buf + N :, :buf].copy()
-        addcorn44[-buf:, :buf] = tempbufmat[:buf, buf + N :].copy()
-
-        tempmainlayer += (
-                addlayer11
-                + addlayer22
-                + addlayer33
-                + addlayer44
-                + addcorn11
-                + addcorn22
-                + addcorn33
-                + addcorn44
-            )
-
-        locslayers.append(tempmainlayer)
-
-    mainlayer = np.zeros((N,N))
-    for ll in locslayers:
-        mainlayer += ll
-    return mainlayer
-
-
-#@jit(nopython=True, parallel=True)
 def newstorm(locs1, mainlayer):
     buf = rad
     mat = np.zeros((N,N)) # matrix of zeros
