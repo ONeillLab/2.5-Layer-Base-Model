@@ -205,16 +205,14 @@ while t <= tmax + dt / 2:
 
     if mode == 1:
         for i in range(len(locs)):
-            if (t-locs[i][-1]) % locs[i][3] == 0 and t != 0:
+            if (t-locs[i][-1]) >= locs[i][3] and t != 0:
                 remove_layers.append(i) # tag layer for removal if a storm's 
 
         add = len(remove_layers) # number of storms that were removed
 
         if add != 0:
-            locs = np.delete(locs, remove_layers, axis=0)
-
             newlocs = hf.genlocs(add, N, t)
-            locs = np.append(locs, newlocs, axis=0)
+            locs[remove_layers] = newlocs
 
             wlayer = hf.pairshapeN2(locs, t) ### use pairshapeBEGIN instead of pairshape
             Wmat = hf.pairfieldN2(L, h1, wlayer)
@@ -308,6 +306,8 @@ while t <= tmax + dt / 2:
         KEmat.append(hf.calculate_KE(u1,u2,v1,v2,h1,h2))
         APEmat.append(hf.calculate_APE(h1,h2))
 
+        Wpulsemat.append(Wmat)
+
         timer = time.time()
 
     if math.isnan(h1[0, 0]):
@@ -321,7 +321,7 @@ while t <= tmax + dt / 2:
 
 PV2 = zeta2mat - (1 - Bt * rdist**2)
 
-frames = PV2
+frames = Wpulsemat
 
 fmax = np.max(frames)
 fmin = np.min(frames)

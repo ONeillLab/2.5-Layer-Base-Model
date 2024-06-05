@@ -49,7 +49,7 @@ def pairshapeN2(locs, t):
     wlayer = np.zeros_like(x).astype(np.float64)
     
     for loc in locs:
-        if not ((t-loc[-1]) > (t-loc[2]) and t != 0):
+        if (t-loc[-1]) <= loc[2] or t == 0:
             layer = Wsh * np.exp( - (Br2*dx**2)/0.3606 * ( (x-loc[0])**2 + (y-loc[1])**2))
             wlayer = wlayer + layer
 

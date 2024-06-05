@@ -13,13 +13,10 @@ config.THREADING_LAYER = 'omp'
 
 @jit(nopython=True, parallel=True)
 def run_sim(u1, u2, v1, v2, h1, h2):
-    locslayers = [] ### all weather matrix layers are stored here
-    locs = hf.genlocs(num, N - 1) ### use genlocs instead of paircount
+    locs = hf.genlocs(num, N, 0) ### use genlocs instead of paircount
     mode = 1
 
-    pulse = "off"
-
-    wlayer = hf.pairshapeBEGIN(locs, x, y, Br2, Wsh, N, locslayers) ### use pairshapeBEGIN instead of pairshape
+    wlayer = hf.pairshapeN2(locs, 0) ### use pairshapeBEGIN instead of pairshape
     Wmat = hf.pairfieldN2(L, h1, wlayer)
 
     # TIME STEPPING
@@ -42,6 +39,9 @@ def run_sim(u1, u2, v1, v2, h1, h2):
     zeta2mat = []
     h2mat = []
     u2mat = []
+
+    KEmat = []
+    APEmat = []
 
     with objmode(timer='f8'):
         timer = time.perf_counter()
@@ -130,37 +130,20 @@ def run_sim(u1, u2, v1, v2, h1, h2):
         ##### new storm forcing -P #####
 
         remove_layers = [] # store weather layers that need to be removed here
-        with objmode(locs='i8[:,:]'):
-            locs = locs.tolist()
 
         if mode == 1:
-            for i in locs:
-                if (t-i[-1]) % i[3] == 0 and t != 0:
-                    remove_layers.append(locs.index(i)) # tag layer for removal if a storm's 
-                    locs.remove(i)                      # internal clock has reached the end of its tstpf
-                elif (t-i[-1]) > (t-i[2]) and t != 0:   
-                    locslayers[locs.index(i)] = np.zeros((N,N))
-
-            for j in remove_layers: # remove the storm (i.e. its layer) from the current set of layers
-                locslayers.pop(j)
+            for i in range(len(locs)):
+                if (t-locs[i][-1]) >= locs[i][3] and t != 0:
+                    remove_layers.append(i) # tag layer for removal if a storm's 
 
             add = len(remove_layers) # number of storms that were removed
 
-            for j in range(add):
-                newstorm = hf.newstorm(locs, wlayer) # add storms to keep the number of total storms constant
-                newstorm[1][-1] = t # set the storm's internal time to the current time
-                locs.append(newstorm[1]) # add storm characteristics to locs
-                locslayers.append(newstorm[0]) # add the new storm layer to the set of layers
+            if add != 0:
+                newlocs = hf.genlocs(add, N, t)
+                locs[remove_layers] = newlocs
 
-
-            locs = np.asarray(locs)
-            wlayer = np.zeros((N,N))
-
-
-            for ll in locslayers: # update the weather layer
-                wlayer += ll
-            newWmat = hf.pairfieldN2(L, h1, wlayer) # remove mean
-            Wmat = newWmat # new storm forcing for next timestep
+                wlayer = hf.pairshapeN2(locs, t) ### use pairshapeBEGIN instead of pairshape
+                Wmat = hf.pairfieldN2(L, h1, wlayer)
 
         ##### new storm forcing -P #####
 
@@ -195,7 +178,7 @@ def run_sim(u1, u2, v1, v2, h1, h2):
 
         if tc % tpl == 0:
             with objmode(timer='f8'):
-                print(f"t={t}, mean h1 is {round(np.mean(np.mean(h1)), 4)}. Time elapsed, {round(time.perf_counter()-timer, 3)}s. CPU usage, {psutil.cpu_percent()}")
+                print(f"t={t}, mean h1 is {round(np.mean(np.mean(h1)), 4)}, num storms {locs.shape[0]}. Time elapsed, {round(time.perf_counter()-timer, 3)}s. CPU usage, {psutil.cpu_percent()}")
                 timer = time.perf_counter()
 
             ii += 1
@@ -205,6 +188,9 @@ def run_sim(u1, u2, v1, v2, h1, h2):
             u2mat.append(u2)
             h2mat.append(h2)
             zeta2mat.append(zeta2)
+
+            KEmat.append(hf.calculate_KE(u1,u2,v1,v2,h1,h2))
+            APEmat.append(hf.calculate_APE(h1, h2))
                 
         if math.isnan(h1[0, 0]):
             break
@@ -212,9 +198,9 @@ def run_sim(u1, u2, v1, v2, h1, h2):
         tc += 1
         t = tc * dt
 
-    return u2mat, h2mat, zeta2mat
+    return u2mat, h2mat, zeta2mat, KEmat, APEmat
 
-u2mat, h2mat, zeta2mat = run_sim(u1,u2,v1,v2,h1,h2)
+u2mat, h2mat, zeta2mat, KEmat, APEmat = run_sim(u1,u2,v1,v2,h1,h2)
 
 
 print("Threading layer chosen: %s" % threading_layer())
@@ -224,9 +210,8 @@ print("Num Threads: %s" % config.NUMBA_NUM_THREADS)
 PV2 = zeta2mat - (1 - Bt*rdist**2)
 
 #print(PV2.shape)
-np.save(f"Run_{round(time.time())}", [u2mat,h2mat,PV2])
+#np.save(f"Run_{round(time.time())}", [u2mat,h2mat,PV2])
 
-"""
 frames = PV2
 
 fmin = np.min(frames)
@@ -253,4 +238,8 @@ def animate(i):
 
 ani = animation.FuncAnimation(fig, animate, interval=ani_interval, frames=len(frames))
 plt.show()
-"""
+
+plt.plot(KEmat, label="KE")
+plt.plot(APEmat, label="APE")
+plt.legend(frameon=True)
+plt.show()
