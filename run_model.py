@@ -130,7 +130,8 @@ def run_sim(u1, u2, v1, v2, h1, h2):
         ##### new storm forcing -P #####
 
         remove_layers = [] # store weather layers that need to be removed here
-        locs = locs.tolist()
+        with objmode(locs='i8[:,:]'):
+            locs = locs.tolist()
 
         if mode == 1:
             for i in locs:
