@@ -4,25 +4,6 @@ from name_list import *
 
 
 @jit(nopython=True, parallel=True)
-def gauss(x, y, L):
-    """
-    Generates a Gaussian
-    """
-    g = np.exp(-0.5 * (x**2 + y**2) / L**2)
-    return g
-
-
-@jit(nopython=True, parallel=True)
-def paircountN2(num, N):
-    """
-    Generates a list of coordinate pairs.
-    """
-
-    locs = np.ceil(np.random.rand(num, 2) * N).astype(np.float64)
-    return locs
-
-
-@jit(nopython=True, parallel=True)
 def pairfieldN2(L, h1, wlayer):
     """
     Creates the weather matrix for the storms, S_st in paper.
@@ -262,22 +243,5 @@ def genlocs(num, N):
     final = np.append(locs, newdur, axis=1)
     final = np.append(final, newper, axis=1)
     final = np.append(final, np.zeros((num, 1)), axis=1).astype(np.int64)
-
-    """
-    i=0
-    locs=[]
-    while i <= num:
-        tup = []
-        tup.append(np.random.randint(0, N+1))
-        tup.append(np.random.randint(0, N+1))
-        newdur = np.random.randint(1, 15)
-        newper = np.random.randint(newdur, 4*newdur+1)
-        tup.append(newdur)
-        tup.append(newper)
-        tup.append(0)
-        locs.append(tup)
-        i+=1 
-    locs = np.asarray(locs)
-    """
 
     return final
