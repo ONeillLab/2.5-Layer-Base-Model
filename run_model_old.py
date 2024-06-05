@@ -15,7 +15,8 @@ plt.rc('animation', html='html5')
 plt.rcParams["animation.html"] = "jshtml"
 plt.rcParams['figure.dpi'] = 150  
 
-locs = hf.paircountN2(num, N - 1)
+locslayers = [] ### all weather matrix layers are stored here
+locs = hf.genlocs(num, N - 1) ### use genlocs instead of paircount
 mode = 1
 
 match mode:
@@ -23,16 +24,8 @@ match mode:
     case 1:
         pulse = "off"
 
-        wlayer = hf.pairshapeN2(locs, x, y, Br2, Wsh, N)
+        wlayer = hf.pairshapeBEGIN(locs, x, y, Br2, Wsh, N, locslayers) ### use pairshapeBEGIN instead of pairshape
         Wmat = hf.pairfieldN2(L, h1, wlayer)
-
-        Wmatorig = Wmat
-
-        tpulseper = tstpf
-        tpulsedur = tstf
-        tclock = 0
-
-        FreeGrid = np.sum(spdrag1 == 0) / (N**2)
 
 t = 0
 tc = 0
@@ -207,18 +200,41 @@ while t <= tmax + dt / 2:
         v1sq = v1_p + dt * dv1dtsq
         v2sq = v2_p + dt * dv2dtsq
 
-    if mode == 1:
-        if t % tpulseper == 0 and t != 0:
-            tclock = t
-            locs = hf.paircountN2(num, N - 1)
-            wlayer = hf.pairshapeN2(locs, x, y, Br2, Wsh, N)
-            newWmat = hf.pairfieldN2(L, h1, wlayer)
+    ##### new storm forcing -P #####
 
-        if tclock + tpulsedur > t and tclock != 0:
-            Wmat = newWmat
-        elif t > tpulsedur:
-            Wmat = np.zeros_like(x * y)
-            tclock = 0
+    remove_layers = [] # store weather layers that need to be removed here
+    locs = locs.tolist()
+
+    if mode == 1:
+        for i in locs:
+            if (t-i[-1]) % i[3] == 0 and t != 0:
+                remove_layers.append(locs.index(i)) # tag layer for removal if a storm's 
+                locs.remove(i)                      # internal clock has reached the end of its tstpf
+            elif (t-i[-1]) > (t-i[2]) and t != 0:   
+                locslayers[locs.index(i)] = np.zeros((N,N))
+
+        for j in remove_layers: # remove the storm (i.e. its layer) from the current set of layers
+            locslayers.pop(j)
+
+        add = len(remove_layers) # number of storms that were removed
+
+        for j in range(add):
+            newstorm = hf.newstorm(locs, wlayer) # add storms to keep the number of total storms constant
+            newstorm[1][-1] = t # set the storm's internal time to the current time
+            locs.append(newstorm[1]) # add storm characteristics to locs
+            locslayers.append(newstorm[0]) # add the new storm layer to the set of layers
+
+
+        locs = np.asarray(locs)
+        wlayer = np.zeros((N,N))
+
+
+        for ll in locslayers: # update the weather layer
+            wlayer += ll
+        newWmat = hf.pairfieldN2(L, h1, wlayer) # remove mean
+        Wmat = newWmat # new storm forcing for next timestep
+
+        ##### new storm forcing -P #####
 
     Fx1 = hf.xflux(h1, u1) - kappa / dx * (h1 - np.roll(h1, 1, axis=1))
     Fy1 = hf.yflux(h1, v1) - kappa / dx * (h1 - np.roll(h1, 1, axis=0))
