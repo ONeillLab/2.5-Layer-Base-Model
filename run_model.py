@@ -40,6 +40,8 @@ def run_sim(u1, u2, v1, v2, h1, h2):
     h2mat = []
     u2mat = []
 
+    Wpulse = []
+
     KEmat = []
     APEmat = []
 
@@ -140,7 +142,9 @@ def run_sim(u1, u2, v1, v2, h1, h2):
 
             if add != 0:
                 newlocs = hf.genlocs(add, N, t)
-                locs[remove_layers] = newlocs
+
+                for i in range(len(remove_layers)):
+                    locs[remove_layers[i]] = newlocs[i]
 
                 wlayer = hf.pairshapeN2(locs, t) ### use pairshapeBEGIN instead of pairshape
                 Wmat = hf.pairfieldN2(L, h1, wlayer)
@@ -189,6 +193,8 @@ def run_sim(u1, u2, v1, v2, h1, h2):
             h2mat.append(h2)
             zeta2mat.append(zeta2)
 
+            Wpulse.append(Wmat)
+
             KEmat.append(hf.calculate_KE(u1,u2,v1,v2,h1,h2))
             APEmat.append(hf.calculate_APE(h1, h2))
                 
@@ -198,9 +204,9 @@ def run_sim(u1, u2, v1, v2, h1, h2):
         tc += 1
         t = tc * dt
 
-    return u2mat, h2mat, zeta2mat, KEmat, APEmat
+    return u2mat, h2mat, zeta2mat, KEmat, APEmat, Wpulse
 
-u2mat, h2mat, zeta2mat, KEmat, APEmat = run_sim(u1,u2,v1,v2,h1,h2)
+u2mat, h2mat, zeta2mat, KEmat, APEmat, Wpulse = run_sim(u1,u2,v1,v2,h1,h2)
 
 
 print("Threading layer chosen: %s" % threading_layer())
