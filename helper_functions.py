@@ -125,6 +125,7 @@ def calculate_APE(h1, h2):
 
 ######### new helper functions for new storm forcing ##########
 
+#@jit(nopython=True, parallel=True)
 def pairshapeBEGIN(locs, x, y, Br2, Wsh, N, locslayers):
     rad = int(np.ceil(np.sqrt(1 / Br2) / dx))
     xg, yg = np.meshgrid(range(-rad, rad + 1), range(-rad, rad + 1))
@@ -185,6 +186,7 @@ def pairshapeBEGIN(locs, x, y, Br2, Wsh, N, locslayers):
     return mainlayer
 
 
+#@jit(nopython=True, parallel=True)
 def newstorm(locs1, mainlayer):
     buf = rad
     mat = np.zeros((N,N)) # matrix of zeros
@@ -244,12 +246,26 @@ def newstorm(locs1, mainlayer):
     
     return tempmainlayer, tup
 
+
+@jit(nopython=True, parallel=True)
 def genlocs(num, N):
     """
     Generates a list of coordinates, storm duration, storm period, and tclock.
+
+        - Made it more pythonic and faster - D
     """
-    locs = []
-    i = 1
+    
+    locs = np.random.randint(0,N+1, (num, 2))
+    newdur = np.round(np.random.normal(tstf, 2, (num, 1)))
+    newper = np.round(np.random.normal(tstpf, 2, (num, 1)))
+
+    final = np.append(locs, newdur, axis=1)
+    final = np.append(final, newper, axis=1)
+    final = np.append(final, np.zeros((num, 1)), axis=1).astype(np.int64)
+
+    """
+    i=0
+    locs=[]
     while i <= num:
         tup = []
         tup.append(np.random.randint(0, N+1))
@@ -262,76 +278,6 @@ def genlocs(num, N):
         locs.append(tup)
         i+=1 
     locs = np.asarray(locs)
-    return locs
+    """
 
-
-"""
-    Everything past this point is old/redundant code
-
-def Axl(f, l, r):
-
-    fa = 0.5 * (f + f[:, l - 1])
-    return fa
-
-
-def Ayl(f, l, r):
-
-    fa = 0.5 * (f + f[l - 1, :])
-    return fa
-
-    
-def pairshapeN2(locs, x, y, Br2, Wsh, N):
-    #Create Gaussians on smaller scales and then convolve them with the weather layer.
-    rad = int(np.ceil(np.sqrt(1 / Br2) / dx))
-    xg, yg = np.meshgrid(range(-rad, rad + 1), range(-rad, rad + 1))
-    gaus = Wsh * np.exp(-(Br2 * dx**2) / 0.3606 * ((xg + 0.5) ** 2 + (yg + 0.5) ** 2))
-
-    wlayer = np.zeros(x.shape)
-
-    buf = rad
-    bufmat = np.zeros((N + 2 * rad, N + 2 * rad))
-    nlocs = locs + rad
-
-    corners = nlocs - rad
-
-    for jj in range(locs.shape[0]):
-        bufmat[
-            corners[jj, 0] : corners[jj, 0] + gaus.shape[0],
-            corners[jj, 1] : corners[jj, 1] + gaus.shape[1],
-        ] += gaus
-
-    wlayer = bufmat[buf : buf + N, buf : buf + N]
-
-    addlayer1 = np.zeros_like(wlayer)
-    addlayer2 = np.zeros_like(wlayer)
-    addlayer3 = np.zeros_like(wlayer)
-    addlayer4 = np.zeros_like(wlayer)
-    addcorn1 = np.zeros_like(wlayer)
-    addcorn2 = np.zeros_like(wlayer)
-    addcorn3 = np.zeros_like(wlayer)
-    addcorn4 = np.zeros_like(wlayer)
-
-    addlayer1[:buf, :] = bufmat[buf + N :, buf : buf + N]
-    addlayer2[:, :buf] = bufmat[buf : buf + N, buf + N :]
-    addlayer3[-buf:, :] = bufmat[:buf, buf : buf + N]
-    addlayer4[:, -buf:] = bufmat[buf : buf + N, :buf]
-
-    addcorn1[:buf, :buf] = bufmat[buf + N :, buf + N :]
-    addcorn2[-buf:, -buf:] = bufmat[:buf, :buf]
-    addcorn3[:buf, -buf:] = bufmat[buf + N :, :buf]
-    addcorn4[-buf:, :buf] = bufmat[:buf, buf + N :]
-
-    wlayer += (
-        addlayer1
-        + addlayer2
-        + addlayer3
-        + addlayer4
-        + addcorn1
-        + addcorn2
-        + addcorn3
-        + addcorn4
-    )
-
-    layersum = np.sum(wlayer)  # redundant ?
-    return wlayer
-"""
+    return final
