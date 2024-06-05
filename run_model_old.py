@@ -199,7 +199,7 @@ while t <= tmax + dt / 2:
         v1sq = v1_p + dt * dv1dtsq
         v2sq = v2_p + dt * dv2dtsq
 
-    ##### new storm forcing  #####
+    ##### new storm forcing - P #####
 
     remove_layers = [] # store weather layers that need to be removed here
 
@@ -219,7 +219,7 @@ while t <= tmax + dt / 2:
             wlayer = hf.pairshapeN2(locs, t) ### use pairshapeBEGIN instead of pairshape
             Wmat = hf.pairfieldN2(L, h1, wlayer)
 
-    ##### new storm forcing  #####
+    ##### new storm forcing  - P #####
 
     Fx1 = hf.xflux(h1, u1) - kappa / dx * (h1 - np.roll(h1, 1, axis=1))
     Fy1 = hf.yflux(h1, v1) - kappa / dx * (h1 - np.roll(h1, 1, axis=0))
