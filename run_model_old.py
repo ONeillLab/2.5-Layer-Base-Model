@@ -16,7 +16,7 @@ plt.rc('animation', html='html5')
 plt.rcParams["animation.html"] = "jshtml"
 plt.rcParams['figure.dpi'] = 150  
 
-locs = hf.genlocs(num, N - 1) ### use genlocs instead of paircount
+locs = hf.genlocs(num, N, 0) ### use genlocs instead of paircount
 mode = 1
 
 match mode:
@@ -24,7 +24,7 @@ match mode:
     case 1:
         pulse = "off"
 
-        wlayer = hf.pairshapeN2(locs, x, y, Br2, Wsh, N) ### use pairshapeBEGIN instead of pairshape
+        wlayer = hf.pairshapeN2(locs, 0) ### use pairshapeBEGIN instead of pairshape
         Wmat = hf.pairfieldN2(L, h1, wlayer)
 
 t = 0
@@ -177,7 +177,6 @@ while t <= tmax + dt / 2:
     dv2dt = dv2dt - 0.25 * (zu2 + np.roll(zu2, -1, axis=1))
 
 
-
     ### Cumulus Drag (D) ###
     du1dt = du1dt - (1 / dx) * u1 / dragf
     du2dt = du2dt - (1 / dx) * u2 / dragf
@@ -200,40 +199,27 @@ while t <= tmax + dt / 2:
         v1sq = v1_p + dt * dv1dtsq
         v2sq = v2_p + dt * dv2dtsq
 
-    ##### new storm forcing -P #####
+    ##### new storm forcing  #####
 
     remove_layers = [] # store weather layers that need to be removed here
 
     if mode == 1:
         for i in range(len(locs)):
-            if (t-i[-1]) % i[3] == 0 and t != 0:
-                remove_layers.append(locs.index(i)) # tag layer for removal if a storm's 
-                locs.remove(i)                      # internal clock has reached the end of its tstpf
-            elif (t-i[-1]) > (t-i[2]) and t != 0:   
-                locslayers[locs.index(i)] = np.zeros((N,N))
-
-        for j in remove_layers: # remove the storm (i.e. its layer) from the current set of layers
-            locslayers.pop(j)
+            if (t-locs[i][-1]) % locs[i][3] == 0 and t != 0:
+                remove_layers.append(i) # tag layer for removal if a storm's 
 
         add = len(remove_layers) # number of storms that were removed
 
-        for j in range(add):
-            newstorm = hf.newstorm(locs, wlayer) # add storms to keep the number of total storms constant
-            newstorm[1][-1] = t # set the storm's internal time to the current time
-            locs.append(newstorm[1]) # add storm characteristics to locs
-            locslayers.append(newstorm[0]) # add the new storm layer to the set of layers
+        if add != 0:
+            locs = np.delete(locs, remove_layers, axis=0)
 
+            newlocs = hf.genlocs(add, N, t)
+            locs = np.append(locs, newlocs, axis=0)
 
-        locs = np.asarray(locs)
-        wlayer = np.zeros((N,N))
+            wlayer = hf.pairshapeN2(locs, t) ### use pairshapeBEGIN instead of pairshape
+            Wmat = hf.pairfieldN2(L, h1, wlayer)
 
-
-        for ll in locslayers: # update the weather layer
-            wlayer += ll
-        newWmat = hf.pairfieldN2(L, h1, wlayer) # remove mean
-        Wmat = newWmat # new storm forcing for next timestep
-
-        ##### new storm forcing -P #####
+    ##### new storm forcing  #####
 
     Fx1 = hf.xflux(h1, u1) - kappa / dx * (h1 - np.roll(h1, 1, axis=1))
     Fy1 = hf.yflux(h1, v1) - kappa / dx * (h1 - np.roll(h1, 1, axis=0))
@@ -306,9 +292,7 @@ while t <= tmax + dt / 2:
     v2 = v2sq
 
     if tc % tpl == 0:
-        print(
-            f"t={t}, mean h1 is {round(np.mean(np.mean(h1)), 4)}. Time elapsed, {round(time.time()-timer, 3)}s"
-        )
+        print(f"t={t}, mean h1 is {round(np.mean(np.mean(h1)), 4)}. Time elapsed, {round(time.time()-timer, 3)}s, Num active storms {locs.shape[0]}")
         ii += 1
         ts.append(t)
 
