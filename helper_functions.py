@@ -1,25 +1,6 @@
 import numpy as np
-from numba import jit
+from numba import jit, prange
 from name_list import *
-
-
-@jit(nopython=True, parallel=True)
-def gauss(x, y, L):
-    """
-    Generates a Gaussian
-    """
-    g = np.exp(-0.5 * (x**2 + y**2) / L**2)
-    return g
-
-
-@jit(nopython=True, parallel=True)
-def paircountN2(num, N):
-    """
-    Generates a list of coordinate pairs.
-    """
-
-    locs = np.ceil(np.random.rand(num, 2) * N).astype(np.float64)
-    return locs
 
 
 @jit(nopython=True, parallel=True)
@@ -63,13 +44,14 @@ def viscND(vel, Re, n):
 
 ### New pairshapeN2 function. Generates Gaussians using entire domain instead of creating sub-domains. (Daniel) ###
 @jit(nopython=True, parallel=True)
-def pairshapeN2(locs, x, y, Br2, Wsh, N):
+def pairshapeN2(locs, t):
 
     wlayer = np.zeros_like(x).astype(np.float64)
     
     for loc in locs:
-        layer = Wsh * np.exp( - (Br2*dx**2)/0.3606 * ( (x-loc[0])**2 + (y-loc[1])**2))
-        wlayer = wlayer + layer
+        if (t-loc[-1]) <= loc[2] or t == 0:
+            layer = Wsh * np.exp( - (Br2*dx**2)/0.3606 * ( (x-loc[0])**2 + (y-loc[1])**2))
+            wlayer = wlayer + layer
 
     return wlayer
 
@@ -125,159 +107,24 @@ def calculate_APE(h1, h2):
 
 ######### new helper functions for new storm forcing ##########
 
-#@jit(nopython=True, parallel=True)
-def pairshapeBEGIN(locs, x, y, Br2, Wsh, N, locslayers):
-    rad = int(np.ceil(np.sqrt(1 / Br2) / dx))
-    xg, yg = np.meshgrid(range(-rad, rad + 1), range(-rad, rad + 1))
-    gaus = Wsh * np.exp(-(Br2 * dx**2) / 0.3606 * ((xg + 0.5) ** 2 + (yg + 0.5) ** 2))
-
-    wlayer = np.zeros(x.shape)
-
-    buf = rad
-    bufmat = np.zeros((N + 2 * rad, N + 2 * rad))
-    nlocs = locs + rad
-
-    corners = nlocs - rad
-
-    for jj in range(locs.shape[0]):
-        tempbufmat = np.zeros((N + 2 * rad, N + 2 * rad))
-        tempbufmat[
-            corners[jj, 0] : corners[jj, 0] + gaus.shape[0],
-            corners[jj, 1] : corners[jj, 1] + gaus.shape[1],
-        ] += gaus
-
-        tempmainlayer = tempbufmat[buf : buf + N, buf : buf + N].copy()
-
-        addlayer11 = np.zeros_like(tempmainlayer)
-        addlayer22 = np.zeros_like(tempmainlayer)
-        addlayer33 = np.zeros_like(tempmainlayer)
-        addlayer44 = np.zeros_like(tempmainlayer)
-        addcorn11 = np.zeros_like(tempmainlayer)
-        addcorn22 = np.zeros_like(tempmainlayer)
-        addcorn33 = np.zeros_like(tempmainlayer)
-        addcorn44 = np.zeros_like(tempmainlayer)
-
-        addlayer11[:buf, :] = tempbufmat[buf + N :, buf : buf + N].copy()
-        addlayer22[:, :buf] = tempbufmat[buf : buf + N, buf + N :].copy()
-        addlayer33[-buf:, :] = tempbufmat[:buf, buf : buf + N].copy()
-        addlayer44[:, -buf:] = tempbufmat[buf : buf + N, :buf].copy()
-
-        addcorn11[:buf, :buf] = tempbufmat[buf + N :, buf + N :].copy()
-        addcorn22[-buf:, -buf:] = tempbufmat[:buf, :buf].copy()
-        addcorn33[:buf, -buf:] = tempbufmat[buf + N :, :buf].copy()
-        addcorn44[-buf:, :buf] = tempbufmat[:buf, buf + N :].copy()
-
-        tempmainlayer += (
-                addlayer11
-                + addlayer22
-                + addlayer33
-                + addlayer44
-                + addcorn11
-                + addcorn22
-                + addcorn33
-                + addcorn44
-            )
-
-        locslayers.append(tempmainlayer)
-
-    mainlayer = np.zeros((N,N))
-    for ll in locslayers:
-        mainlayer += ll
-    return mainlayer
-
-
-#@jit(nopython=True, parallel=True)
-def newstorm(locs1, mainlayer):
-    buf = rad
-    mat = np.zeros((N,N)) # matrix of zeros
-    newlocx = np.random.randint(0, N) # generate new x coordinate
-    newlocy = np.random.randint(0, N) # generate new y coordinate
-    #newloc = np.asarray([newlocx, newlocy]) # new location coordinates
-    #locs = np.vstack([locs, newloc]) # add to list of locations
-
-    tempbufmat = np.zeros((N + 2 * rad, N + 2 * rad))
-    tempbufmat[
-            newlocx : newlocx + gaus.shape[0],
-            newlocy : newlocy + gaus.shape[1],
-        ] += gaus
-    
-    tempmainlayer = tempbufmat[buf : buf + N, buf : buf + N].copy()
-
-    addlayer11 = np.zeros_like(tempmainlayer)
-    addlayer22 = np.zeros_like(tempmainlayer)
-    addlayer33 = np.zeros_like(tempmainlayer)
-    addlayer44 = np.zeros_like(tempmainlayer)
-    addcorn11 = np.zeros_like(tempmainlayer)
-    addcorn22 = np.zeros_like(tempmainlayer)
-    addcorn33 = np.zeros_like(tempmainlayer)
-    addcorn44 = np.zeros_like(tempmainlayer)
-
-    addlayer11[:buf, :] = tempbufmat[buf + N :, buf : buf + N].copy()
-    addlayer22[:, :buf] = tempbufmat[buf : buf + N, buf + N :].copy()
-    addlayer33[-buf:, :] = tempbufmat[:buf, buf : buf + N].copy()
-    addlayer44[:, -buf:] = tempbufmat[buf : buf + N, :buf].copy()
-
-    addcorn11[:buf, :buf] = tempbufmat[buf + N :, buf + N :].copy()
-    addcorn22[-buf:, -buf:] = tempbufmat[:buf, :buf].copy()
-    addcorn33[:buf, -buf:] = tempbufmat[buf + N :, :buf].copy()
-    addcorn44[-buf:, :buf] = tempbufmat[:buf, buf + N :].copy()
-
-    tempmainlayer += (
-            addlayer11
-            + addlayer22
-            + addlayer33
-            + addlayer44
-            + addcorn11
-            + addcorn22
-            + addcorn33
-            + addcorn44
-        )
-    ##
-    tup = []
-    tup.append(newlocx)
-    tup.append(newlocy)
-    newdur = np.random.randint(1, 15)
-    newper = np.random.randint(newdur, 4*newdur+1)
-    tup.append(newdur)
-    tup.append(newper)
-    tup.append(0)
-    locs1 = np.vstack([locs1, np.asarray(tup)])
-    ##
-    
-    return tempmainlayer, tup
-
-
 @jit(nopython=True, parallel=True)
-def genlocs(num, N):
+def genlocs(num, N, t):
     """
     Generates a list of coordinates, storm duration, storm period, and tclock.
 
         - Made it more pythonic and faster - D
     """
     
-    locs = np.random.randint(0,N+1, (num, 2))
+    locs = np.random.randint(0,N, (num, 2))
     newdur = np.round(np.random.normal(tstf, 2, (num, 1)))
     newper = np.round(np.random.normal(tstpf, 2, (num, 1)))
 
     final = np.append(locs, newdur, axis=1)
     final = np.append(final, newper, axis=1)
-    final = np.append(final, np.zeros((num, 1)), axis=1).astype(np.int64)
 
-    """
-    i=0
-    locs=[]
-    while i <= num:
-        tup = []
-        tup.append(np.random.randint(0, N+1))
-        tup.append(np.random.randint(0, N+1))
-        newdur = np.random.randint(1, 15)
-        newper = np.random.randint(newdur, 4*newdur+1)
-        tup.append(newdur)
-        tup.append(newper)
-        tup.append(0)
-        locs.append(tup)
-        i+=1 
-    locs = np.asarray(locs)
-    """
+    if t == 0:
+        final = np.append(final, np.round(np.random.normal(0, tstf, (num,1))), axis=1).astype(np.int64)
+    else:
+        final = np.append(final, np.ones((num, 1)) * t, axis=1).astype(np.int64)
 
     return final
