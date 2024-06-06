@@ -1,7 +1,9 @@
 import math
 import numpy as np
+import matplotlib.pyplot as plt
+import numpy.ma as ma
 
-tmax = 5000
+tmax = 100
 ani_interval = 100
 
 c22h = 3  # 9  # ND 2nd baroclinic gravity wave speed squared
@@ -48,7 +50,7 @@ EpHat = (
 dx = 1/5 * round(min(1, L/Lst), 3)  # Change dx from 5 grid points per Ld2 to 5 grid points per Rst (only if Rst < Ld2) (Daniel). Note this adds the bug for small dx which is unfixed when Br2 is large.
 dt = dx / (10 * c12h) #1 / (2**8) # CHANGED TO dx/(10*c12h) SO THAT dt CHANGES TO MATCH dx
 dtinv = 1 / dt
-sampfreq = 10
+sampfreq = 1
 tpl = sampfreq * dtinv
 
 N = math.ceil(L / dx)  # resolve
@@ -90,3 +92,13 @@ l = np.concatenate((np.array([N]), np.arange(1, N)), axis=None) - 1
 l2 = np.concatenate((np.arange(N - 1, N + 1), np.arange(1, N - 1)), axis=None) - 1 
 r = np.concatenate((np.arange(2, N + 1), np.array([1])), axis=None) - 1
 r2 = np.concatenate((np.arange(3, N + 1), np.arange(1, 3)), axis=None) - 1
+
+
+### Setting up so the storms only get created outside the spongelayer - D ###
+rmask = rlim + 1 - rlim*2
+
+xs = np.reshape(x, (158,158,1))
+ys = np.reshape(y, (158,158,1))
+
+coords = np.concatenate((xs,ys), axis=2).reshape((N*N,2))
+rmask = rmask.reshape(N*N, 1)
