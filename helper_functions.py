@@ -115,7 +115,16 @@ def genlocs(num, N, t):
         - Made it more pythonic and faster - D
     """
     
-    locs = np.random.randint(0,N, (num, 2))
+    #locs = np.random.randint(0,N, (num, 2))
+
+    locsx = np.random.randint(xmin, xmax, num).reshape((num,1))
+    locsy = []
+    for loc in locsx:
+        locsy.append(np.random.randint(ys[loc[0]][0], ys[loc[0]][1]))
+    
+    locsy = np.array(locsy).reshape((num,1))
+    locs = np.concatenate((locsx, locsy), axis=1)
+    
     newdur = np.round(np.random.normal(tstf, 2, (num, 1)))
     newper = np.round(np.random.normal(tstpf, 2, (num, 1)))
 

@@ -1,6 +1,7 @@
 import math
 import numpy as np
-
+import numpy.ma as ma
+import matplotlib.pyplot as plt
 
 tmax = 100
 ani_interval = 100
@@ -96,9 +97,19 @@ r2 = np.concatenate((np.arange(3, N + 1), np.arange(1, 3)), axis=None) - 1
 ### Setting up so the storms only get created outside the spongelayer - D  (NOT WORKING CURRENTLY) ###
 rmask = rlim + 1 - rlim*2
 
-xs = x.reshape((N,N, 1))
-ys = y.reshape((N,N, 1))
+ax = ma.compressed(ma.array(x, mask=rmask))
+xmax = np.max(ax)
+xmin = np.min(ax)
 
-coords = np.concatenate((xs,ys), axis=2)
+ay = ma.array(y.T, mask=rmask)
 
-coords = coords.reshape((N*N, 2))
+ys = []
+for row in ay:
+    com = ma.compressed(row)
+    if len(com) > 1:
+        ys.append([np.min(com), np.max(com)])
+    else:
+        ys.append([0,1])
+
+ys = np.array(ys)
+#print(ys.shape)
