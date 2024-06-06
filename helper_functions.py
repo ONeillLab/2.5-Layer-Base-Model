@@ -1,5 +1,5 @@
 import numpy as np
-from numba import jit
+from numba import jit, prange
 from name_list import *
 
 
@@ -121,6 +121,10 @@ def genlocs(num, N, t):
 
     final = np.append(locs, newdur, axis=1)
     final = np.append(final, newper, axis=1)
-    final = np.append(final, np.ones((num, 1)) * t, axis=1).astype(np.int64)
+
+    if t == 0:
+        final = np.append(final, np.round(np.random.normal(0, tstf, (num,1))), axis=1).astype(np.int64)
+    else:
+        final = np.append(final, np.ones((num, 1)) * t, axis=1).astype(np.int64)
 
     return final

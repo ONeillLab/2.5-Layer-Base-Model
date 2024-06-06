@@ -5,7 +5,7 @@ import time
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 from name_list import *
-from numba import jit, objmode, threading_layer, config
+from numba import jit, objmode, threading_layer, config, prange
 import psutil
 
 
@@ -199,6 +199,7 @@ def run_sim(u1, u2, v1, v2, h1, h2):
             APEmat.append(hf.calculate_APE(h1, h2))
                 
         if math.isnan(h1[0, 0]):
+            print("NAN h1")
             break
 
         tc += 1
@@ -218,7 +219,7 @@ PV2 = zeta2mat - (1 - Bt*rdist**2)
 #print(PV2.shape)
 #np.save(f"Run_{round(time.time())}", [u2mat,h2mat,PV2])
 
-frames = PV2
+frames = Wpulse
 
 fmin = np.min(frames)
 fmax = np.max(frames)
