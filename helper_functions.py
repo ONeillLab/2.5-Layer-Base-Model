@@ -48,10 +48,10 @@ def pairshapeN2(locs, t):
 
     wlayer = np.zeros_like(x).astype(np.float64)
     
-    for loc in locs:
-        if (t-loc[-1]) <= loc[2] or t == 0:
-            layer = Wsh * np.exp( - (Br2*dx**2)/0.3606 * ( (x-loc[0])**2 + (y-loc[1])**2))
-            wlayer = wlayer + layer
+    for i in prange(len(locs)):
+        if (t-locs[i][-1]) <= locs[i][2] or t == 0:
+            layer = Wsh * np.exp( - (Br2*dx**2)/0.3606 * ( (x-locs[i][0])**2 + (y-locs[i][1])**2))
+            wlayer += layer
 
     return wlayer
 
