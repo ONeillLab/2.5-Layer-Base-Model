@@ -1,5 +1,6 @@
 import math
 import numpy as np
+from netCDF4 import Dataset
 
 tmax = 100
 ani_interval = 100
@@ -90,3 +91,4 @@ l = np.concatenate((np.array([N]), np.arange(1, N)), axis=None) - 1
 l2 = np.concatenate((np.arange(N - 1, N + 1), np.arange(1, N - 1)), axis=None) - 1 
 r = np.concatenate((np.arange(2, N + 1), np.array([1])), axis=None) - 1
 r2 = np.concatenate((np.arange(3, N + 1), np.arange(1, 3)), axis=None) - 1
+

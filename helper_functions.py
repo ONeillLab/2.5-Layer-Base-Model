@@ -1,6 +1,13 @@
 import numpy as np
 from numba import jit
 from name_list import *
+from netCDF4 import Dataset
+
+#@jit(nopython=True, parallel=True)
+def storedata(xmat, x):
+    rootgroup = Dataset("data.nc", "a")
+    rootgroup.variables[xmat][rootgroup.variables[xmat].shape[0],:,:] = x.astype("float64") 
+    rootgroup.close()
 
 
 @jit(nopython=True, parallel=True)

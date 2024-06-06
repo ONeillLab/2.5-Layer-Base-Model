@@ -7,12 +7,71 @@ import matplotlib.animation as animation
 from name_list import *
 from numba import jit, objmode, threading_layer, config
 import psutil
+from netCDF4 import Dataset
 
 
 config.THREADING_LAYER = 'omp'
 
-@jit(nopython=True, parallel=True)
+#@jit(nopython=True, parallel=True) this line does not work with netCDF for whatever reason
+                                    #https://stackoverflow.com/a/65714907/7868096
 def run_sim(u1, u2, v1, v2, h1, h2):
+    #### netCDF output ####
+
+    rootgroup = Dataset("data.nc", "a") # creates the file
+    rootgroup.tmax = tmax # creates attributes
+    rootgroup.c22h = c22h
+    rootgroup.c12h = c12h
+    rootgroup.H1H2 = H1H2
+    rootgroup.Bt = Bt
+    rootgroup.Br2 = Br2
+    rootgroup.p1p2 = p1p2
+    rootgroup.tstf = tstf
+    rootgroup.tstpf = tstpf
+    rootgroup.tradf = tradf
+    rootgroup.dragf = dragf
+    rootgroup.Ar = Ar
+    rootgroup.Re = Re
+    rootgroup.Wsh = Wsh
+    rootgroup.gm = gm 
+    rootgroup.aOLd = aOLd 
+    rootgroup.L = L 
+    rootgroup.num = num 
+    rootgroup.deglim = deglim  
+    rootgroup.Lst = Lst
+    rootgroup.AB = AB  
+    rootgroup.layers = layers  
+    rootgroup.n = n 
+    rootgroup.kappa = kappa
+    rootgroup.ord = ord 
+    rootgroup.spongedrag1 = spongedrag1
+    rootgroup.spongedrag2 = spongedrag2
+    rootgroup.dx = dx
+    rootgroup.dt = dt
+    rootgroup.dtinv = dtinv
+    rootgroup.sampfreq = sampfreq
+    rootgroup.tpl = tpl
+    rootgroup.N = N
+    rootgroup.L = L
+    rootgroup.EpHat = EpHat
+
+    rootgroup.createDimension("t", None) # dimensions
+    rootgroup.createDimension("x", N) 
+    rootgroup.createDimension("y", N)
+
+    u1mat = rootgroup.createVariable("u1mat", "f8", ("t", "x", "y",)) # variables (list of arrays)
+    u2mat = rootgroup.createVariable("u2mat", "f8", ("t", "x", "y",))
+    v1mat = rootgroup.createVariable("v1mat", "f8", ("t", "x", "y",))
+    v2mat = rootgroup.createVariable("v2mat", "f8", ("t", "x", "y",))
+    h1mat = rootgroup.createVariable("h1mat", "f8", ("t", "x", "y",))
+    h2mat = rootgroup.createVariable("h2mat", "f8", ("t", "x", "y",))
+    zeta1mat = rootgroup.createVariable("zeta1mat", "f8", ("t", "x", "y",))
+    zeta2mat = rootgroup.createVariable("zeta2mat", "f8", ("t", "x", "y",))
+
+    rootgroup.close() # close when done
+
+
+
+
     locs = hf.genlocs(num, N, 0) ### use genlocs instead of paircount
     mode = 1
 
@@ -189,9 +248,18 @@ def run_sim(u1, u2, v1, v2, h1, h2):
         
             ts.append(t)
 
-            u2mat.append(u2)
-            h2mat.append(h2)
-            zeta2mat.append(zeta2)
+            hf.storedata("u1mat", u1) # storedata takes u1 and appends it to the variable "u1mat"
+            hf.storedata("u2mat", u2)
+            hf.storedata("h1mat", h1)
+            hf.storedata("h2mat", h2)
+            hf.storedata("v1mat", v1)
+            hf.storedata("v2mat", v2)
+            hf.storedata("zeta1mat", zeta1)
+            hf.storedata("zeta2mat", zeta2)
+
+            #u2mat.append(u2)
+            #h2mat.append(h2)
+            #zeta2mat.append(zeta2)
 
             Wpulse.append(Wmat)
 
@@ -204,15 +272,17 @@ def run_sim(u1, u2, v1, v2, h1, h2):
         tc += 1
         t = tc * dt
 
-    return u2mat, h2mat, zeta2mat, KEmat, APEmat, Wpulse
+    #return u2mat, h2mat, zeta2mat, KEmat, APEmat, Wpulse
 
-u2mat, h2mat, zeta2mat, KEmat, APEmat, Wpulse = run_sim(u1,u2,v1,v2,h1,h2)
+#u2mat, h2mat, zeta2mat, KEmat, APEmat, Wpulse = 
+
+run_sim(u1,u2,v1,v2,h1,h2)
 
 
 print("Threading layer chosen: %s" % threading_layer())
 print("Num Threads: %s" % config.NUMBA_NUM_THREADS)
 
-### Saving ###
+""" ### Saving ###
 PV2 = zeta2mat - (1 - Bt*rdist**2)
 
 #print(PV2.shape)
@@ -248,4 +318,4 @@ plt.show()
 plt.plot(KEmat, label="KE")
 plt.plot(APEmat, label="APE")
 plt.legend(frameon=True)
-plt.show()
+plt.show() """
