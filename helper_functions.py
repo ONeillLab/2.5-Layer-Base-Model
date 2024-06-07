@@ -4,6 +4,11 @@ from name_list import *
 from netCDF4 import Dataset
 
 #@jit(nopython=True, parallel=True)
+def storetime(t):
+    rootgroup = Dataset("data.nc", "a")
+    rootgroup.time = t
+    rootgroup.close()
+
 def storedata(xmat, x):
     rootgroup = Dataset("data.nc", "a")
     rootgroup.variables[xmat][rootgroup.variables[xmat].shape[0],:,:] = x.astype("float64") 
