@@ -14,7 +14,6 @@ def storedata(xmat, x):
     rootgroup.variables[xmat][rootgroup.variables[xmat].shape[0],:,:] = x.astype("float64") 
     rootgroup.close()
 
-
 @jit(nopython=True, parallel=True)
 def pairfieldN2(L, h1, wlayer):
     """
