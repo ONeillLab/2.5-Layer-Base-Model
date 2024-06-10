@@ -1,7 +1,5 @@
 import math
 import numpy as np
-import numpy.ma as ma
-import matplotlib.pyplot as plt
 
 tmax = 20000
 ani_interval = 100
