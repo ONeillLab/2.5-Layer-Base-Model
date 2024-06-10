@@ -117,7 +117,7 @@ def genlocs(num, N, t):
     
     #locs = np.random.randint(0,N, (num, 2))
 
-    locsr = np.random.randint(0, int(np.round(outerlim/dx)), num).reshape((num,1))
+    locsr = np.random.randint(int(np.round(outerlim/(5*dx))), int(np.round(outerlim/dx)), num).reshape((num,1))
     locstheta = (np.random.random(num) * 2*np.pi).reshape((num,1))
 
     locsx = np.round(locsr*np.cos(locstheta)+N/2)
