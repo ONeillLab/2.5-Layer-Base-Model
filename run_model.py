@@ -11,22 +11,21 @@ import psutil
 from netCDF4 import Dataset
 import access_data as ad
 
-config.THREADING_LAYER = 'omp'
 
-#@jit(nopython=True, parallel=True)  #this line does not work with netCDF for whatever reason                                    
-#@jit(nopython=True, parallel=True)                                     #https://stackoverflow.com/a/65714907/7868096
-def run_sim(resume, u1, u2, v1, v2, h1, h2, locs=0, lasttime=0):
+config.THREADING_LAYER = 'omp'
+                                    
+@jit(nopython=True, parallel=True)                                     
+def run_sim(resume, u1, u2, v1, v2, h1, h2, locs, lasttime):
     if resume == 0:
         locs = hf.genlocs(num, N, 0) ### use genlocs instead of paircount
-        lasttime = 0
         correction = 0
     elif resume == 1:
         correction = sampfreq
-    mode = 1
-    wlayer = hf.pairshapeN2(locs, 0) ### use pairshapeBEGIN instead of pairshape
-    Wmat = hf.pairfieldN2(L, h1, wlayer)
-
     
+    mode = 1
+
+    wlayer = hf.pairshapeN2(locs, 0)
+    Wmat = hf.pairfieldN2(L, h1, wlayer)
 
     # TIME STEPPING
     if AB == 2:
@@ -37,29 +36,22 @@ def run_sim(resume, u1, u2, v1, v2, h1, h2, locs=0, lasttime=0):
         v2_p = v2.copy()
         h2_p = h2.copy()
 
+    ts = []
     psi2 = np.zeros_like(x)
     zeta1 = psi2.copy()
     zeta2 = psi2.copy()
     B2 = psi2.copy()
     B1p = B2.copy()
+
     ii = 0
-    u1mat = []
-    u2mat = []
-    v1mat = []
-    v2mat = []
-    h1mat = []
-    h2mat = []
-    locsmat = []
-    ts = []
+
     KEmat = []
     APEmat = []
 
     with objmode(timer='f8'):
         timer = time.perf_counter()
 
-    tpulseper = tstpf
-    tpulsedur = tstf
-    tclock = 0
+        
     t = 0
     tc = 0
 
@@ -196,14 +188,10 @@ def run_sim(resume, u1, u2, v1, v2, h1, h2, locs=0, lasttime=0):
 
             ii += 1
         
-            ts.append(t+lasttime+correction)
-            u1mat.append(u1)
-            u2mat.append(u2)
-            v1mat.append(v1)
-            v2mat.append(v2)
-            h1mat.append(h1)
-            h2mat.append(h2)
-            locsmat.append(locs)
+            ts.append(t)
+
+            with objmode():
+                ad.save_data(u1,u2,v1,v2,h1,h2,locs,t,lasttime,new_name)
 
             KEmat.append(hf.calculate_KE(u1,u2,v1,v2,h1,h2))
             APEmat.append(hf.calculate_APE(h1, h2))
@@ -213,63 +201,25 @@ def run_sim(resume, u1, u2, v1, v2, h1, h2, locs=0, lasttime=0):
 
         tc += 1
         t = tc * dt
-    
-    return u1mat, u2mat, h1mat, h2mat, v1mat, v2mat, locsmat, ts
 
 
 def run_model(new_file_name, old_file_name=None):
     if old_file_name == None:
         ad.create_file(new_file_name)
-        u1mat, u2mat, h1mat, h2mat, v1mat, v2mat, locsmat, ts = run_sim(0,name_list.u1,name_list.u2,name_list.v1,
-                                                                        name_list.v2,name_list.h1,name_list.h2)
-        ad.store_data(new_file_name, u1mat, u2mat, h1mat, h2mat, v1mat, v2mat, locsmat, ts)
+        lasttime = 0
+        locs = np.zeros((num,5))
+        resume = 0
     else:
         ad.create_file(new_file_name)
         u1, u2, v1, v2, h1, h2, locs, lasttime = ad.last_timestep(old_file_name)
-        u1mat, u2mat, h1mat, h2mat, v1mat, v2mat, locsmat, ts = run_sim(1,u1,u2,v1,v2,h1,h2,locs,lasttime)
-        ad.store_data(new_file_name, u1mat, u2mat, h1mat, h2mat, v1mat, v2mat, locsmat, ts)
+        resume = 1
+    
+    run_sim(resume, u1,u2,v1,v2,h1,h2,locs,lasttime)
 
 
-### running a simulation from the start:        run_model("new_file_name")
-### restarting a simiulation from an old file:  run_model("new_file_name", "old_file_name")
+
+### running a simulation from the start:        run_model(new_name)
+### restarting a simiulation from an old file:  run_model(new_name), restart_name)
 
 print("Threading layer chosen: %s" % threading_layer())
 print("Num Threads: %s" % config.NUMBA_NUM_THREADS)
-
-""" ### Saving ###
-PV2 = zeta2mat - (1 - Bt*rdist**2)
-
-#print(PV2.shape)
-#np.save(f"Run_{round(time.time())}", [u2mat,h2mat,PV2])
-
-frames = PV2
-
-fmin = np.min(frames)
-fmax = np.max(frames)
-
-fig = plt.figure()
-ax = fig.add_subplot(111)
-
-cv0 = frames[0]
-im = ax.imshow(cv0, cmap="bwr")
-cb = fig.colorbar(im)
-tx = ax.set_title(f"time: {0}")
-
-
-def animate(i):
-    arr = frames[i]
-
-    vmax = np.max(arr)
-    vmin = np.min(arr)
-    im.set_data(arr)
-    im.set_clim(fmin, fmax)
-    tx.set_text(f"time: {i}")
-
-
-ani = animation.FuncAnimation(fig, animate, interval=ani_interval, frames=len(frames))
-plt.show()
-
-plt.plot(KEmat, label="KE")
-plt.plot(APEmat, label="APE")
-plt.legend(frameon=True)
-plt.show() """

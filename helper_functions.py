@@ -1,18 +1,7 @@
 import numpy as np
-from numba import jit
-from name_list import *
-from netCDF4 import Dataset
+from numba import jit, prange
+from name_list_jupiter import *
 
-#@jit(nopython=True, parallel=True)
-def storetime(t):
-    rootgroup = Dataset("data.nc", "a")
-    rootgroup.time = t
-    rootgroup.close()
-
-def storedata(xmat, x):
-    rootgroup = Dataset("data.nc", "a")
-    rootgroup.variables[xmat][rootgroup.variables[xmat].shape[0],:,:] = x.astype("float64") 
-    rootgroup.close()
 
 @jit(nopython=True, parallel=True)
 def pairfieldN2(L, h1, wlayer):
@@ -59,10 +48,10 @@ def pairshapeN2(locs, t):
 
     wlayer = np.zeros_like(x).astype(np.float64)
     
-    for loc in locs:
-        if (t-loc[-1]) <= loc[2] or t == 0:
-            layer = Wsh * np.exp( - (Br2*dx**2)/0.3606 * ( (x-loc[0])**2 + (y-loc[1])**2))
-            wlayer = wlayer + layer
+    for i in prange(len(locs)):
+        if (t-locs[i][-1]) <= locs[i][2] or t == 0:
+            layer = Wsh * np.exp( - (Br2*dx**2)/0.3606 * ( (x-locs[i][0])**2 + (y-locs[i][1])**2))
+            wlayer += layer
 
     return wlayer
 
@@ -126,12 +115,25 @@ def genlocs(num, N, t):
         - Made it more pythonic and faster - D
     """
     
-    locs = np.random.randint(0,N, (num, 2))
+    #locs = np.random.randint(0,N, (num, 2))
+
+    locsr = np.random.randint(int(0), int(np.round(outerlim/dx)), num).reshape((num,1))
+    locstheta = (np.random.random(num) * 2*np.pi).reshape((num,1))
+
+    locsx = np.round(locsr*np.cos(locstheta)+N/2)
+    locsy = np.round(locsr*np.sin(locstheta)+N/2) 
+
+    locs = np.concatenate((locsx, locsy), axis=1)
+    
     newdur = np.round(np.random.normal(tstf, 2, (num, 1)))
     newper = np.round(np.random.normal(tstpf, 2, (num, 1)))
 
     final = np.append(locs, newdur, axis=1)
     final = np.append(final, newper, axis=1)
-    final = np.append(final, np.ones((num, 1)) * t, axis=1).astype(np.int64)
+
+    if t == 0:
+        final = np.append(final, np.round(np.random.normal(0, tstf, (num,1))), axis=1).astype(np.int64)
+    else:
+        final = np.append(final, np.ones((num, 1)) * t, axis=1).astype(np.int64)
 
     return final
