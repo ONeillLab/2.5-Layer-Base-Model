@@ -1,7 +1,7 @@
 import math
 import numpy as np
 
-tmax = 900
+tmax = 1000
 ani_interval = 100
 restart_from_file = False
 restart_name = 'data.nc'
@@ -22,7 +22,7 @@ tst = 260000      # 3 day storm duration from Siegelman [s]
 tstp = tst*1.1   # Period between forced storms (Guess)
 
 ### Dimensonal, Atmosphere parameters, these are not known and must be adjusted ###
-p1p2 = 0.80
+p1p2 = 0.95
 H1H2 = 0.80
 
 # Dimensional, Derived Parameters ###
@@ -34,7 +34,7 @@ c2 = Ld2 * f0 # Second baroclinic gravity wave speed
 tstf = round(tst*f0)
 tradf = trad*f0
 tstpf = round(tstp*f0)
-dragf = drag*f0
+dragf = 1000000 #drag*f0
 Br2 = Ld2**2 / Rst**2   # Burger Number
 c22h = 3 # ND 2nd baroclinic gravity wave speed squared
 c12h = 4 # ND 1st baroclinic gravity wave speed squared
