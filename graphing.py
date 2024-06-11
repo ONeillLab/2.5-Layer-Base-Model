@@ -15,12 +15,31 @@ def animate_data(data_name, element):
 
     data_name is name of the file e.g., "data.nc"
 
-    element is either "u1mat","u2mat","v1mat","v2mat","h1mat","h2mat"
+    element is either "u1mat","u2mat","v1mat","v2mat","h1mat","h2mat", "zeta1", "zeta2"
     """   
-    rootgroup = Dataset(data_name, "r") 
-    elementmat = rootgroup.variables[element]
-    frames = elementmat
-    frameslen = int(elementmat.shape[0])
+    if element == "zeta1":
+        rootgroup = Dataset(data_name, 'r')
+        u1mat = np.array(rootgroup.variables["u1mat"])
+        v1mat = np.array(rootgroup.variables["v1mat"])
+        
+        zeta1 = (1 / dx) * (v1mat[:] - v1mat[:,:,l] + u1mat[:,l,:] - u1mat[:])
+        frames = zeta1
+        frameslen = int(frames.shape[0])
+
+    elif element == "zeta2":
+        rootgroup = Dataset(data_name, 'r')
+        u2mat = np.array(rootgroup.variables["u2mat"])
+        v2mat = np.array(rootgroup.variables["v2mat"])
+        
+        zeta2 = (1 / dx) * (v2mat[:] - v2mat[:,:,l] + u2mat[:,l,:] - u2mat[:])
+        frames = zeta2
+        frameslen = int(frames.shape[0])
+
+    else:
+        rootgroup = Dataset(data_name, "r") 
+        elementmat = rootgroup.variables[element]
+        frames = np.array(elementmat)
+        frameslen = int(elementmat.shape[0])
 
     fig = plt.figure()
     ax = fig.add_subplot(111)
@@ -39,7 +58,7 @@ def animate_data(data_name, element):
     cb = fig.colorbar(im)
 
     def animate(i):
-        arr = frames[i] #frames[7 * i + (i - 1)]
+        arr = np.array(frames[i])
         vmax = np.max(arr)
         vmin = np.min(arr)
         im.set_data(arr)
@@ -49,52 +68,9 @@ def animate_data(data_name, element):
     rootgroup.close()
 
 
-def animate_zeta(data_name, i):
+def animate_multiple(files, element):
     """
-    Animates zeta1 or zeta2
-    """
-    rootgroup = Dataset(data_name, "r") 
-    umat = np.asarray(rootgroup.variables[f'u{i}mat'])
-    vmat = np.asarray(rootgroup.variables[f'v{i}mat'])
-    rootgroup.close()
-    zetaimat = []
-    for j in range(len(umat)):
-        zetai = 1 - Bt * rdist**2 + (1 / dx) * (vmat[j] - vmat[j][:,l] + umat[j][l,:] - umat[j])
-        zeta = zetai
-        zetaimat.append(zeta)
-    frames = zetaimat
-    frameslen = len(zetaimat)
-
-    fig = plt.figure()
-    ax = fig.add_subplot(111)
-
-
-    cv0 = frames[0]
-    vminlist = []
-    vmaxlist = []
-    for j in frames:
-        if math.isnan(j[0, 0]) == False:
-            vminlist.append(np.min(j))
-            vmaxlist.append(np.max(j))
-    vmin = np.min(vminlist)
-    vmax = np.max(vmaxlist)
-    im = ax.imshow(cv0, cmap="bwr", vmin=vmin, vmax=vmax)
-    cb = fig.colorbar(im)
-
-    def animate(i):
-        arr = frames[i] #frames[7 * i + (i - 1)]
-        vmax = np.max(arr)
-        vmin = np.min(arr)
-        im.set_data(arr)
-    
-    ani = animation.FuncAnimation(fig, animate, interval=ani_interval, frames=frameslen)
-    plt.show()
-    return zetaimat
-
-
-def animate_two(data_name1, data_name2, element):
-    """
-    Takes two files and produces a single smooth animation 
+    Takes multple files (i.e files = ['data1.nc', 'data2.nc', ...]) and produces a single smooth animation 
     """
     rootgroup = Dataset(data_name1, "r") 
     rootgroup2 = Dataset(data_name2, "r") 
@@ -133,7 +109,7 @@ def animate_two(data_name1, data_name2, element):
 #animate_two("run1.nc", "run1continued.nc", "u1mat")
 
 #display_data("data2.nc")
-#animate_data("data.nc", "u1mat")
+#animate_data("data2.nc", "zeta2")
 #animate_data("data2.nc", "u1mat")
 
 

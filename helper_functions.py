@@ -1,6 +1,6 @@
 import numpy as np
 from numba import jit, prange
-from name_list_jupiter import *
+from name_list import *
 
 
 @jit(nopython=True, parallel=True)

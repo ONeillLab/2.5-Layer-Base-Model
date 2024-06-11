@@ -2,10 +2,7 @@ import numpy as np
 import math
 import helper_functions as hf
 import time
-import matplotlib.pyplot as plt
-import matplotlib.animation as animation
 from name_list import *
-import name_list
 from numba import jit, objmode, threading_layer, config
 import psutil
 from netCDF4 import Dataset
@@ -15,16 +12,13 @@ import access_data as ad
 config.THREADING_LAYER = 'omp'
                                     
 @jit(nopython=True, parallel=True)                                     
-def run_sim(resume, u1, u2, v1, v2, h1, h2, locs, lasttime):
-    if resume == 0:
+def run_sim(u1, u2, v1, v2, h1, h2, locs, lasttime):
+    if restart_name == None:
         locs = hf.genlocs(num, N, 0) ### use genlocs instead of paircount
-        correction = 0
-    elif resume == 1:
-        correction = sampfreq
-    
+        
     mode = 1
 
-    wlayer = hf.pairshapeN2(locs, 0)
+    wlayer = hf.pairshapeN2(locs, lasttime)
     Wmat = hf.pairfieldN2(L, h1, wlayer)
 
     # TIME STEPPING
@@ -183,7 +177,7 @@ def run_sim(resume, u1, u2, v1, v2, h1, h2, locs, lasttime):
 
         if tc % tpl == 0:
             with objmode(timer='f8'):
-                print(f"t={t+lasttime+correction}, mean h1 is {round(np.mean(np.mean(h1)), 4)}, num storms {locs.shape[0]}. Time elapsed, {round(time.perf_counter()-timer, 3)}s. CPU usage, {psutil.cpu_percent()}")
+                print(f"t={t+lasttime+sampfreq}, mean h1 is {round(np.mean(np.mean(h1)), 4)}, num storms {locs.shape[0]}. Time elapsed, {round(time.perf_counter()-timer, 3)}s. CPU usage, {psutil.cpu_percent()}")
                 timer = time.perf_counter()
 
             ii += 1
@@ -203,23 +197,15 @@ def run_sim(resume, u1, u2, v1, v2, h1, h2, locs, lasttime):
         t = tc * dt
 
 
-def run_model(new_file_name, old_file_name=None):
-    if old_file_name == None:
-        ad.create_file(new_file_name)
-        lasttime = 0
-        locs = np.zeros((num,5))
-        resume = 0
-    else:
-        ad.create_file(new_file_name)
-        u1, u2, v1, v2, h1, h2, locs, lasttime = ad.last_timestep(old_file_name)
-        resume = 1
+if restart_name == None:
+    ad.create_file(new_name)
+    lasttime = 0
+    locs = np.zeros((num,5))
+else:
+    ad.create_file(new_name)
+    u1, u2, v1, v2, h1, h2, locs, lasttime = ad.last_timestep(restart_name)
     
-    run_sim(resume, u1,u2,v1,v2,h1,h2,locs,lasttime)
-
-
-
-### running a simulation from the start:        run_model(new_name)
-### restarting a simiulation from an old file:  run_model(new_name), restart_name)
+run_sim(u1,u2,v1,v2,h1,h2,locs,lasttime)
 
 print("Threading layer chosen: %s" % threading_layer())
 print("Num Threads: %s" % config.NUMBA_NUM_THREADS)

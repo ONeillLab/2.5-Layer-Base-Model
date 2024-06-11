@@ -3,10 +3,9 @@ import numpy as np
 from netCDF4 import Dataset
 
 tmax = 20
-ani_interval = 200
-restart_from_file = False
-restart_name = 'data.nc'
-new_name = 'data1.nc'
+ani_interval = 100
+restart_name = 'data1.nc'
+new_name = 'data2.nc'
 
 c22h = 9  # 9  # ND 2nd baroclinic gravity wave speed squared
 c12h = 10  # 10  # ND 1st baroclinic gravity wave speed squared

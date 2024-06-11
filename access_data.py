@@ -1,10 +1,4 @@
 import numpy as np
-import math
-import time
-import matplotlib.pyplot as plt
-import matplotlib.animation as animation
-from numba import jit, objmode, threading_layer, config
-import psutil
 from netCDF4 import Dataset
 from name_list import *
 
@@ -87,6 +81,7 @@ def create_file(data_name):
     rootgroup.close()
 
 
+### Depricated ? ###
 def store_data(data_name, u1mat, u2mat, h1mat, h2mat, v1mat, v2mat, locsmat, ts):
     """
     Stores the output of a simulation
@@ -123,13 +118,13 @@ def last_timestep(data_name):
     return u1, u2, v1, v2, h1, h2, locs, lasttime
 
 
-def storetime(t):
-    rootgroup = Dataset("data.nc", "a")
+def storetime(t, file_name):
+    rootgroup = Dataset(file_name, "a")
     rootgroup.time = t
     rootgroup.close()
 
-def storedata(xmat, x):
-    rootgroup = Dataset("data.nc", "a")
+def storedata(xmat, x, file_name):
+    rootgroup = Dataset(file_name, "a")
     rootgroup.variables[xmat][rootgroup.variables[xmat].shape[0],:,:] = x.astype("float64") 
     rootgroup.close()
 
