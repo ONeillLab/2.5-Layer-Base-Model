@@ -15,6 +15,8 @@ def animate(files, element):
     This has taken the place of all the animate, animate_zeta1/zeta2, and animate_two. Since it will do all those
     
     possible elements are: "u1mat","u2mat","v1mat","v2mat","h1mat","h2mat", "zeta1", "zeta2"
+
+    Note the zetas are relative vorticity.
     """
     rootgroups = []
     for file in files:
