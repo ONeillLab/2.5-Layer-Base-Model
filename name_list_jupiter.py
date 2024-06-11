@@ -3,9 +3,8 @@ import numpy as np
 
 tmax = 1000
 ani_interval = 100
-restart_from_file = False
-restart_name = 'data.nc'
-new_name = 'data1.nc'
+restart_name = None
+new_name = 'data_jupiter110624_1.nc'
 
 ### Dimensional, collected from papers, used for normalization ###
 f0 = 3.517e-4     # coriolis parameter from Siegelman [s]
