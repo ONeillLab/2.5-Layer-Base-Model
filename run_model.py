@@ -54,7 +54,13 @@ def run_sim(u1, u2, v1, v2, h1, h2):
     t = 0
     tc = 0
 
+    sum = 0
+
     while t <= tmax + dt / 2:
+
+        
+        with objmode(timer1='f8'):
+            timer1 = time.perf_counter()
 
         if AB == 2:
             tmp = u1.copy()
@@ -129,6 +135,12 @@ def run_sim(u1, u2, v1, v2, h1, h2):
             v1sq = v1_p + dt * dv1dtsq
             v2sq = v2_p + dt * dv2dtsq
 
+
+        with objmode(timer2='f8'):
+            timer2 = time.perf_counter()
+
+        sum += timer2-timer1
+
         ##### new storm forcing -P #####
 
         remove_layers = [] # store weather layers that need to be removed here
@@ -184,6 +196,9 @@ def run_sim(u1, u2, v1, v2, h1, h2):
             with objmode(timer='f8'):
                 print(f"t={t}, mean h1 is {round(np.mean(np.mean(h1)), 4)}, num storms {locs.shape[0]}. Time elapsed, {round(time.perf_counter()-timer, 3)}s. CPU usage, {psutil.cpu_percent()}")
                 timer = time.perf_counter()
+
+            print(sum)
+            sum = 0
 
             ii += 1
         
