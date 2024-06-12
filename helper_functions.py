@@ -115,15 +115,9 @@ def genlocs(num, N, t):
         - Made it more pythonic and faster - D
     """
     
-    #locs = np.random.randint(0,N, (num, 2))
+    choices = np.random.randint(0, len(poslocs), num)
 
-    locsr = np.random.randint(int(np.round(outerlim/(5*dx))), int(np.round(outerlim/dx)), num).reshape((num,1))
-    locstheta = (np.random.random(num) * 2*np.pi).reshape((num,1))
-
-    locsx = np.round(locsr*np.cos(locstheta)+N/2)
-    locsy = np.round(locsr*np.sin(locstheta)+N/2) 
-
-    locs = np.concatenate((locsx, locsy), axis=1)
+    locs = poslocs[choices]
     
     newdur = np.round(np.random.normal(tstf, 2, (num, 1)))
     newper = np.round(np.random.normal(tstpf, 2, (num, 1)))

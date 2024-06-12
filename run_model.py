@@ -219,7 +219,7 @@ PV2 = zeta2mat - (1 - Bt*rdist**2)
 #print(PV2.shape)
 #np.save(f"Run_{round(time.time())}", [u2mat,h2mat,PV2])
 
-frames = Wpulse
+frames = PV2
 
 fmin = np.min(frames)
 fmax = np.max(frames)
