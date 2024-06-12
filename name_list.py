@@ -1,11 +1,13 @@
 import math
 import numpy as np
 from netCDF4 import Dataset
+import numpy.ma as ma
+import matplotlib.pyplot as plt
 
 tmax = 20
 ani_interval = 100
-restart_name = 'data2.nc'
-new_name = 'data3.nc'
+restart_name = None
+new_name = 'data1.nc'
 
 c22h = 9  # 9  # ND 2nd baroclinic gravity wave speed squared
 c12h = 10  # 10  # ND 1st baroclinic gravity wave speed squared
@@ -94,3 +96,13 @@ l2 = np.concatenate((np.arange(N - 1, N + 1), np.arange(1, N - 1)), axis=None) -
 r = np.concatenate((np.arange(2, N + 1), np.array([1])), axis=None) - 1
 r2 = np.concatenate((np.arange(3, N + 1), np.arange(1, 3)), axis=None) - 1
 
+### Storm location picking ###
+
+possibleLocs = np.array(list(zip(*np.where(rlim == 1))))
+
+poslocs = []
+
+for loc in possibleLocs:
+    poslocs.append(np.array(loc))
+
+poslocs = np.array(poslocs)

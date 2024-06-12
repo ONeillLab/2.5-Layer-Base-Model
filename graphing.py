@@ -87,6 +87,6 @@ def animate(files, element):
 
 
 #### examples ####
-data = ['data1.nc', 'data2.nc', 'data3.nc']
+data = ['data1.nc']#, 'data2.nc', 'data3.nc']
 
-animate(data, "zeta2")
+animate(data, "h2mat")
