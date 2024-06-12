@@ -2,7 +2,7 @@ import numpy as np
 import math
 import helper_functions as hf
 import time
-from name_list import *
+from name_list_jupiter import *
 from numba import jit, objmode, threading_layer, config
 import psutil
 from netCDF4 import Dataset

@@ -4,7 +4,7 @@ import numpy as np
 tmax = 1000
 ani_interval = 100
 restart_name = None
-new_name = 'data_jupiter110624_1.nc'
+new_name = 'data_jupiter120624_1.nc'
 
 ### Dimensional, collected from papers, used for normalization ###
 f0 = 3.517e-4     # coriolis parameter from Siegelman [s]
@@ -115,3 +115,14 @@ l = np.concatenate((np.array([N]), np.arange(1, N)), axis=None) - 1
 l2 = np.concatenate((np.arange(N - 1, N + 1), np.arange(1, N - 1)), axis=None) - 1 
 r = np.concatenate((np.arange(2, N + 1), np.array([1])), axis=None) - 1
 r2 = np.concatenate((np.arange(3, N + 1), np.arange(1, 3)), axis=None) - 1
+
+### Storm location picking ###
+
+possibleLocs = np.array(list(zip(*np.where(rlim == 1))))
+
+poslocs = []
+
+for loc in possibleLocs:
+    poslocs.append(np.array(loc))
+
+poslocs = np.array(poslocs)
