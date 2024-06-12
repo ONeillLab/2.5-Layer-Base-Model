@@ -9,8 +9,8 @@ ani_interval = 100
 restart_name = None
 new_name = 'data1.nc'
 
-c22h = 9  # 9  # ND 2nd baroclinic gravity wave speed squared
-c12h = 10  # 10  # ND 1st baroclinic gravity wave speed squared
+c22h = 3  # 9  # ND 2nd baroclinic gravity wave speed squared
+c12h = 4  # 10  # ND 1st baroclinic gravity wave speed squared
 H1H2 = 1  # ND upper to lower layer height ratio
 Bt = (1**2) / 2 / (30**2)  # ND scaled beta Ld2^2/4a^2 ### adjust this
 Br2 = 1  # 1.5  # ND scaled storm size: Burger number Ld2^2/Rst^2
