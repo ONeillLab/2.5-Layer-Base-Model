@@ -46,8 +46,8 @@ def run_sim(u1, u2, v1, v2, h1, h2, locs, lasttime):
         timer = time.perf_counter()
 
         
-    t = 0
-    tc = 0
+    t = lasttime
+    tc = round(t/dt)
 
     while t <= tmax + dt / 2:
 
