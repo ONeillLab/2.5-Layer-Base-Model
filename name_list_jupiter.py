@@ -1,5 +1,6 @@
 import math
 import numpy as np
+import matplotlib.pyplot as plt
 
 tmax = 1000
 ani_interval = 100
@@ -126,3 +127,10 @@ for loc in possibleLocs:
     poslocs.append(np.array(loc))
 
 poslocs = np.array(poslocs)
+
+print(L * Ld2)
+
+print(L)
+
+#plt.imshow(spdrag2, cmap='hot')
+#plt.show()
