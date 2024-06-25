@@ -5,8 +5,8 @@ fixed = True
 
 tmax = 900
 ani_interval = 100
-restart_name = 'data_jupiter120624_1.nc'
-new_name = 'data_jupiter120624_2.nc'
+restart_name = None
+new_name = 'data_jupiter250624_1.nc'
 
 ### Dimensional, collected from papers, used for normalization ###
 f0 = 3.517e-4     # coriolis parameter from Siegelman [s]
@@ -24,7 +24,7 @@ tstp = tst*1.1   # Period between forced storms (Guess)
 
 ### Dimensonal, Atmosphere parameters, these are not known and must be adjusted ###
 p1p2 = 0.95
-H1H2 = 0.80
+H1H2 = 1
 
 # Dimensional, Derived Parameters ###
 Wst = H / tst
@@ -48,8 +48,8 @@ Wsh = Wst / (H1 * f0)
 #### Derived Quantities ###
 gm = p1p2*c22h/c12h*H1H2            # ND reduced gravity
 aOLd = a/Ld2;             # ND planetary radius to deformation radius ratio
-deglim = 30  # domain size [degrees]
-L = (deglim * (np.pi/180) * a)/Ld2  # domain radius 30 deg from pole, normalized by deformation radius
+deglim = np.pi/6  # domain size [degrees]
+L = (deglim * a)/Ld2  # domain radius 30 deg from pole, normalized by deformation radius
 num = round(Ar*(L**2)*Br2/np.pi)    # number of storms
 
 Lst = L * Ld2/Rst
@@ -128,3 +128,5 @@ for loc in possibleLocs:
     poslocs.append(np.array(loc))
 
 poslocs = np.array(poslocs)
+
+print((L*Ld2 / 1e3) / Rst)
