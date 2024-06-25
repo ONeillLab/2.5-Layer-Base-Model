@@ -4,6 +4,8 @@ from netCDF4 import Dataset
 import numpy.ma as ma
 import matplotlib.pyplot as plt
 
+fixed = True
+
 tmax = 20
 ani_interval = 100
 restart_name = None

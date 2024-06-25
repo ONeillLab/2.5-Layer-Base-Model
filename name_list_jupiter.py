@@ -1,6 +1,8 @@
 import math
 import numpy as np
 
+fixed = True
+
 tmax = 1000
 ani_interval = 100
 restart_name = 'data_jupiter120624_1.nc'
