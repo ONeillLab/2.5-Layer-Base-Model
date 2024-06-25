@@ -3,7 +3,7 @@ import numpy as np
 
 fixed = True
 
-tmax = 1000
+tmax = 900
 ani_interval = 100
 restart_name = 'data_jupiter120624_1.nc'
 new_name = 'data_jupiter120624_2.nc'

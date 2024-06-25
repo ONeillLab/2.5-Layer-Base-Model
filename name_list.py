@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 
 fixed = True
 
-tmax = 20
+tmax = 1000
 ani_interval = 100
 restart_name = None
 new_name = 'data1.nc'
