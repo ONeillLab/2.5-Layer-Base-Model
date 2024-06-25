@@ -129,4 +129,4 @@ for loc in possibleLocs:
 
 poslocs = np.array(poslocs)
 
-print((L*Ld2 / 1e3) / Rst)
+#print((L*Ld2 / 1e3) / Rst)
