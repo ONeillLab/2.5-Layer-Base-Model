@@ -4,24 +4,26 @@ from netCDF4 import Dataset
 import numpy.ma as ma
 import matplotlib.pyplot as plt
 
+fixed = True
+
 tmax = 1000
 ani_interval = 100
 restart_name = None
-new_name = 'data1.nc'
+new_name = 'data170624_2.nc'
 
-c22h = 3  # 9  # ND 2nd baroclinic gravity wave speed squared
-c12h = 4  # 10  # ND 1st baroclinic gravity wave speed squared
+c22h = 4  # 9  # ND 2nd baroclinic gravity wave speed squared
+c12h = 5  # 10  # ND 1st baroclinic gravity wave speed squared
 H1H2 = 1  # ND upper to lower layer height ratio
 Bt = (1**2) / 2 / (30**2)  # ND scaled beta Ld2^2/4a^2 ### adjust this
-Br2 = 1  # 1.5  # ND scaled storm size: Burger number Ld2^2/Rst^2
+Br2 = 1 #4  # 1.5  # ND scaled storm size: Burger number Ld2^2/Rst^2
 p1p2 = 0.95  # ND upper to lower layer density ratio
 tstf = 6  # 48  # ND storm duration tst*f0
 tstpf = 15  # 60  # ND period between forced storms tstp*f0
 tradf = 2000  # ND Newtonian damping of layer thickness trad*f0
-dragf = 1000  # Cumulus drag time scale (Li and O'Neill) (D)
+dragf = 1000000  # Cumulus drag time scale (Li and O'Neill) (D)
 Ar = 0.15  # ND areal storm coverage
 Re = 5e4  # ND Reynolds number
-Wsh = 0.03 / 2  # ND convective Rossby number
+Wsh = 0.012 / 2  # ND convective Rossby number
 
 #### Derived Quantities ###  
 gm = p1p2 * c22h / c12h * H1H2  # ND reduced gravity
@@ -39,8 +41,8 @@ layers = 2.5  # # of layers (2 or 2.5)
 n = 2  # order of Laplacian '2' is hyperviscosity
 kappa = 1e-6
 ord = 2  # must equal 1 for Glenn's order, otherwise for Sadourney's (squares before avgs)
-spongedrag1 = 0.1
-spongedrag2 = 0.1
+spongedrag1 = 0.01
+spongedrag2 = 0.01
 
 EpHat = (
     ((1 / 2) * p1p2 * c12h + (1 / 2) * H1H2 * c22h - p1p2 * (c22h / c12h) * H1H2 * c12h)
@@ -106,3 +108,8 @@ for loc in possibleLocs:
     poslocs.append(np.array(loc))
 
 poslocs = np.array(poslocs)
+
+print(EpHat)
+print(aOLd)
+print(1/Br2)
+print(N)

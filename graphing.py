@@ -81,12 +81,14 @@ def animate(files, element):
     ani = animation.FuncAnimation(fig, animate, interval=ani_interval, frames=frameslen)
     plt.show()
     
+    ani.save("Sponge0_1.mp4")
+
     for group in rootgroups:
         group.close()
 
 
 
 #### examples ####
-data = ['data170624_1.nc', 'data170624_2.nc']
+data = ['Sponge0_1.nc']
 
 animate(data, "zeta2")
