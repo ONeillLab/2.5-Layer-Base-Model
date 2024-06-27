@@ -6,10 +6,10 @@ import matplotlib.pyplot as plt
 
 fixed = True
 
-tmax = 1000
+tmax = 100
 ani_interval = 100
-restart_name = None
-new_name = 'Sponge0_01.nc'
+restart_name = 'test1.nc'
+new_name = 'test2.nc'
 
 c22h = 4  # 9  # ND 2nd baroclinic gravity wave speed squared
 c12h = 5  # 10  # ND 1st baroclinic gravity wave speed squared
@@ -55,7 +55,7 @@ EpHat = (
 dx = 1/5 * round(min(1, L/Lst), 3)  # Change dx from 5 grid points per Ld2 to 5 grid points per Rst (only if Rst < Ld2) (Daniel). Note this adds the bug for small dx which is unfixed when Br2 is large.
 dt = dx / (10 * c12h) #1 / (2**8) # CHANGED TO dx/(10*c12h) SO THAT dt CHANGES TO MATCH dx
 dtinv = 1 / dt
-sampfreq = 10
+sampfreq = 1
 tpl = sampfreq * dtinv
 
 N = math.ceil(L / dx)  # resolve

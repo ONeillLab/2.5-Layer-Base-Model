@@ -20,7 +20,9 @@ def animate(files, element):
     """
     rootgroups = []
     for file in files:
-        rootgroups.append(Dataset(file, "r"))
+        set = Dataset(file, "r")
+        rootgroups.append(set)
+        print(set.__dict__["time"])
 
     if element == "zeta1":
         u1mat = rootgroups[0].variables['u1mat']
@@ -81,14 +83,12 @@ def animate(files, element):
     ani = animation.FuncAnimation(fig, animate, interval=ani_interval, frames=frameslen)
     plt.show()
     
-    ani.save("Sponge0_1.mp4")
-
     for group in rootgroups:
         group.close()
 
 
 
 #### examples ####
-data = ['Sponge0_1.nc']
+data = ['test1.nc','test2.nc']
 
 animate(data, "zeta2")

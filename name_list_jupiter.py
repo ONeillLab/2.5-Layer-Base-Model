@@ -1,13 +1,12 @@
 import math
 import numpy as np
-import matplotlib.pyplot as plt
 
 fixed = True
 
-tmax = 1000
+tmax = 200
 ani_interval = 100
-restart_name = 'data_jupiter120624_1.nc'
-new_name = 'data_jupiter120624_2.nc'
+restart_name = None
+new_name = 'data_jupiter260624_1.nc'
 
 ### Dimensional, collected from papers, used for normalization ###
 f0 = 3.517e-4     # coriolis parameter from Siegelman [s]
@@ -25,7 +24,7 @@ tstp = tst*1.1   # Period between forced storms (Guess)
 
 ### Dimensonal, Atmosphere parameters, these are not known and must be adjusted ###
 p1p2 = 0.95
-H1H2 = 0.80
+H1H2 = 1
 
 # Dimensional, Derived Parameters ###
 Wst = H / tst
@@ -49,8 +48,8 @@ Wsh = Wst / (H1 * f0)
 #### Derived Quantities ###
 gm = p1p2*c22h/c12h*H1H2            # ND reduced gravity
 aOLd = a/Ld2;             # ND planetary radius to deformation radius ratio
-deglim = 30  # domain size [degrees]
-L = 2*(deglim * (np.pi/180) * a)/Ld2  # domain radius 30 deg from pole, normalized by deformation radius
+deglim = np.pi/6  # domain size [degrees]
+L = 2*(deglim * a)/Ld2  # domain radius 30 deg from pole, normalized by deformation radius
 num = round(Ar*(L**2)*Br2/np.pi)    # number of storms
 
 Lst = L * Ld2/Rst
@@ -61,8 +60,8 @@ layers = 2.5  # of layers (2 or 2.5)
 n = 2  # order of Laplacian '2' is hyperviscosity
 kappa = 1e-6
 ord = 2  # must equal 1 for Glenn's order, otherwise for Sadourney's (squares before avgs)
-spongedrag1 = 0.1
-spongedrag2 = 0.1
+spongedrag1 = 0.01
+spongedrag2 = 0.01
 
 EpHat = (
     ((1 / 2) * p1p2 * c12h + (1 / 2) * H1H2 * c22h - p1p2 * (c22h / c12h) * H1H2 * c12h)
@@ -130,9 +129,5 @@ for loc in possibleLocs:
 
 poslocs = np.array(poslocs)
 
-print(L * Ld2)
-
-print(L)
-
-#plt.imshow(spdrag2, cmap='hot')
-#plt.show()
+print(dtinv)
+print(dt)
