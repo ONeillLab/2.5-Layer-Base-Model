@@ -137,4 +137,4 @@ def save_data(u1,u2,v1,v2,h1,h2,locs,t,lasttime,file_name):
     storedata("v1mat", v1, file_name)
     storedata("v2mat", v2, file_name)
     storedata("locsmat", locs, file_name)
-    storetime(t+lasttime+sampfreq, file_name)
+    storetime(t, file_name)

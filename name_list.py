@@ -41,8 +41,8 @@ layers = 2.5  # # of layers (2 or 2.5)
 n = 2  # order of Laplacian '2' is hyperviscosity
 kappa = 1e-6
 ord = 2  # must equal 1 for Glenn's order, otherwise for Sadourney's (squares before avgs)
-spongedrag1 = 0.1
-spongedrag2 = 0.1
+spongedrag1 = 0.01
+spongedrag2 = 0.01
 
 EpHat = (
     ((1 / 2) * p1p2 * c12h + (1 / 2) * H1H2 * c22h - p1p2 * (c22h / c12h) * H1H2 * c12h)
