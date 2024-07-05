@@ -6,7 +6,7 @@ fixed = True
 tmax = 200
 ani_interval = 100
 restart_name = None
-new_name = 'data_jupiter260624_1.nc'
+new_name = 'data_jupiter030724_1.nc'
 
 ### Dimensional, collected from papers, used for normalization ###
 f0 = 3.517e-4     # coriolis parameter from Siegelman [s]
