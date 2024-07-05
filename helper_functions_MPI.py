@@ -124,12 +124,9 @@ def genlocs(num, N, t):
     return final
 
 ### New helper function for MPI ###
-def split(mat, subdomains, rank):
-    start = 0
-    for i in range(0,rank):
-        start += subdomains[i]
+def split(mat, offset, ranks, rank):
 
-    print(start)
-
-    return mat[start:start+subdomains[rank], :][:, start:start+subdomains[rank]]
+    ind = np.where(ranks == rank)
+    
+    return mat[offset*ind[0][0] : offset*ind[0][0] + offset, :][:, offset*ind[1][0] : offset*ind[1][0] + offset]
 
