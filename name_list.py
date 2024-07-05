@@ -97,13 +97,14 @@ x,y = np.meshgrid(np.arange(0,N), np.arange(0,N))
 
 
 ### For rolling the arrays ###
-subdomain_size = N // np.sqrt(num_processors-1)
+subdomain_size = int(N // np.sqrt(num_processors-1)) + 4
 
 l = np.concatenate((np.array([subdomain_size]), np.arange(1, subdomain_size)), axis=None) - 1
 l2 = np.concatenate((np.arange(subdomain_size - 1, subdomain_size + 1), np.arange(1, subdomain_size - 1)), axis=None) - 1 
 r = np.concatenate((np.arange(2, subdomain_size + 1), np.array([1])), axis=None) - 1
 r2 = np.concatenate((np.arange(3, subdomain_size + 1), np.arange(1, 3)), axis=None) - 1
 
+subdomain_size = int(N // np.sqrt(num_processors-1))
 
 ### Storm location picking ###
 possibleLocs = np.array(list(zip(*np.where(rlim == 1))))

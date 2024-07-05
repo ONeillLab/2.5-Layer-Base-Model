@@ -1,5 +1,5 @@
 import numpy as np
-from name_list import *
+from name_list_jupiter import *
 
 
 def pairfieldN2(L, h1, wlayer):
@@ -127,6 +127,34 @@ def genlocs(num, N, t):
 def split(mat, offset, ranks, rank):
 
     ind = np.where(ranks == rank)
-    
-    return mat[offset*ind[0][0] : offset*ind[0][0] + offset, :][:, offset*ind[1][0] : offset*ind[1][0] + offset]
 
+    temp = np.zeros((subdomain_size + 4, subdomain_size + 4))
+
+    left_padding = np.roll(mat, 2 , axis=1)[offset*ind[0][0] : offset*ind[0][0] + offset, :][:, offset*ind[1][0] : offset*ind[1][0] + 2]
+    right_padding = np.roll(mat, -2, axis=1)[offset*ind[0][0] : offset*ind[0][0] + offset, :][:, offset*ind[1][0] + offset - 2 : offset*ind[1][0] + offset]
+    top_padding = np.roll(mat, 2, axis=0)[offset*ind[0][0] : offset*ind[0][0] + 2, :][:, offset*ind[1][0] : offset*ind[1][0] + offset]
+    bot_padding = np.roll(mat, -2, axis=0)[offset*ind[0][0] + offset -2: offset*ind[0][0] + offset, :][:, offset*ind[1][0] : offset*ind[1][0] + offset]
+
+    temp[0:2, :][:, 2:len(temp)-2] = top_padding
+    temp[subdomain_size+2:subdomain_size+4, :][:, 2:len(temp)-2] = bot_padding
+    temp[2:len(temp)-2, :][:, 0:2] = left_padding
+    temp[2:len(temp)-2, : ][:, subdomain_size+2:subdomain_size+4] = right_padding
+
+    temp[2:subdomain_size+2, :][:, 2:subdomain_size+2] = mat[offset*ind[0][0] : offset*ind[0][0] + offset, :][:, offset*ind[1][0] : offset*ind[1][0] + offset]
+
+    return temp
+
+
+
+def combine(mats, offset, ranks, size):
+    mats = np.array(mats[1:size+1])
+
+    matsnew = np.reshape(mats[:, 2:subdomain_size+2, :][:, :, 2:subdomain_size+2], (int(np.sqrt(size)),int(np.sqrt(size)),subdomain_size,subdomain_size))
+
+    mat = np.zeros((N,N))
+
+    for i in range(1,size+1):
+        ind = np.where(ranks == i)
+        mat[offset*ind[0][0] : offset*ind[0][0] + offset, :][:, offset*ind[1][0] : offset*ind[1][0] + offset] = matsnew[ind[0][0], ind[1][0]]
+
+    return mat

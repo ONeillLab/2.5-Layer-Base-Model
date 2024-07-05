@@ -2,15 +2,15 @@ import numpy as np
 import math
 import helper_functions_MPI as hf
 import time
-from name_list import *
+from name_list_jupiter import *
 import psutil
 from netCDF4 import Dataset
 import access_data as ad
 from mpi4py import MPI
+import sys
 
 
 import matplotlib.pyplot as plt
-
 
 
 """ 
@@ -71,6 +71,7 @@ if rank == 0:
         v2matSplit.append(hf.split(v2, offset, ranks, i))
         h1matSplit.append(hf.split(h1, offset, ranks, i))
         h2matSplit.append(hf.split(h2, offset, ranks, i))
+
 else:
     WmatSplit = None
     u1matSplit = None
@@ -87,6 +88,7 @@ else:
     h1 = None
     h2 = None
     Wmat = None
+    lasttime = None
 
 Wmat = comm.scatter(WmatSplit, root=0)
 u1 = comm.scatter(u1matSplit, root=0)
@@ -95,8 +97,12 @@ v1 = comm.scatter(v1matSplit, root=0)
 v2 = comm.scatter(v2matSplit, root=0)
 h1 = comm.scatter(h1matSplit, root=0)
 h2 = comm.scatter(h2matSplit, root=0)
+lasttime = comm.bcast(lasttime, root=0)
+
+print(f"rank: {rank}, {u1.shape}")
 
 ### END OF INITIALIZATION ###
+
 
 """
 This is the start of time stepping.
@@ -130,8 +136,7 @@ The time step function...
 This function takes in each threads u1,u2,... and then solves the shallow water equations in them. It is the exact 
 same code as in other files, just wrapped in a function instead of a while loop. 
 """
-
-def timestep(u1,u2,v1,v2,h1,h2,Wmat, t,tc):
+def timestep(u1,u2,v1,v2,h1,h2,Wmat, t,tc, u1_p,u2_p,v1_p,v2_p,h1_p,h2_p):
     if AB == 2:
         tmp = u1.copy()
         u1 = 1.5 * u1 - 0.5 * u1_p
@@ -160,15 +165,15 @@ def timestep(u1,u2,v1,v2,h1,h2,Wmat, t,tc):
     dv2dt = hf.viscND(v2, Re, n)
 
     if spongedrag1 > 0:
-        du1dt = du1dt - spdrag1 * (u1)
-        du2dt = du2dt - spdrag2 * (u2)
-        dv1dt = dv1dt - spdrag1 * (v1)
-        dv2dt = dv2dt - spdrag2 * (v2)
+        du1dt = du1dt - hf.split(spdrag1, offset, ranks, rank) * (u1)
+        du2dt = du2dt - hf.split(spdrag2, offset, ranks, rank) * (u2)
+        dv1dt = dv1dt - hf.split(spdrag1, offset, ranks, rank) * (v1)
+        dv2dt = dv2dt - hf.split(spdrag2, offset, ranks, rank) * (v2)
 
     # absolute vorticity
-    zeta1 = 1 - Bt * rdist**2 + (1 / dx) * (v1 - v1[:,l] + u1[l,:] - u1)
+    zeta1 = 1 - Bt * hf.split(rdist,offset,ranks,rank)**2 + (1 / dx) * (v1 - v1[:,l] + u1[l,:] - u1)
     
-    zeta2 = 1 - Bt * rdist**2 + (1 / dx) * (v2 - v2[:,l] + u2[l,:] - u2)
+    zeta2 = 1 - Bt * hf.split(rdist,offset,ranks,rank)**2 + (1 / dx) * (v2 - v2[:,l] + u2[l,:] - u2)
 
 
     # add vorticity flux, zeta*u
@@ -205,6 +210,7 @@ def timestep(u1,u2,v1,v2,h1,h2,Wmat, t,tc):
         v1sq = v1_p + dt * dv1dtsq
         v2sq = v2_p + dt * dv2dtsq
 
+    """
     ##### new storm forcing -P #####
 
     remove_layers = [] # store weather layers that need to be removed here
@@ -226,6 +232,7 @@ def timestep(u1,u2,v1,v2,h1,h2,Wmat, t,tc):
             Wmat = hf.pairfieldN2(L, h1, wlayer)
 
     ##### new storm forcing -P #####
+    """
 
     Fx1 = hf.xflux(h1, u1) - kappa / dx * (h1 - h1[:,l])
     Fy1 = hf.yflux(h1, v1) - kappa / dx * (h1 - h1[l,:])
@@ -259,7 +266,67 @@ def timestep(u1,u2,v1,v2,h1,h2,Wmat, t,tc):
     tc += 1
     t = tc * dt
 
-    return u1,u2,v1,v2,h1,h2, t,tc
+    return u1,u2,v1,v2,h1,h2, t,tc, u1_p,u2_p,v1_p,v2_p,h1_p,h2_p
 
 
-u1,u2,v1,v2,h1,h2, t,tc = timestep(u1,u2,v1,v2,h1,h2,Wmat, t,tc)
+#while t <= tmax + lasttime + dt / 2:
+
+print("Starting simulation")
+
+if rank == 0:
+    timer = time.time()
+
+for i in range(10):
+
+    if rank != 0:
+        u1,u2,v1,v2,h1,h2, t,tc, u1_p,u2_p,v1_p,v2_p,h1_p,h2_p = timestep(u1,u2,v1,v2,h1,h2,Wmat, t,tc, u1_p,u2_p,v1_p,v2_p,h1_p,h2_p)
+
+    u1matSplit = comm.gather(u1, root=0)
+    v1matSplit = comm.gather(v1, root=0)
+    u2matSplit = comm.gather(u2, root=0)
+    v2matSplit = comm.gather(v2, root=0)
+    h1matSplit = comm.gather(h1, root=0)
+    h2matSplit = comm.gather(h2, root=0)
+
+    if rank == 0:
+
+        print(f"timestep: {i}, runtime:{time.time()-timer}")
+        timer = time.time()
+
+        u1 = hf.combine(u1matSplit, offset, ranks, size)
+        u2 = hf.combine(u2matSplit, offset, ranks, size)
+        v1 = hf.combine(v1matSplit, offset, ranks, size)
+        v2 = hf.combine(v2matSplit, offset, ranks, size)
+        h1 = hf.combine(h1matSplit, offset, ranks, size)
+        h2 = hf.combine(h2matSplit, offset, ranks, size)
+
+        u1matSplit = [u1]
+        v1matSplit = [v1]
+        u2matSplit = [u2]
+        v2matSplit = [v2]
+        h1matSplit = [h1]
+        h2matSplit = [h2]
+
+        for i in range(1,size+1):
+            u1matSplit.append(hf.split(u1, offset, ranks, i))
+            v1matSplit.append(hf.split(v1, offset, ranks, i))
+            u2matSplit.append(hf.split(u2, offset, ranks, i))
+            v2matSplit.append(hf.split(v2, offset, ranks, i))
+            h1matSplit.append(hf.split(h1, offset, ranks, i))
+            h2matSplit.append(hf.split(h2, offset, ranks, i))
+    
+    u1 = comm.scatter(u1matSplit, root=0)
+    u2 = comm.scatter(u2matSplit, root=0)
+    v1 = comm.scatter(v1matSplit, root=0)
+    v2 = comm.scatter(v2matSplit, root=0)
+    h1 = comm.scatter(h1matSplit, root=0)
+    h2 = comm.scatter(h2matSplit, root=0)
+    
+
+if rank == 0:
+    print(time.time()-timer)
+    plt.title(f"Rank: {rank}")
+    plt.imshow(u1, cmap='hot')
+    plt.colorbar()
+    plt.show()
+

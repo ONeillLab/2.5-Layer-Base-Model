@@ -3,6 +3,8 @@ import numpy as np
 
 fixed = True
 
+num_processors = 5
+
 tmax = 200
 ani_interval = 100
 restart_name = None
@@ -113,10 +115,15 @@ spdrag2 = spongedrag2 * sponge2
 
 x,y = np.meshgrid(np.arange(0,N), np.arange(0,N))
 
-l = np.concatenate((np.array([N]), np.arange(1, N)), axis=None) - 1
-l2 = np.concatenate((np.arange(N - 1, N + 1), np.arange(1, N - 1)), axis=None) - 1 
-r = np.concatenate((np.arange(2, N + 1), np.array([1])), axis=None) - 1
-r2 = np.concatenate((np.arange(3, N + 1), np.arange(1, 3)), axis=None) - 1
+### For rolling the arrays ###
+subdomain_size = int(N // np.sqrt(num_processors-1)) + 4
+
+l = np.concatenate((np.array([subdomain_size]), np.arange(1, subdomain_size)), axis=None) - 1
+l2 = np.concatenate((np.arange(subdomain_size - 1, subdomain_size + 1), np.arange(1, subdomain_size - 1)), axis=None) - 1 
+r = np.concatenate((np.arange(2, subdomain_size + 1), np.array([1])), axis=None) - 1
+r2 = np.concatenate((np.arange(3, subdomain_size + 1), np.arange(1, 3)), axis=None) - 1
+
+subdomain_size = int(N // np.sqrt(num_processors-1))
 
 ### Storm location picking ###
 
