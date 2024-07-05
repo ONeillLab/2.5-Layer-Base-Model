@@ -99,6 +99,9 @@ h1 = comm.scatter(h1matSplit, root=0)
 h2 = comm.scatter(h2matSplit, root=0)
 lasttime = comm.bcast(lasttime, root=0)
 
+
+print(f"Rank: {rank}, Shape: {Wmat.shape}")
+
 ### END OF INITIALIZATION ###
 
 

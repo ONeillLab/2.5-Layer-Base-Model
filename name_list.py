@@ -60,7 +60,7 @@ dtinv = 1 / dt
 sampfreq = 1
 tpl = sampfreq * dtinv
 
-N = 400 #math.ceil(L / dx)  # resolve
+N = math.ceil(L / dx)  # resolve
 L = N * dx
 
 x, y = np.meshgrid(np.arange(0.5, N + 0.5) * dx - L / 2, np.arange(0.5, N + 0.5) * dx - L / 2)
