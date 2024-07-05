@@ -1,5 +1,5 @@
 import numpy as np
-from name_list_jupiter import *
+from name_list import *
 
 
 def pairfieldN2(L, h1, wlayer):

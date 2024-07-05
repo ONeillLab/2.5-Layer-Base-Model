@@ -49,7 +49,7 @@ def run_sim(u1, u2, v1, v2, h1, h2, locs, lasttime):
     t = lasttime
     tc = round(t/dt)
 
-    while tc < 5: #t <= tmax + lasttime + dt / 2:
+    while tc < 10: #t <= tmax + lasttime + dt / 2:
 
         if AB == 2:
             tmp = u1.copy()
