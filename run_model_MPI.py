@@ -99,8 +99,6 @@ h1 = comm.scatter(h1matSplit, root=0)
 h2 = comm.scatter(h2matSplit, root=0)
 lasttime = comm.bcast(lasttime, root=0)
 
-print(f"rank: {rank}, {u1.shape}")
-
 ### END OF INITIALIZATION ###
 
 
@@ -271,10 +269,11 @@ def timestep(u1,u2,v1,v2,h1,h2,Wmat, t,tc, u1_p,u2_p,v1_p,v2_p,h1_p,h2_p):
 
 #while t <= tmax + lasttime + dt / 2:
 
-print("Starting simulation")
 
-if rank == 0:
+if rank == 1:
     timer = time.time()
+    print("Starting simulation")
+
 
 for i in range(10):
 
@@ -289,10 +288,6 @@ for i in range(10):
     h2matSplit = comm.gather(h2, root=0)
 
     if rank == 0:
-
-        print(f"timestep: {i}, runtime:{time.time()-timer}")
-        timer = time.time()
-
         u1 = hf.combine(u1matSplit, offset, ranks, size)
         u2 = hf.combine(u2matSplit, offset, ranks, size)
         v1 = hf.combine(v1matSplit, offset, ranks, size)
@@ -323,8 +318,10 @@ for i in range(10):
     h2 = comm.scatter(h2matSplit, root=0)
     
 
+if rank == 1:
+    print(f"time spent: {time.time()-timer}")
+
 if rank == 0:
-    print(time.time()-timer)
     plt.title(f"Rank: {rank}")
     plt.imshow(u1, cmap='hot')
     plt.colorbar()
