@@ -7,7 +7,7 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 from numba import jit, objmode, threading_layer, config
 import psutil
 from netCDF4 import Dataset
-from name_list_jupiter import *
+from name_list import *
 
 
 def animate(files, element):
