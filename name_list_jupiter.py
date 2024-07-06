@@ -79,7 +79,7 @@ dtinv = 1 / dt
 sampfreq = 10
 tpl = round(sampfreq * dtinv)
 
-N = math.ceil(L / dx)  # resolve
+N = 1024 #math.ceil(L / dx)  # resolve
 L = N * dx
 
 x, y = np.meshgrid(np.arange(0.5, N + 0.5) * dx - L / 2, np.arange(0.5, N + 0.5) * dx - L / 2)
@@ -135,3 +135,5 @@ for loc in possibleLocs:
     poslocs.append(np.array(loc))
 
 poslocs = np.array(poslocs)
+
+print(N)
