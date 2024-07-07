@@ -109,35 +109,14 @@ print(f"Rank: {rank}, Shape: {Wmat.shape}")
 This is the start of time stepping.
 
 Each thread solves the 2.5 layer shallow water equations on their own grid cell and then sends boundary data to its 
-neighbouring cells so that there are no weird boundaries.
+neighbouring cells so that there are no weird boundaries
 
-"""
-mode = 1
-
-# TIME STEPPING
-if AB == 2:
-    u1_p = u1.copy()
-    v1_p = v1.copy()
-    h1_p = h1.copy()
-    u2_p = u2.copy()
-    v2_p = v2.copy()
-    h2_p = h2.copy()
-
-
-ts = []
-ii = 0
-
-t = lasttime
-tc = round(t/dt)
-
-
-"""
 The time step function...
 
 This function takes in each threads u1,u2,... and then solves the shallow water equations in them. It is the exact 
 same code as in other files, just wrapped in a function instead of a while loop. 
 """
-def timestep(u1,u2,v1,v2,h1,h2,Wmat, t,tc, u1_p,u2_p,v1_p,v2_p,h1_p,h2_p):
+def timestep(u1,u2,v1,v2,h1,h2,Wmat, u1_p,u2_p,v1_p,v2_p,h1_p,h2_p):
     if AB == 2:
         tmp = u1.copy()
         u1 = 1.5 * u1 - 0.5 * u1_p
@@ -264,24 +243,52 @@ def timestep(u1,u2,v1,v2,h1,h2,Wmat, t,tc, u1_p,u2_p,v1_p,v2_p,h1_p,h2_p):
     v1 = v1sq
     v2 = v2sq
 
-    tc += 1
-    t = tc * dt
+    if math.isnan(h1[0, 0]):
+        print(f"Rank: {rank}, h1 is nan")
+        MPI.Finalize()
 
-    return u1,u2,v1,v2,h1,h2, t,tc, u1_p,u2_p,v1_p,v2_p,h1_p,h2_p
+    return u1,u2,v1,v2,h1,h2,u1_p,u2_p,v1_p,v2_p,h1_p,h2_p
 
+
+
+"""
+This is the start of the simulation
+
+"""
+
+mode = 1
+
+# TIME STEPPING
+if AB == 2:
+    u1_p = u1.copy()
+    v1_p = v1.copy()
+    h1_p = h1.copy()
+    u2_p = u2.copy()
+    v2_p = v2.copy()
+    h2_p = h2.copy()
+
+
+ts = []
+ii = 0
+
+t = lasttime
+tc = round(t/dt)
+
+
+
+print("Starting simulation")
 
 #while t <= tmax + lasttime + dt / 2:
 
 
-if rank == 1:
-    timer = time.time()
-    print("Starting simulation")
+timer = time.time()
 
+for i in range(200):
 
-for i in range(10):
+    
 
     if rank != 0:
-        u1,u2,v1,v2,h1,h2, t,tc, u1_p,u2_p,v1_p,v2_p,h1_p,h2_p = timestep(u1,u2,v1,v2,h1,h2,Wmat, t,tc, u1_p,u2_p,v1_p,v2_p,h1_p,h2_p)
+        u1,u2,v1,v2,h1,h2, u1_p,u2_p,v1_p,v2_p,h1_p,h2_p = timestep(u1,u2,v1,v2,h1,h2,Wmat, u1_p,u2_p,v1_p,v2_p,h1_p,h2_p)
 
     u1matSplit = comm.gather(u1, root=0)
     v1matSplit = comm.gather(v1, root=0)
@@ -319,10 +326,11 @@ for i in range(10):
     v2 = comm.scatter(v2matSplit, root=0)
     h1 = comm.scatter(h1matSplit, root=0)
     h2 = comm.scatter(h2matSplit, root=0)
-    
 
-if rank == 1:
-    print(f"time spent: {time.time()-timer}")
+    tc += 1
+    t = tc * dt
+
+print(f"rank: {rank}, time spent: {time.time()-timer}")
 
 if rank == 0:
     plt.title(f"Rank: {rank}")

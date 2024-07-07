@@ -49,7 +49,7 @@ def run_sim(u1, u2, v1, v2, h1, h2, locs, lasttime):
     t = lasttime
     tc = round(t/dt)
 
-    while tc < 10: #t <= tmax + lasttime + dt / 2:
+    while t <= tmax + lasttime + dt / 2:
 
         if AB == 2:
             tmp = u1.copy()
@@ -192,10 +192,6 @@ def run_sim(u1, u2, v1, v2, h1, h2, locs, lasttime):
                 
         if math.isnan(h1[0, 0]):
             break
-
-        with objmode(timer='f8'):
-            print(f"t={t}, mean h1 is {round(np.mean(np.mean(h1)), 4)}, num storms {locs.shape[0]}. Time elapsed, {round(time.perf_counter()-timer, 3)}s. CPU usage, {psutil.cpu_percent()}")
-            timer = time.perf_counter()
 
         tc += 1
         t = tc * dt

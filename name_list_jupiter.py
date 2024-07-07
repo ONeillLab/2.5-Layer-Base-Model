@@ -3,7 +3,7 @@ import numpy as np
 
 fixed = True
 
-num_processors = 5
+num_processors = 65
 
 tmax = 200
 ani_interval = 100
@@ -135,5 +135,3 @@ for loc in possibleLocs:
     poslocs.append(np.array(loc))
 
 poslocs = np.array(poslocs)
-
-print(N)
