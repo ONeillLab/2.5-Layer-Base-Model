@@ -313,117 +313,81 @@ while t <= tmax + lasttime + dt / 2:
         i = ind[0][0] + 2
         j = ind[1][0] + 2
         sendranks, recvranks = hf.get_surrounding_points(largeranks, i, j)
-        #print(f"rank: {rank}, {sendranks}")
+        print(f"rank: {rank}, {sendranks}")
 
         
         for sendrank in sendranks:
             if (sendrank[0], sendrank[1]) == (-1,-1):
-                comm.send([u1[2:4,:][:,2:4],u2[2:4,:][:,2:4],v1[2:4,:][:,2:4],v2[2:4,:][:,2:4],h1[2:4,:][:,2:4],h2[2:4,:][:,2:4]], 
-                          dest=sendrank[2], tag=0)
+                comm.send(u1[2:4,:][:,2:4], dest=sendrank[2], tag=0)
+                comm.send(u2[2:4,:][:,2:4], dest=sendrank[2], tag=1)
+                comm.send(v1[2:4,:][:,2:4], dest=sendrank[2], tag=2)
+                comm.send(v2[2:4,:][:,2:4], dest=sendrank[2], tag=3)
+                comm.send(h1[2:4,:][:,2:4], dest=sendrank[2], tag=4)
+                comm.send(h2[2:4,:][:,2:4], dest=sendrank[2], tag=5) #recvbuf=u1[offset+2:offset+4,:][:,offset+2:offset+4], source=rank, recvtag=5)
 
             if (sendrank[0], sendrank[1]) == (-1,0):
-                comm.send([u1[2:4,:][:,2:offset+2],u2[2:4,:][:,2:offset+2],v1[2:4,:][:,2:offset+2],v2[2:4,:][:,2:offset+2],h1[2:4,:][:,2:offset+2],h2[2:4,:][:,2:offset+2]], 
-                          dest=sendrank[2], tag=1)
-      
+                comm.send(u1[2:4,:][:,2:offset+2], dest=sendrank[2], tag=10)
+                comm.send(u2[2:4,:][:,2:offset+2], dest=sendrank[2], tag=11)
+                comm.send(v1[2:4,:][:,2:offset+2], dest=sendrank[2], tag=12)
+                comm.send(v2[2:4,:][:,2:offset+2], dest=sendrank[2], tag=13)
+                comm.send(h1[2:4,:][:,2:offset+2], dest=sendrank[2], tag=14)
+                comm.send(h2[2:4,:][:,2:offset+2], dest=sendrank[2], tag=15) #recvbuf=h2[offset+2:offset+4,:][:,2:offset+2])
+
             if (sendrank[0], sendrank[1]) == (-1,1):
-                comm.send([u1[2:4,:][:,offset:offset+2],u2[2:4,:][:,offset:offset+2],v1[2:4,:][:,offset:offset+2],v2[2:4,:][:,offset:offset+2],h1[2:4,:][:,offset:offset+2],h2[2:4,:][:,offset:offset+2]],     
-                          dest=sendrank[2], tag=2)
+                comm.send(u1[2:4,:][:,offset:offset+2], dest=sendrank[2], tag=20)
+                comm.send(u2[2:4,:][:,offset:offset+2], dest=sendrank[2], tag=21)
+                comm.send(v1[2:4,:][:,offset:offset+2], dest=sendrank[2], tag=22)
+                comm.send(v2[2:4,:][:,offset:offset+2], dest=sendrank[2], tag=23)
+                comm.send(h1[2:4,:][:,offset:offset+2], dest=sendrank[2], tag=24)
+                comm.send(h2[2:4,:][:,offset:offset+2], dest=sendrank[2], tag=25) #recvbuf=h2[offset+2:offset+4,:][:,0:2])
 
             if (sendrank[0], sendrank[1]) == (0,-1):
-                comm.send([u1[2:offset+2,:][:,2:4],u2[2:offset+2,:][:,2:4],v1[2:offset+2,:][:,2:4],v2[2:offset+2,:][:,2:4],h1[2:offset+2,:][:,2:4],h2[2:offset+2,:][:,2:4]],
-                          dest=sendrank[2], tag=3)
+                comm.send(u1[2:offset+2,:][:,2:4], dest=sendrank[2], tag=30)
+                comm.send(u2[2:offset+2,:][:,2:4], dest=sendrank[2], tag=31)
+                comm.send(v1[2:offset+2,:][:,2:4], dest=sendrank[2], tag=32)
+                comm.send(v2[2:offset+2,:][:,2:4], dest=sendrank[2], tag=33)
+                comm.send(h1[2:offset+2,:][:,2:4], dest=sendrank[2], tag=34)
+                comm.send(h2[2:offset+2,:][:,2:4], dest=sendrank[2], tag=35) #recvbuf=h2[2:offset+2,:][:,offset+2:offset+4])
 
             if (sendrank[0], sendrank[1]) == (0,1):
-                comm.send([u1[2:offset+2,:][:,offset:offset+2],u2[2:offset+2,:][:,offset:offset+2],v1[2:offset+2,:][:,offset:offset+2],v2[2:offset+2,:][:,offset:offset+2],h1[2:offset+2,:][:,offset:offset+2],h2[2:offset+2,:][:,offset:offset+2]],
-                          dest=sendrank[2], tag=4)
-            
+                comm.send(u1[2:offset+2,:][:,offset:offset+2], dest=sendrank[2], tag=40)
+                comm.send(u2[2:offset+2,:][:,offset:offset+2], dest=sendrank[2], tag=41)
+                comm.send(v1[2:offset+2,:][:,offset:offset+2], dest=sendrank[2], tag=42)
+                comm.send(v2[2:offset+2,:][:,offset:offset+2], dest=sendrank[2], tag=43)
+                comm.send(h1[2:offset+2,:][:,offset:offset+2], dest=sendrank[2], tag=44)
+                comm.send(h2[2:offset+2,:][:,offset:offset+2], dest=sendrank[2], tag=45) #recvbuf=h2[2:offset+2,:][:,0:2])
+
             if (sendrank[0], sendrank[1]) == (1,-1):
-                comm.send([u1[offset:offset+2,:][:,2:4],u2[offset:offset+2,:][:,2:4],v1[offset:offset+2,:][:,2:4],v2[offset:offset+2,:][:,2:4],h1[offset:offset+2,:][:,2:4],h2[offset:offset+2,:][:,2:4]],
-                          dest=sendrank[2], tag=5)
+                comm.send(u1[offset:offset+2,:][:,2:4], dest=sendrank[2], tag=50)
+                comm.send(u2[offset:offset+2,:][:,2:4], dest=sendrank[2], tag=51)
+                comm.send(v1[offset:offset+2,:][:,2:4], dest=sendrank[2], tag=52)
+                comm.send(v2[offset:offset+2,:][:,2:4], dest=sendrank[2], tag=53)
+                comm.send(h1[offset:offset+2,:][:,2:4], dest=sendrank[2], tag=54)
+                comm.send(h2[offset:offset+2,:][:,2:4], dest=sendrank[2], tag=55) #recvbuf=h2[0:2,:][:,offset+2:offset+4])
 
             if (sendrank[0], sendrank[1]) == (1,0):
-                comm.send([u1[offset:offset+2,:][:,2:offset+2],u2[offset:offset+2,:][:,2:offset+2],v1[offset:offset+2,:][:,2:offset+2],v2[offset:offset+2,:][:,2:offset+2],h1[offset:offset+2,:][:,2:offset+2], h2[offset:offset+2,:][:,2:offset+2]], 
-                          dest=sendrank[2], tag=6)
+                comm.send([u1[offset:offset+2,:][:,2:offset+2], u2[offset:offset+2,:][:,2:offset+2], v1[offset:offset+2,:][:,2:offset+2], v2[offset:offset+2,:][:,2:offset+2],
+                           h1[offset:offset+2,:][:,2:offset+2], h2[offset:offset+2,:][:,2:offset+2]], dest=sendrank[2], tag=6)
+                
+                
+                comm.send(u2[offset:offset+2,:][:,2:offset+2], dest=sendrank[2], tag=61)
+                comm.send(v1[offset:offset+2,:][:,2:offset+2], dest=sendrank[2], tag=62)
+                comm.send(v2[offset:offset+2,:][:,2:offset+2], dest=sendrank[2], tag=63)
+                comm.send(h1[offset:offset+2,:][:,2:offset+2], dest=sendrank[2], tag=64)
+                comm.send(h2[offset:offset+2,:][:,2:offset+2], dest=sendrank[2], tag=65) #recvbuf=h2[0:2,:][:,2:offset+2])
             
             if (sendrank[0], sendrank[1]) == (1,1):
-                comm.send([u1[offset:offset+2,:][:,offset:offset+2],u2[offset:offset+2,:][:,offset:offset+2],v1[offset:offset+2,:][:,offset:offset+2],v2[offset:offset+2,:][:,offset:offset+2],h1[offset:offset+2,:][:,offset:offset+2],h2[offset:offset+2,:][:,offset:offset+2]],
-                          dest=sendrank[2], tag=7)
-
+                comm.send(u1[offset:offset+2,:][:,offset:offset+2], dest=sendrank[2], tag=70)
+                comm.send(u2[offset:offset+2,:][:,offset:offset+2], dest=sendrank[2], tag=71)
+                comm.send(v1[offset:offset+2,:][:,offset:offset+2], dest=sendrank[2], tag=72)
+                comm.send(v2[offset:offset+2,:][:,offset:offset+2], dest=sendrank[2], tag=73)
+                comm.send(h1[offset:offset+2,:][:,offset:offset+2], dest=sendrank[2], tag=74)
+                comm.send(h2[offset:offset+2,:][:,offset:offset+2], dest=sendrank[2], tag=75) #recvbuf=h2[0:2,:][:,0:2])
 
         for sendrank in sendranks:
-            if (sendrank[0], sendrank[1]) == (-1,-1):
-                data = comm.recv(source=sendrank[2], tag=7)
-                u1[0:2,:][:,offset+2:offset+4] = data[0]
-                u2[0:2,:][:,offset+2:offset+4] = data[1]
-                v1[0:2,:][:,offset+2:offset+4] = data[2]
-                v2[0:2,:][:,offset+2:offset+4] = data[3]
-                h1[0:2,:][:,offset+2:offset+4] = data[4]
-                h2[0:2,:][:,offset+2:offset+4] = data[5]
-            
-            if (sendrank[0], sendrank[1]) == (-1,0):
-                data = comm.recv(source=sendrank[2], tag=6)
-                u1[0:2,:][:,2:offset+2] = data[0]
-                u2[0:2,:][:,2:offset+2] = data[1]
-                v1[0:2,:][:,2:offset+2] = data[2]
-                v2[0:2,:][:,2:offset+2] = data[3]
-                h1[0:2,:][:,2:offset+2] = data[4]
-                h2[0:2,:][:,2:offset+2] = data[5]
 
-            if (sendrank[0], sendrank[1]) == (-1,1):
-                data = comm.recv(source=sendrank[2], tag=5)
-                u1[0:2,:][:,offset+2:offset+4] = data[0]
-                u2[0:2,:][:,offset+2:offset+4] = data[1]
-                v1[0:2,:][:,offset+2:offset+4] = data[2]
-                v2[0:2,:][:,offset+2:offset+4] = data[3]
-                h1[0:2,:][:,offset+2:offset+4] = data[4]
-                h2[0:2,:][:,offset+2:offset+4] = data[5]
 
-            if (sendrank[0], sendrank[1]) == (0,-1):
-                data = comm.recv(source=sendrank[2], tag=4)
-                u1[2:offset+2,:][:,0:2] = data[0]
-                u2[2:offset+2,:][:,0:2] = data[1]
-                v1[2:offset+2,:][:,0:2] = data[2]
-                v2[2:offset+2,:][:,0:2] = data[3]
-                h1[2:offset+2,:][:,0:2] = data[4]
-                h2[2:offset+2,:][:,0:2] = data[5]
-
-            if (sendrank[0], sendrank[1]) == (0,1):
-                data = comm.recv(source=sendrank[2], tag=3)
-                u1[2:offset+2,:][:,offset+2:offset+4] = data[0]
-                u2[2:offset+2,:][:,offset+2:offset+4] = data[1]
-                v1[2:offset+2,:][:,offset+2:offset+4] = data[2]
-                v2[2:offset+2,:][:,offset+2:offset+4] = data[3]
-                h1[2:offset+2,:][:,offset+2:offset+4] = data[4]
-                h2[2:offset+2,:][:,offset+2:offset+4] = data[5]
-            
-            if (sendrank[0], sendrank[1]) == (1,-1):
-                data = comm.recv(source=sendrank[2], tag=2)
-                u1[offset+2:offset+4,:][:,0:2] = data[0]
-                u2[offset+2:offset+4,:][:,0:2] = data[1]
-                v1[offset+2:offset+4,:][:,0:2] = data[2]
-                v2[offset+2:offset+4,:][:,0:2] = data[3]
-                h1[offset+2:offset+4,:][:,0:2] = data[4]
-                h2[offset+2:offset+4,:][:,0:2] = data[5]
-            
-            if (sendrank[0], sendrank[1]) == (-1,0):
-                data = comm.recv(source=sendrank[2], tag=1)
-                u1[offset+2:offset+4,:][:,2:offset+2] = data[0]
-                u2[offset+2:offset+4,:][:,2:offset+2] = data[1]
-                v1[offset+2:offset+4,:][:,2:offset+2] = data[2]
-                v2[offset+2:offset+4,:][:,2:offset+2] = data[3]
-                h1[offset+2:offset+4,:][:,2:offset+2] = data[4]
-                h2[offset+2:offset+4,:][:,2:offset+2] = data[5]
-
-            if (sendrank[0], sendrank[1]) == (1,1):
-                data = comm.recv(source=sendrank[2], tag=0)
-                u1[offset+2:offset+4,:][:,offset+2:offset+4] = data[0]
-                u2[offset+2:offset+4,:][:,offset+2:offset+4] = data[1]
-                v1[offset+2:offset+4,:][:,offset+2:offset+4] = data[2]
-                v2[offset+2:offset+4,:][:,offset+2:offset+4] = data[3]
-                h1[offset+2:offset+4,:][:,offset+2:offset+4] = data[4]
-                h2[offset+2:offset+4,:][:,offset+2:offset+4] = data[5]
-    
-    #sys.exit()
+    sys.exit()
     sendingTimes.append(time.time()-sendtimer)
 
     ### Rank 0 checks for if new storms need to be created and sends out the new Wmat ###

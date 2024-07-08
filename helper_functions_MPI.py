@@ -195,6 +195,21 @@ def combine(mats, offset, ranks, size):
     return mat
 
 
+def get_surrounding_points(arr, i, j):
+    surrounding_indices = [(-1, -1), (-1, 0), (-1, 1),
+                           (0, -1),         (0, 1),
+                           (1, -1), (1, 0), (1, 1)]
+    
+    rows, cols = arr.shape
+    surrounding_points = []
+    just_ranks = []
+    
+    for di, dj in surrounding_indices:
+        ni, nj = (i + di) % rows, (j + dj) % cols
+        surrounding_points.append((ni-i, nj-j, arr[ni, nj]))
+        just_ranks.append(arr[ni,nj])
+    
+    return surrounding_points, set(just_ranks)
 
 """
 Deprecated functions which might be needed later
