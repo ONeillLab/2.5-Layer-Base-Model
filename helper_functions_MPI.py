@@ -1,5 +1,6 @@
 import numpy as np
 from name_list import *
+import time
 
 
 def pairfieldN2(L, h1, wlayer):
@@ -121,8 +122,86 @@ def genlocs(num, N, t):
     return final
 
 ### New helper function for MPI ###
-def split(mat, offset, ranks, rank):
+def split(arr, offset, ranks, rank):
 
+    timer = time.time()
+
+    rows, cols = arr.shape
+    ind = np.where(ranks == rank)
+    i = offset*ind[0][0]
+    j = offset*ind[1][0]
+    
+    n = offset
+
+    # Initialize an (n+4)x(n+4) result array
+    result = np.full((n+4, n+4), np.nan, dtype=arr.dtype)
+    
+    #Fill the center (n x n) part with the original n x n block
+    for block_i in range(n):
+        for block_j in range(n):
+            result[block_i + 2, block_j + 2] = arr[(i + block_i) % rows, (j + block_j) % cols]
+    
+    #result[2:n+2,:][:,2:n+2] = arr[i:i+n,:][:,j:j+n]
+
+    # Fill the edges 2 cells away
+    for block_j in range(n):
+        result[0, block_j + 2] = arr[(i - 2) % rows, (j + block_j) % cols]  # Top edge
+        result[1, block_j + 2] = arr[(i - 1) % rows, (j + block_j) % cols]  # 1 cell above the block
+        result[n + 2, block_j + 2] = arr[(i + n) % rows, (j + block_j) % cols]  # 1 cell below the block
+        result[n + 3, block_j + 2] = arr[(i + n + 1) % rows, (j + block_j) % cols]  # Bottom edge
+    
+    for block_i in range(n):
+        result[block_i + 2, 0] = arr[(i + block_i) % rows, (j - 2) % cols]  # Left edge
+        result[block_i + 2, 1] = arr[(i + block_i) % rows, (j - 1) % cols]  # 1 cell left of the block
+        result[block_i + 2, n + 2] = arr[(i + block_i) % rows, (j + n) % cols]  # 1 cell right of the block
+        result[block_i + 2, n + 3] = arr[(i + block_i) % rows, (j + n + 1) % cols]  # Right edge
+    
+    # Fill the corners 2 cells away
+    result[0, 0] = arr[(i - 2) % rows, (j - 2) % cols]  # Top-left corner
+    result[0, 1] = arr[(i - 2) % rows, (j - 1) % cols]  # Top-left 1 cell right
+    result[1, 0] = arr[(i - 1) % rows, (j - 2) % cols]  # Top-left 1 cell down
+    result[1, 1] = arr[(i - 1) % rows, (j - 1) % cols]  # Top-left 1 cell down-right
+
+    result[0, n + 3] = arr[(i - 2) % rows, (j + n + 1) % cols]  # Top-right corner
+    result[0, n + 2] = arr[(i - 2) % rows, (j + n) % cols]  # Top-right 1 cell left
+    result[1, n + 3] = arr[(i - 1) % rows, (j + n + 1) % cols]  # Top-right 1 cell down
+    result[1, n + 2] = arr[(i - 1) % rows, (j + n) % cols]  # Top-right 1 cell down-left
+
+    result[n + 3, 0] = arr[(i + n + 1) % rows, (j - 2) % cols]  # Bottom-left corner
+    result[n + 3, 1] = arr[(i + n + 1) % rows, (j - 1) % cols]  # Bottom-left 1 cell right
+    result[n + 2, 0] = arr[(i + n) % rows, (j - 2) % cols]  # Bottom-left 1 cell up
+    result[n + 2, 1] = arr[(i + n) % rows, (j - 1) % cols]  # Bottom-left 1 cell up-right
+
+    result[n + 3, n + 3] = arr[(i + n + 1) % rows, (j + n + 1) % cols]  # Bottom-right corner
+    result[n + 3, n + 2] = arr[(i + n + 1) % rows, (j + n) % cols]  # Bottom-right 1 cell left
+    result[n + 2, n + 3] = arr[(i + n) % rows, (j + n + 1) % cols]  # Bottom-right 1 cell up
+    result[n + 2, n + 2] = arr[(i + n) % rows, (j + n) % cols]  # Bottom-right 1 cell up-left
+    
+        
+    return result
+
+
+def combine(mats, offset, ranks, size):
+    mats = np.array(mats[1:size+1])
+
+    matsnew = np.reshape(mats[:, 2:subdomain_size+2, :][:, :, 2:subdomain_size+2], (int(np.sqrt(size)),int(np.sqrt(size)),subdomain_size,subdomain_size))
+
+    mat = np.zeros((N,N))
+
+    for i in range(1,size+1):
+        ind = np.where(ranks == i)
+        mat[offset*ind[0][0] : offset*ind[0][0] + offset, :][:, offset*ind[1][0] : offset*ind[1][0] + offset] = matsnew[ind[0][0], ind[1][0]]
+
+    return mat
+
+
+
+"""
+Deprecated functions which might be needed later
+
+def split(mat, offset, ranks, rank):
+    
+    timer = time.time()
     ind = np.where(ranks == rank)
 
     temp = np.zeros((subdomain_size + 4, subdomain_size + 4))
@@ -139,18 +218,8 @@ def split(mat, offset, ranks, rank):
 
     temp[2:subdomain_size+2, :][:, 2:subdomain_size+2] = mat[offset*ind[0][0] : offset*ind[0][0] + offset, :][:, offset*ind[1][0] : offset*ind[1][0] + offset]
 
+    print(time.time()-timer)
+
     return temp
 
-
-def combine(mats, offset, ranks, size):
-    mats = np.array(mats[1:size+1])
-
-    matsnew = np.reshape(mats[:, 2:subdomain_size+2, :][:, :, 2:subdomain_size+2], (int(np.sqrt(size)),int(np.sqrt(size)),subdomain_size,subdomain_size))
-
-    mat = np.zeros((N,N))
-
-    for i in range(1,size+1):
-        ind = np.where(ranks == i)
-        mat[offset*ind[0][0] : offset*ind[0][0] + offset, :][:, offset*ind[1][0] : offset*ind[1][0] + offset] = matsnew[ind[0][0], ind[1][0]]
-
-    return mat
+"""
