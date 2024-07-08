@@ -8,6 +8,7 @@ from netCDF4 import Dataset
 import access_data as ad
 from mpi4py import MPI
 import sys
+import os
 
 
 import matplotlib.pyplot as plt
@@ -364,7 +365,7 @@ while t <= tmax + lasttime + dt / 2:
     tc += 1
     t = tc * dt
 
-print(f"rank: {rank}, simtime avg: {np.mean(simTimes)}, sendingtime avg: {np.mean(sendingTimes)}, total time: {time.time()-tottimer}")
+print(f"rank: {rank}, simtime avg: {np.mean(simTimes)}, sendingtime avg: {np.mean(sendingTimes)}, total time: {time.time()-tottimer}, num threads: {os.environ.get('OMP_NUM_THREADS')}")
 
 if rank == 0:
     print(f"zerotime avg: {np.mean(zeroTimes)}")
