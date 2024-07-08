@@ -73,14 +73,14 @@ EpHat = (
     * (Ar / np.sqrt(Br2))
 )
 
-dx = 1 / 5 * round(min(1,L/Lst), 3)
+#dx = 1 / 5 * round(min(1,L/Lst), 3)
+
+N  = 1024
+dx = L/N
 dt = dx / (10 * c12h) #1 / (2**8) # CHANGED TO dx/(10*c12h) SO THAT dt CHANGES TO MATCH dx
 dtinv = 1 / dt
 sampfreq = 10
 tpl = round(sampfreq * dtinv)
-
-N = 1024 #math.ceil(L / dx)  # resolve
-#L = N * dx
 
 x, y = np.meshgrid(np.arange(0.5, N + 0.5) * dx - L / 2, np.arange(0.5, N + 0.5) * dx - L / 2)
 H = 1 + 0 * x
@@ -135,3 +135,9 @@ for loc in possibleLocs:
     poslocs.append(np.array(loc))
 
 poslocs = np.array(poslocs)
+
+
+import matplotlib.pyplot as plt
+
+plt.imshow(spdrag1, cmap='hot')
+plt.show()
