@@ -384,7 +384,7 @@ while t <= tmax + lasttime + dt / 2:
                 comm.send(h1[offset:offset+2,:][:,offset:offset+2], dest=sendrank[2], tag=74)
                 comm.send(h2[offset:offset+2,:][:,offset:offset+2], dest=sendrank[2], tag=75) #recvbuf=h2[0:2,:][:,0:2])
 
-        for sendrank in sendranks:
+        #for sendrank in sendranks:
 
 
     sys.exit()
