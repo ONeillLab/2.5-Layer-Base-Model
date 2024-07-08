@@ -135,9 +135,3 @@ for loc in possibleLocs:
     poslocs.append(np.array(loc))
 
 poslocs = np.array(poslocs)
-
-
-import matplotlib.pyplot as plt
-
-plt.imshow(spdrag1, cmap='hot')
-plt.show()
