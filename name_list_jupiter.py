@@ -80,7 +80,7 @@ sampfreq = 10
 tpl = round(sampfreq * dtinv)
 
 N = 1024 #math.ceil(L / dx)  # resolve
-L = N * dx
+#L = N * dx
 
 x, y = np.meshgrid(np.arange(0.5, N + 0.5) * dx - L / 2, np.arange(0.5, N + 0.5) * dx - L / 2)
 H = 1 + 0 * x
