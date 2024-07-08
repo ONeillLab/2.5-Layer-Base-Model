@@ -63,6 +63,10 @@ if rank == 0:
     h1matSplit = [h1]
     h2matSplit = [h2]
 
+    spdrag1Split = [spdrag1]
+    spdrag2Split = [spdrag2]
+    rdistSplit = [rdist]
+
     for i in range(1,size+1):
         WmatSplit.append(hf.split(Wmat, offset, ranks, i))
         u1matSplit.append(hf.split(u1, offset, ranks, i))
@@ -71,6 +75,10 @@ if rank == 0:
         v2matSplit.append(hf.split(v2, offset, ranks, i))
         h1matSplit.append(hf.split(h1, offset, ranks, i))
         h2matSplit.append(hf.split(h2, offset, ranks, i))
+
+        spdrag1Split.append(hf.split(spdrag1, offset, ranks, i))
+        spdrag2Split.append(hf.split(spdrag2, offset, ranks, i))
+        rdistSplit.append(hf.split(rdist, offset, ranks, i))
 
 else:
     WmatSplit = None
@@ -81,6 +89,10 @@ else:
     h1matSplit = None
     h2matSplit = None
 
+    spdrag1Split = None
+    spdrag2Split = None
+    rdistSplit = None
+
     u1 = None
     u2 = None
     v1 = None
@@ -90,6 +102,10 @@ else:
     Wmat = None
     lasttime = None
 
+    spdrag1 = None
+    spdrag2 = None
+    rdist = None
+
 Wmat = comm.scatter(WmatSplit, root=0)
 u1 = comm.scatter(u1matSplit, root=0)
 u2 = comm.scatter(u2matSplit, root=0)
@@ -97,10 +113,13 @@ v1 = comm.scatter(v1matSplit, root=0)
 v2 = comm.scatter(v2matSplit, root=0)
 h1 = comm.scatter(h1matSplit, root=0)
 h2 = comm.scatter(h2matSplit, root=0)
+spdrag1 = comm.scatter(spdrag1Split, root=0)
+spdrag2 = comm.scatter(spdrag2Split, root=0)
+rdist = comm.scatter(rdistSplit, root=0)
 lasttime = comm.bcast(lasttime, root=0)
 
 
-print(f"Rank: {rank}, Shape: {Wmat.shape}")
+#print(f"Rank: {rank}, Shape: {Wmat.shape}")
 
 ### END OF INITIALIZATION ###
 
@@ -117,6 +136,7 @@ This function takes in each threads u1,u2,... and then solves the shallow water 
 same code as in other files, just wrapped in a function instead of a while loop. 
 """
 def timestep(u1,u2,v1,v2,h1,h2,Wmat, u1_p,u2_p,v1_p,v2_p,h1_p,h2_p):
+    broke = False
     if AB == 2:
         tmp = u1.copy()
         u1 = 1.5 * u1 - 0.5 * u1_p
@@ -145,15 +165,15 @@ def timestep(u1,u2,v1,v2,h1,h2,Wmat, u1_p,u2_p,v1_p,v2_p,h1_p,h2_p):
     dv2dt = hf.viscND(v2, Re, n)
 
     if spongedrag1 > 0:
-        du1dt = du1dt - hf.split(spdrag1, offset, ranks, rank) * (u1)
-        du2dt = du2dt - hf.split(spdrag2, offset, ranks, rank) * (u2)
-        dv1dt = dv1dt - hf.split(spdrag1, offset, ranks, rank) * (v1)
-        dv2dt = dv2dt - hf.split(spdrag2, offset, ranks, rank) * (v2)
+        du1dt = du1dt - spdrag1 * (u1)
+        du2dt = du2dt - spdrag2 * (u2)
+        dv1dt = dv1dt - spdrag1 * (v1)
+        dv2dt = dv2dt - spdrag2 * (v2)
 
     # absolute vorticity
-    zeta1 = 1 - Bt * hf.split(rdist,offset,ranks,rank)**2 + (1 / dx) * (v1 - v1[:,l] + u1[l,:] - u1)
+    zeta1 = 1 - Bt * rdist**2 + (1 / dx) * (v1 - v1[:,l] + u1[l,:] - u1)
     
-    zeta2 = 1 - Bt * hf.split(rdist,offset,ranks,rank)**2 + (1 / dx) * (v2 - v2[:,l] + u2[l,:] - u2)
+    zeta2 = 1 - Bt * rdist**2 + (1 / dx) * (v2 - v2[:,l] + u2[l,:] - u2)
 
 
     # add vorticity flux, zeta*u
@@ -190,29 +210,6 @@ def timestep(u1,u2,v1,v2,h1,h2,Wmat, u1_p,u2_p,v1_p,v2_p,h1_p,h2_p):
         v1sq = v1_p + dt * dv1dtsq
         v2sq = v2_p + dt * dv2dtsq
 
-    """
-    ##### new storm forcing -P #####
-
-    remove_layers = [] # store weather layers that need to be removed here
-
-    if mode == 1:
-        for i in range(len(locs)):
-            if (t-locs[i][-1]) >= locs[i][3] and t != 0:
-                remove_layers.append(i) # tag layer for removal if a storm's 
-
-        add = len(remove_layers) # number of storms that were removed
-
-        if add != 0:
-            newlocs = hf.genlocs(add, N, t)
-
-            for i in range(len(remove_layers)):
-                locs[remove_layers[i]] = newlocs[i]
-
-            wlayer = hf.pairshapeN2(locs, t) ### use pairshapeBEGIN instead of pairshape
-            Wmat = hf.pairfieldN2(L, h1, wlayer)
-
-    ##### new storm forcing -P #####
-    """
 
     Fx1 = hf.xflux(h1, u1) - kappa / dx * (h1 - h1[:,l])
     Fy1 = hf.yflux(h1, v1) - kappa / dx * (h1 - h1[l,:])
@@ -245,9 +242,9 @@ def timestep(u1,u2,v1,v2,h1,h2,Wmat, u1_p,u2_p,v1_p,v2_p,h1_p,h2_p):
 
     if math.isnan(h1[0, 0]):
         print(f"Rank: {rank}, h1 is nan")
-        MPI.Finalize()
+        broke = True
 
-    return u1,u2,v1,v2,h1,h2,u1_p,u2_p,v1_p,v2_p,h1_p,h2_p
+    return u1,u2,v1,v2,h1,h2,u1_p,u2_p,v1_p,v2_p,h1_p,h2_p, broke
 
 
 
@@ -276,19 +273,27 @@ tc = round(t/dt)
 
 
 
+tottimer = time.time()
 print("Starting simulation")
 
-#while t <= tmax + lasttime + dt / 2:
+sendingTimes = []
+simTimes = []
+zeroTimes = []
+broke = False
 
+while t <= tmax + lasttime + dt / 2:
 
-timer = time.time()
-
-for i in range(200):
-
-    
+    timer = time.time()
 
     if rank != 0:
-        u1,u2,v1,v2,h1,h2, u1_p,u2_p,v1_p,v2_p,h1_p,h2_p = timestep(u1,u2,v1,v2,h1,h2,Wmat, u1_p,u2_p,v1_p,v2_p,h1_p,h2_p)
+        u1,u2,v1,v2,h1,h2, u1_p,u2_p,v1_p,v2_p,h1_p,h2_p, broke = timestep(u1,u2,v1,v2,h1,h2,Wmat, u1_p,u2_p,v1_p,v2_p,h1_p,h2_p)
+
+    if broke == True:
+        MPI.Finalize()
+
+    simTimes.append(time.time()-timer)
+
+    timer = time.time()
 
     u1matSplit = comm.gather(u1, root=0)
     v1matSplit = comm.gather(v1, root=0)
@@ -298,6 +303,7 @@ for i in range(200):
     h2matSplit = comm.gather(h2, root=0)
 
     if rank == 0:
+        timer = time.time()
         u1 = hf.combine(u1matSplit, offset, ranks, size)
         u2 = hf.combine(u2matSplit, offset, ranks, size)
         v1 = hf.combine(v1matSplit, offset, ranks, size)
@@ -305,12 +311,33 @@ for i in range(200):
         h1 = hf.combine(h1matSplit, offset, ranks, size)
         h2 = hf.combine(h2matSplit, offset, ranks, size)
 
+        remove_layers = [] # store weather layers that need to be removed here
+
+        if mode == 1:
+            for i in range(len(locs)):
+                if (t-locs[i][-1]) >= locs[i][3] and t != 0:
+                    remove_layers.append(i) # tag layer for removal if a storm's 
+
+            add = len(remove_layers) # number of storms that were removed
+
+            if add != 0:
+                newlocs = hf.genlocs(add, N, t)
+
+                for i in range(len(remove_layers)):
+                    locs[remove_layers[i]] = newlocs[i]
+
+                wlayer = hf.pairshapeN2(locs, t) ### use pairshapeBEGIN instead of pairshape
+                Wmat = hf.pairfieldN2(L, h1, wlayer)
+
+
         u1matSplit = [u1]
         v1matSplit = [v1]
         u2matSplit = [u2]
         v2matSplit = [v2]
         h1matSplit = [h1]
         h2matSplit = [h2]
+        WmatSplit = [Wmat]
+
 
         for i in range(1,size+1):
             u1matSplit.append(hf.split(u1, offset, ranks, i))
@@ -319,6 +346,10 @@ for i in range(200):
             v2matSplit.append(hf.split(v2, offset, ranks, i))
             h1matSplit.append(hf.split(h1, offset, ranks, i))
             h2matSplit.append(hf.split(h2, offset, ranks, i))
+            WmatSplit.append(hf.split(Wmat, offset, ranks, i))
+
+        
+        zeroTimes.append(time.time() - timer)
     
     u1 = comm.scatter(u1matSplit, root=0)
     u2 = comm.scatter(u2matSplit, root=0)
@@ -326,13 +357,17 @@ for i in range(200):
     v2 = comm.scatter(v2matSplit, root=0)
     h1 = comm.scatter(h1matSplit, root=0)
     h2 = comm.scatter(h2matSplit, root=0)
+    Wmat = comm.scatter(WmatSplit, root=0)
 
+    sendingTimes.append(time.time()-timer)
+    
     tc += 1
     t = tc * dt
 
-print(f"rank: {rank}, time spent: {time.time()-timer}")
+print(f"rank: {rank}, simtime avg: {np.mean(simTimes)}, sendingtime avg: {np.mean(sendingTimes)}, total time: {time.time()-tottimer}")
 
 if rank == 0:
+    print(f"zerotime avg: {np.mean(zeroTimes)}")
     plt.title(f"Rank: {rank}")
     plt.imshow(u1, cmap='hot')
     plt.colorbar()

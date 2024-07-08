@@ -51,7 +51,6 @@ def pairshapeN2(locs, t):
 
     return wlayer
 
-
 def BernN2(u1, v1, u2, v2, gm, c22h, c12h, h1, h2, ord):
     """
     Bernoulli
@@ -65,7 +64,6 @@ def BernN2(u1, v1, u2, v2, gm, c22h, c12h, h1, h2, ord):
 
     return B1, B2
 
-
 def xflux(f, u):  # removed dx, dt from input
     fl = f[:,l]
     fr = f
@@ -73,7 +71,6 @@ def xflux(f, u):  # removed dx, dt from input
     fa = 0.5 * u * (fl + fr)
 
     return fa
-
 
 def yflux(f, v):  # removed dx, dt from input
     fl = f[l,:]
@@ -143,7 +140,6 @@ def split(mat, offset, ranks, rank):
     temp[2:subdomain_size+2, :][:, 2:subdomain_size+2] = mat[offset*ind[0][0] : offset*ind[0][0] + offset, :][:, offset*ind[1][0] : offset*ind[1][0] + offset]
 
     return temp
-
 
 
 def combine(mats, offset, ranks, size):

@@ -8,7 +8,7 @@ fixed = True
 
 num_processors = 5
 
-tmax = 100
+tmax = 10
 ani_interval = 100
 restart_name = None
 new_name = 'data1.nc'
