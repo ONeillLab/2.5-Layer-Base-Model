@@ -114,16 +114,16 @@ else:
     spdrag2 = None
     rdist = None
 
-Wmat = np.ascontiguousarray(comm.scatter(WmatSplit, root=0))
-u1 = np.ascontiguousarray(comm.scatter(u1matSplit, root=0))
-u2 = np.ascontiguousarray(comm.scatter(u2matSplit, root=0))
-v1 = np.ascontiguousarray(comm.scatter(v1matSplit, root=0))
-v2 = np.ascontiguousarray(comm.scatter(v2matSplit, root=0))
-h1 = np.ascontiguousarray(comm.scatter(h1matSplit, root=0))
-h2 = np.ascontiguousarray(comm.scatter(h2matSplit, root=0))
-spdrag1 = np.ascontiguousarray(comm.scatter(spdrag1Split, root=0))
-spdrag2 = np.ascontiguousarray(comm.scatter(spdrag2Split, root=0))
-rdist = np.ascontiguousarray(comm.scatter(rdistSplit, root=0))
+Wmat = comm.scatter(WmatSplit, root=0)
+u1 = comm.scatter(u1matSplit, root=0)
+u2 = comm.scatter(u2matSplit, root=0)
+v1 = comm.scatter(v1matSplit, root=0)
+v2 = comm.scatter(v2matSplit, root=0)
+h1 = comm.scatter(h1matSplit, root=0)
+h2 = comm.scatter(h2matSplit, root=0)
+spdrag1 = comm.scatter(spdrag1Split, root=0)
+spdrag2 = comm.scatter(spdrag2Split, root=0)
+rdist = comm.scatter(rdistSplit, root=0)
 lasttime = comm.bcast(lasttime, root=0)
 
 
