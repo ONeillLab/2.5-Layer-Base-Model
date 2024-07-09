@@ -142,26 +142,9 @@ y = comm.scatter(ySplit, root=0)
 locs = comm.bcast(locs, root=0)
 
 
-stormtimer = time.time()
-tot=0
 if rank != 0:
-    print(f"rank {rank} {offset}")
-    wlayer, tot = hf.pairshapeN2(locs, 0, x, y, offset)
+    wlayer = hf.pairshapeN2(locs, 0, x, y, offset)
     Wmat = hf.pairfieldN2(L, h1, wlayer)
-
-print(f"rank {rank} storm time {time.time()-stormtimer}, tot storms {tot}")
-
-WmatSplit = comm.gather(Wmat, root=0)
-
-if rank == 0:
-    Wmat = hf.combine(WmatSplit, offset, ranks, size)
-
-    plt.imshow(Wmat)
-    plt.colorbar()
-    plt.show()
-
-MPI.Finalize()
-sys.exit()
 
 ### END OF INITIALIZATION ###
 
@@ -321,11 +304,12 @@ tottimer = time.time()
 sendingTimes = []
 simTimes = []
 zeroTimes = []
+stormTimes = []
 broke = False
 
 #while t <= tmax + lasttime + dt / 2:
 
-for i in range(1):
+for i in range(100):
     ### Running of the simulation on all ranks but the master rank (0) ###
 
     timer = time.time()
@@ -333,11 +317,11 @@ for i in range(1):
     if rank != 0:
         u1,u2,v1,v2,h1,h2, u1_p,u2_p,v1_p,v2_p,h1_p,h2_p, broke = timestep(u1,u2,v1,v2,h1,h2,Wmat, u1_p,u2_p,v1_p,v2_p,h1_p,h2_p)
 
-    broke = comm.bcast(broke, root=rank)
+    
     if broke == True:
-        print("h1 Nan")
+        print(f"h1 Nan on rank {rank}")
         MPI.Finalize()
-        sys.exit()
+        MPI.COMM_WORLD.Abort()
 
     simTimes.append(time.time()-timer)
 
@@ -464,8 +448,7 @@ for i in range(1):
     
     ### Rank 0 checks for if new storms need to be created and sends out the new Wmat ###
 
-    zerotimer = time.time()
-
+    stormtimer = time.time()
     if rank == 0:
         remove_layers = [] # store weather layers that need to be removed here
         rem = False
@@ -483,25 +466,29 @@ for i in range(1):
                 for i in range(len(remove_layers)):
                     locs[remove_layers[i]] = newlocs[i]
 
-                wlayer = hf.pairshapeN2(locs, t) ### use pairshapeBEGIN instead of pairshape
-                Wmat = hf.pairfieldN2(L, h1, wlayer)
+                #wlayer = hf.pairshapeN2(locs, t) ### use pairshapeBEGIN instead of pairshape
+                #Wmat = hf.pairfieldN2(L, h1, wlayer)
 
         if len(remove_layers) != 0:
             rem = True
-            WmatSplit = [Wmat]
-
-            for i in range(1,size+1):
-                WmatSplit.append(hf.split(Wmat, offset, ranks, i))
+            
+            #WmatSplit = [Wmat]
+            #for i in range(1,size+1):
+            #    WmatSplit.append(hf.split(Wmat, offset, ranks, i))
     
     rem = comm.bcast(rem, root=0)
-    if rem == True:
-        Wmat = comm.scatter(WmatSplit, root=0)
+    locs = comm.bcast(locs, root=0)
+    if rem == True and rank != 0:
+        wlayer = hf.pairshapeN2(locs, 0, x, y, offset)
+        Wmat = hf.pairfieldN2(L, h1, wlayer)
         rem = False
-
-    zeroTimes.append(time.time()-zerotimer)
+    
+    stormTimes.append(time.time()-stormtimer)
     
     tc += 1
     t = tc * dt
+
+print(f"rank: {rank}, simtime avg: {round(np.mean(simTimes),4)}, sendingtime avg: {round(np.mean(sendingTimes),4)}, stormtime avg: {round(np.mean(stormTimes), 4)}, total time: {round(time.time()-tottimer,4)}")
 
 
 ### Combining data on rank 0 ###
@@ -522,13 +509,11 @@ if rank == 0:
 
 ### Post running tests ###
 
-print(f"rank: {rank}, simtime avg: {np.mean(simTimes)}, sendingtime avg: {np.mean(zeroTimes)}, total time: {time.time()-tottimer}, num threads: {os.environ.get('OMP_NUM_THREADS')}")
-
-
 if rank == 0:
     plt.title(f"Rank: {rank}")
     plt.imshow(h1, cmap='hot')
     plt.colorbar()
     plt.show()
+
 
 MPI.Finalize()

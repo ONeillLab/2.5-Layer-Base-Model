@@ -54,8 +54,6 @@ def pairshapeN2(locs, t, x, y, offset):
     xcenter = x[round(offset/2), round(offset/2)]
     ycenter = y[round(offset/2), round(offset/2)]
 
-    tot = 0
-
     for i in range(len(locs)):
         if np.abs(locs[i][0] - xcenter) < len(x)/2 + padding and np.abs(locs[i][1] - ycenter) < len(y)/2 + padding:
             if (t-locs[i][-1]) <= locs[i][2] or t == 0:
@@ -66,9 +64,8 @@ def pairshapeN2(locs, t, x, y, offset):
                 layer = Wsh * np.exp( - (Br2*dx**2)/0.3606 * ( (x-locs[i][0])**2 + (y-locs[i][1])**2))
                 #wlayer[yloc-padding:yloc+padding, :][:, xloc-padding:xloc+padding] += layer
                 wlayer += layer
-                tot += 1
 
-    return wlayer,tot
+    return wlayer
 
 def BernN2(u1, v1, u2, v2, gm, c22h, c12h, h1, h2, ord):
     """
