@@ -2,7 +2,7 @@ import numpy as np
 import math
 import helper_functions_MPI as hf
 import time
-from name_list import *
+from name_list_jupiter import *
 import psutil
 from netCDF4 import Dataset
 import access_data as ad
@@ -46,13 +46,11 @@ ranks = np.reshape(np.arange(0,size), (int(np.sqrt(size)), int(np.sqrt(size)))) 
 
 largeranks = np.zeros((int(3*np.sqrt(size)), int(3*np.sqrt(size))), dtype=ranks.dtype)
 
-# Step 3: Use nested loops to copy elements with periodic boundary conditions
 for i in range(int(3*np.sqrt(size))):
     for j in range(int(3*np.sqrt(size))):
         largeranks[i, j] = ranks[i % int(np.sqrt(size)), j % int(np.sqrt(size))]
 
 if rank == 0:
-    #print(offset)
     if restart_name == None:
         #ad.create_file(new_name)
         lasttime = 0
@@ -61,8 +59,11 @@ if rank == 0:
         ad.create_file(new_name)
         u1, u2, v1, v2, h1, h2, locs, lasttime = ad.last_timestep(restart_name)
 
+
+    stormtimer = time.time()
     wlayer = hf.pairshapeN2(locs, 0)
     Wmat = hf.pairfieldN2(L, h1, wlayer)
+    print(f"time to create Wmat {time.time()-stormtimer}")
 
     WmatSplit = [Wmat]
     u1matSplit = [u1]
@@ -128,8 +129,6 @@ rdist = comm.scatter(rdistSplit, root=0)
 lasttime = comm.bcast(lasttime, root=0)
 
 
-#print(f"Rank: {rank}, Shape: {Wmat.shape}")
-#sys.exit()
 ### END OF INITIALIZATION ###
 
 
@@ -290,8 +289,9 @@ simTimes = []
 zeroTimes = []
 broke = False
 
-while t <= tmax + lasttime + dt / 2:
+#while t <= tmax + lasttime + dt / 2:
 
+for i in range(1):
     ### Running of the simulation on all ranks but the master rank (0) ###
 
     timer = time.time()
@@ -299,8 +299,11 @@ while t <= tmax + lasttime + dt / 2:
     if rank != 0:
         u1,u2,v1,v2,h1,h2, u1_p,u2_p,v1_p,v2_p,h1_p,h2_p, broke = timestep(u1,u2,v1,v2,h1,h2,Wmat, u1_p,u2_p,v1_p,v2_p,h1_p,h2_p)
 
+    broke = comm.bcast(broke, root=rank)
     if broke == True:
+        print("h1 Nan")
         MPI.Finalize()
+        sys.exit()
 
     simTimes.append(time.time()-timer)
 
@@ -424,7 +427,7 @@ while t <= tmax + lasttime + dt / 2:
                 h2[offset+2:offset+4,:][:,offset+2:offset+4] = data[5]
 
     sendingTimes.append(time.time()-sendtimer)
-
+    
     ### Rank 0 checks for if new storms need to be created and sends out the new Wmat ###
 
     zerotimer = time.time()

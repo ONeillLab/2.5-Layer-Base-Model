@@ -3,9 +3,9 @@ import numpy as np
 
 fixed = True
 
-num_processors = 65
+num_processors = 17
 
-tmax = 200
+tmax = 1
 ani_interval = 100
 restart_name = None
 new_name = 'data_jupiter030724_1.nc'
@@ -76,7 +76,7 @@ EpHat = (
 #dx = 1 / 5 * round(min(1,L/Lst), 3)
 
 N  = 1024
-dx = L/N
+dx = round(L/N,4)
 dt = dx / (10 * c12h) #1 / (2**8) # CHANGED TO dx/(10*c12h) SO THAT dt CHANGES TO MATCH dx
 dtinv = 1 / dt
 sampfreq = 10

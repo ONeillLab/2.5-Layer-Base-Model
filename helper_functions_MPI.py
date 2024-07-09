@@ -1,7 +1,7 @@
 import numpy as np
-from name_list import *
+from name_list_jupiter import *
 import time
-
+import sys
 
 def pairfieldN2(L, h1, wlayer):
     """
@@ -44,11 +44,18 @@ def viscND(vel, Re, n):
 def pairshapeN2(locs, t):
 
     wlayer = np.zeros_like(x).astype(np.float64)
+
+    resolution = round((Rst/Ld2)/dx)
+    padding = 5*resolution
     
     for i in range(len(locs)):
         if (t-locs[i][-1]) <= locs[i][2] or t == 0:
-            layer = Wsh * np.exp( - (Br2*dx**2)/0.3606 * ( (x-locs[i][0])**2 + (y-locs[i][1])**2))
-            wlayer += layer
+            xloc = locs[i][0]
+            yloc = locs[i][1]
+            zonex = x[yloc-padding:yloc+padding, :][:, xloc-padding:xloc+padding]
+            zoney = y[yloc-padding:yloc+padding, :][:, xloc-padding:xloc+padding]
+            layer = Wsh * np.exp( - (Br2*dx**2)/0.3606 * ( (zonex-locs[i][0])**2 + (zoney-locs[i][1])**2))
+            wlayer[yloc-padding:yloc+padding, :][:, xloc-padding:xloc+padding] += layer
 
     return wlayer
 
@@ -124,7 +131,7 @@ def genlocs(num, N, t):
 ### New helper function for MPI ###
 def split(arr, offset, ranks, rank):
 
-    timer = time.time()
+    #timer = time.time()
 
     rows, cols = arr.shape
     ind = np.where(ranks == rank)
