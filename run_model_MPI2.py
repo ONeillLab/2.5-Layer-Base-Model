@@ -282,7 +282,7 @@ tc = round(t/dt)
 rem = False
 
 tottimer = time.time()
-print("Starting simulation")
+#print("Starting simulation")
 
 sendingTimes = []
 simTimes = []

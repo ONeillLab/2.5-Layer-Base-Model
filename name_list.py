@@ -8,7 +8,7 @@ fixed = True
 
 num_processors = 5
 
-tmax = 10
+tmax = 1
 ani_interval = 100
 restart_name = None
 new_name = 'data1.nc'
@@ -60,7 +60,7 @@ dtinv = 1 / dt
 sampfreq = 1
 tpl = sampfreq * dtinv
 
-N = math.ceil(L / dx)  # resolve
+N = 400 #math.ceil(L / dx)  # resolve
 L = N * dx
 
 x, y = np.meshgrid(np.arange(0.5, N + 0.5) * dx - L / 2, np.arange(0.5, N + 0.5) * dx - L / 2)
