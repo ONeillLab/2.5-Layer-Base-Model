@@ -3,9 +3,9 @@ import numpy as np
 
 fixed = True
 
-num_processors = 17
+num_processors = 65
 
-tmax = 1
+tmax = 10
 ani_interval = 100
 restart_name = None
 new_name = 'data_jupiter030724_1.nc'

@@ -3,7 +3,6 @@ import math
 import helper_functions_MPI as hf
 import time
 from name_list_jupiter import *
-import psutil
 from netCDF4 import Dataset
 import access_data as ad
 from mpi4py import MPI
@@ -11,7 +10,7 @@ import sys
 import os
 
 
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 
 
 """ 
@@ -51,6 +50,7 @@ for i in range(int(3*np.sqrt(size))):
         largeranks[i, j] = ranks[i % int(np.sqrt(size)), j % int(np.sqrt(size))]
 
 if rank == 0:
+    #print(largeranks)
     if restart_name == None:
         #ad.create_file(new_name)
         lasttime = 0
@@ -308,7 +308,6 @@ stormTimes = []
 broke = False
 
 while t <= tmax + lasttime + dt / 2:
-#for i in range(100):
     ### Running of the simulation on all ranks but the master rank (0) ###
 
     timer = time.time()
@@ -324,7 +323,6 @@ while t <= tmax + lasttime + dt / 2:
 
     simTimes.append(time.time()-timer)
 
-
     ### Sending boundary conditions to neighbouring cells
 
     sendtimer = time.time()
@@ -334,45 +332,46 @@ while t <= tmax + lasttime + dt / 2:
         i = ind[0][0] + int(np.sqrt(size))
         j = ind[1][0] + int(np.sqrt(size))
         sendranks, recvranks = hf.get_surrounding_points(largeranks, i, j)
-        #print(f"rank: {rank}, {sendranks}")
-
+        #print(f"rank: {rank}, {len(sendranks)}")
+        
         for sendrank in sendranks:
             if (sendrank[0], sendrank[1]) == (-1,-1):
-                comm.send([u1[2:4,:][:,2:4],u2[2:4,:][:,2:4],v1[2:4,:][:,2:4],v2[2:4,:][:,2:4],h1[2:4,:][:,2:4],h2[2:4,:][:,2:4]], 
+                comm.isend([u1[2:4,:][:,2:4],u2[2:4,:][:,2:4],v1[2:4,:][:,2:4],v2[2:4,:][:,2:4],h1[2:4,:][:,2:4],h2[2:4,:][:,2:4]], 
                           dest=sendrank[2], tag=0)
 
             if (sendrank[0], sendrank[1]) == (-1,0):
-                comm.send([u1[2:4,:][:,2:offset+2],u2[2:4,:][:,2:offset+2],v1[2:4,:][:,2:offset+2],v2[2:4,:][:,2:offset+2],h1[2:4,:][:,2:offset+2],h2[2:4,:][:,2:offset+2]], 
+                comm.isend([u1[2:4,:][:,2:offset+2],u2[2:4,:][:,2:offset+2],v1[2:4,:][:,2:offset+2],v2[2:4,:][:,2:offset+2],h1[2:4,:][:,2:offset+2],h2[2:4,:][:,2:offset+2]], 
                           dest=sendrank[2], tag=1)
       
             if (sendrank[0], sendrank[1]) == (-1,1):
-                comm.send([u1[2:4,:][:,offset:offset+2],u2[2:4,:][:,offset:offset+2],v1[2:4,:][:,offset:offset+2],v2[2:4,:][:,offset:offset+2],h1[2:4,:][:,offset:offset+2],h2[2:4,:][:,offset:offset+2]],     
+                comm.isend([u1[2:4,:][:,offset:offset+2],u2[2:4,:][:,offset:offset+2],v1[2:4,:][:,offset:offset+2],v2[2:4,:][:,offset:offset+2],h1[2:4,:][:,offset:offset+2],h2[2:4,:][:,offset:offset+2]],     
                           dest=sendrank[2], tag=2)
 
             if (sendrank[0], sendrank[1]) == (0,-1):
-                comm.send([u1[2:offset+2,:][:,2:4],u2[2:offset+2,:][:,2:4],v1[2:offset+2,:][:,2:4],v2[2:offset+2,:][:,2:4],h1[2:offset+2,:][:,2:4],h2[2:offset+2,:][:,2:4]],
+                comm.isend([u1[2:offset+2,:][:,2:4],u2[2:offset+2,:][:,2:4],v1[2:offset+2,:][:,2:4],v2[2:offset+2,:][:,2:4],h1[2:offset+2,:][:,2:4],h2[2:offset+2,:][:,2:4]],
                           dest=sendrank[2], tag=3)
 
             if (sendrank[0], sendrank[1]) == (0,1):
-                comm.send([u1[2:offset+2,:][:,offset:offset+2],u2[2:offset+2,:][:,offset:offset+2],v1[2:offset+2,:][:,offset:offset+2],v2[2:offset+2,:][:,offset:offset+2],h1[2:offset+2,:][:,offset:offset+2],h2[2:offset+2,:][:,offset:offset+2]],
+                comm.isend([u1[2:offset+2,:][:,offset:offset+2],u2[2:offset+2,:][:,offset:offset+2],v1[2:offset+2,:][:,offset:offset+2],v2[2:offset+2,:][:,offset:offset+2],h1[2:offset+2,:][:,offset:offset+2],h2[2:offset+2,:][:,offset:offset+2]],
                           dest=sendrank[2], tag=4)
             
             if (sendrank[0], sendrank[1]) == (1,-1):
-                comm.send([u1[offset:offset+2,:][:,2:4],u2[offset:offset+2,:][:,2:4],v1[offset:offset+2,:][:,2:4],v2[offset:offset+2,:][:,2:4],h1[offset:offset+2,:][:,2:4],h2[offset:offset+2,:][:,2:4]],
+                comm.isend([u1[offset:offset+2,:][:,2:4],u2[offset:offset+2,:][:,2:4],v1[offset:offset+2,:][:,2:4],v2[offset:offset+2,:][:,2:4],h1[offset:offset+2,:][:,2:4],h2[offset:offset+2,:][:,2:4]],
                           dest=sendrank[2], tag=5)
 
             if (sendrank[0], sendrank[1]) == (1,0):
-                comm.send([u1[offset:offset+2,:][:,2:offset+2],u2[offset:offset+2,:][:,2:offset+2],v1[offset:offset+2,:][:,2:offset+2],v2[offset:offset+2,:][:,2:offset+2],h1[offset:offset+2,:][:,2:offset+2], h2[offset:offset+2,:][:,2:offset+2]], 
+                comm.isend([u1[offset:offset+2,:][:,2:offset+2],u2[offset:offset+2,:][:,2:offset+2],v1[offset:offset+2,:][:,2:offset+2],v2[offset:offset+2,:][:,2:offset+2],h1[offset:offset+2,:][:,2:offset+2], h2[offset:offset+2,:][:,2:offset+2]], 
                           dest=sendrank[2], tag=6)
             
             if (sendrank[0], sendrank[1]) == (1,1):
-                comm.send([u1[offset:offset+2,:][:,offset:offset+2],u2[offset:offset+2,:][:,offset:offset+2],v1[offset:offset+2,:][:,offset:offset+2],v2[offset:offset+2,:][:,offset:offset+2],h1[offset:offset+2,:][:,offset:offset+2],h2[offset:offset+2,:][:,offset:offset+2]],
+                comm.isend([u1[offset:offset+2,:][:,offset:offset+2],u2[offset:offset+2,:][:,offset:offset+2],v1[offset:offset+2,:][:,offset:offset+2],v2[offset:offset+2,:][:,offset:offset+2],h1[offset:offset+2,:][:,offset:offset+2],h2[offset:offset+2,:][:,offset:offset+2]],
                           dest=sendrank[2], tag=7)
 
 
         for sendrank in sendranks:
             if (sendrank[0], sendrank[1]) == (-1,-1):
-                data = comm.recv(source=sendrank[2], tag=7)
+                req = comm.irecv(source=sendrank[2], tag=7)
+                data = req.wait()
                 u1[0:2,:][:,offset+2:offset+4] = data[0]
                 u2[0:2,:][:,offset+2:offset+4] = data[1]
                 v1[0:2,:][:,offset+2:offset+4] = data[2]
@@ -381,7 +380,8 @@ while t <= tmax + lasttime + dt / 2:
                 h2[0:2,:][:,offset+2:offset+4] = data[5]
 
             if (sendrank[0], sendrank[1]) == (-1,0):
-                data = comm.recv(source=sendrank[2], tag=6)
+                req = comm.irecv(source=sendrank[2], tag=6)
+                data = req.wait()
                 u1[0:2,:][:,2:offset+2] = data[0]
                 u2[0:2,:][:,2:offset+2] = data[1]
                 v1[0:2,:][:,2:offset+2] = data[2]
@@ -390,7 +390,8 @@ while t <= tmax + lasttime + dt / 2:
                 h2[0:2,:][:,2:offset+2] = data[5]
 
             if (sendrank[0], sendrank[1]) == (-1,1):
-                data = comm.recv(source=sendrank[2], tag=5)
+                req = comm.irecv(source=sendrank[2], tag=5)
+                data = req.wait()
                 u1[0:2,:][:,offset+2:offset+4] = data[0]
                 u2[0:2,:][:,offset+2:offset+4] = data[1]
                 v1[0:2,:][:,offset+2:offset+4] = data[2]
@@ -399,7 +400,8 @@ while t <= tmax + lasttime + dt / 2:
                 h2[0:2,:][:,offset+2:offset+4] = data[5]
 
             if (sendrank[0], sendrank[1]) == (0,-1):
-                data = comm.recv(source=sendrank[2], tag=4)
+                req = comm.irecv(source=sendrank[2], tag=4)
+                data = req.wait()
                 u1[2:offset+2,:][:,0:2] = data[0]
                 u2[2:offset+2,:][:,0:2] = data[1]
                 v1[2:offset+2,:][:,0:2] = data[2]
@@ -408,7 +410,8 @@ while t <= tmax + lasttime + dt / 2:
                 h2[2:offset+2,:][:,0:2] = data[5]
 
             if (sendrank[0], sendrank[1]) == (0,1):
-                data = comm.recv(source=sendrank[2], tag=3)
+                req = comm.irecv(source=sendrank[2], tag=3)
+                data = req.wait()
                 u1[2:offset+2,:][:,offset+2:offset+4] = data[0]
                 u2[2:offset+2,:][:,offset+2:offset+4] = data[1]
                 v1[2:offset+2,:][:,offset+2:offset+4] = data[2]
@@ -417,7 +420,8 @@ while t <= tmax + lasttime + dt / 2:
                 h2[2:offset+2,:][:,offset+2:offset+4] = data[5]
             
             if (sendrank[0], sendrank[1]) == (1,-1):
-                data = comm.recv(source=sendrank[2], tag=2)
+                req = comm.irecv(source=sendrank[2], tag=2)
+                data = req.wait()
                 u1[offset+2:offset+4,:][:,0:2] = data[0]
                 u2[offset+2:offset+4,:][:,0:2] = data[1]
                 v1[offset+2:offset+4,:][:,0:2] = data[2]
@@ -426,7 +430,8 @@ while t <= tmax + lasttime + dt / 2:
                 h2[offset+2:offset+4,:][:,0:2] = data[5]
             
             if (sendrank[0], sendrank[1]) == (1,0):
-                data = comm.recv(source=sendrank[2], tag=1)
+                req = comm.irecv(source=sendrank[2], tag=1)
+                data = req.wait()
                 u1[offset+2:offset+4,:][:,2:offset+2] = data[0]
                 u2[offset+2:offset+4,:][:,2:offset+2] = data[1]
                 v1[offset+2:offset+4,:][:,2:offset+2] = data[2]
@@ -435,7 +440,8 @@ while t <= tmax + lasttime + dt / 2:
                 h2[offset+2:offset+4,:][:,2:offset+2] = data[5]
 
             if (sendrank[0], sendrank[1]) == (1,1):
-                data = comm.recv(source=sendrank[2], tag=0)
+                req = comm.irecv(source=sendrank[2], tag=0)
+                data = req.wait()
                 u1[offset+2:offset+4,:][:,offset+2:offset+4] = data[0]
                 u2[offset+2:offset+4,:][:,offset+2:offset+4] = data[1]
                 v1[offset+2:offset+4,:][:,offset+2:offset+4] = data[2]
@@ -444,6 +450,7 @@ while t <= tmax + lasttime + dt / 2:
                 h2[offset+2:offset+4,:][:,offset+2:offset+4] = data[5]
 
     sendingTimes.append(time.time()-sendtimer)
+    
     
     ### Rank 0 checks for if new storms need to be created and sends out the new Wmat ###
 
@@ -489,7 +496,7 @@ while t <= tmax + lasttime + dt / 2:
 
 print(f"rank: {rank}, simtime avg: {round(np.mean(simTimes),4)}, sendingtime avg: {round(np.mean(sendingTimes),4)}, stormtime avg: {round(np.mean(stormTimes), 4)}, total time: {round(time.time()-tottimer,4)}")
 
-
+"""
 ### Combining data on rank 0 ###
 u1matSplit = comm.gather(u1, root=0)
 v1matSplit = comm.gather(v1, root=0)
@@ -513,6 +520,6 @@ if rank == 0:
     plt.imshow(h1, cmap='hot')
     plt.colorbar()
     plt.show()
-
+"""
 
 MPI.Finalize()
