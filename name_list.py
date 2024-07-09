@@ -4,10 +4,11 @@ from netCDF4 import Dataset
 import numpy.ma as ma
 
 fixed = True
+saving = False
 
 num_processors = 5
 
-tmax = 1
+tmax = 100
 ani_interval = 100
 restart_name = None
 new_name = 'data1.nc'
@@ -56,10 +57,10 @@ EpHat = (
 dx = 1/5 * round(min(1, L/Lst), 3)  # Change dx from 5 grid points per Ld2 to 5 grid points per Rst (only if Rst < Ld2) (Daniel). Note this adds the bug for small dx which is unfixed when Br2 is large.
 dt = dx / (10 * c12h) #1 / (2**8) # CHANGED TO dx/(10*c12h) SO THAT dt CHANGES TO MATCH dx
 dtinv = 1 / dt
-sampfreq = 1
+sampfreq = 100
 tpl = sampfreq * dtinv
 
-N = 400 #math.ceil(L / dx)  # resolve
+N = math.ceil(L / dx)  # resolve
 L = N * dx
 
 x, y = np.meshgrid(np.arange(0.5, N + 0.5) * dx - L / 2, np.arange(0.5, N + 0.5) * dx - L / 2)
@@ -114,3 +115,11 @@ for loc in possibleLocs:
     poslocs.append(np.array(loc))
 
 poslocs = np.array(poslocs)
+
+
+### FOR GRAPHING ###
+
+lg = np.concatenate((np.array([N]), np.arange(1, N)), axis=None) - 1
+lg2 = np.concatenate((np.arange(N - 1, N + 1), np.arange(1, N - 1)), axis=None) - 1 
+rg = np.concatenate((np.arange(2, N + 1), np.array([1])), axis=None) - 1
+rg2 = np.concatenate((np.arange(3, N + 1), np.arange(1, 3)), axis=None) - 1

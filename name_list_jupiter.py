@@ -3,12 +3,12 @@ import numpy as np
 
 fixed = True
 
-num_processors = 65
+num_processors = 17
 
 tmax = 10
 ani_interval = 100
 restart_name = None
-new_name = 'data_jupiter030724_1.nc'
+new_name = 'data1.nc'
 
 ### Dimensional, collected from papers, used for normalization ###
 f0 = 3.517e-4     # coriolis parameter from Siegelman [s]

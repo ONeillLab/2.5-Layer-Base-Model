@@ -4,8 +4,6 @@ import time
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 from mpl_toolkits.axes_grid1 import make_axes_locatable
-from numba import jit, objmode, threading_layer, config
-import psutil
 from netCDF4 import Dataset
 from name_list import *
 
@@ -33,7 +31,7 @@ def animate(files, element):
             u1mat = np.append(u1mat, u1, axis=0)
             v1mat = np.append(v1mat, v1, axis=0)
 
-        zeta1 = (1 / dx) * (v1mat[:] - v1mat[:,:,l] + u1mat[:,l,:] - u1mat[:])
+        zeta1 = (1 / dx) * (v1mat[:] - v1mat[:,:,lg] + u1mat[:,lg,:] - u1mat[:])
         frames = zeta1
     
     elif element == "zeta2":
@@ -48,7 +46,7 @@ def animate(files, element):
         #print(N)
         #print(np.shape(rdist))
         #print(np.shape(1 - Bt + (1/dx) * (v2mat[1] - np.roll(v2mat[1], 1, axis=1) + np.roll(u2mat[1], 1, axis=0) - u2mat[1])))
-        zeta2 = (1 / dx) * (v2mat[:] - v2mat[:,:,l] + u2mat[:,l,:] - u2mat[:])
+        zeta2 = (1 / dx) * (v2mat[:] - v2mat[:,:,lg] + u2mat[:,lg,:] - u2mat[:])
         frames = zeta2
 
     else:
@@ -68,7 +66,6 @@ def animate(files, element):
         if math.isnan(j[0, 0]) == False:
             vminlist.append(np.min(j))
             vmaxlist.append(np.max(j))
-        print(j)
     vmin = np.min(vminlist)
     vmax = np.max(vmaxlist)
     im = ax.imshow(cv0, cmap="bwr", vmin=vmin, vmax=vmax)
@@ -144,8 +141,6 @@ def view_slice(data, slice):
 
 
 #### examples ####
-#data = ['jupiter_1.nc']#, 'data2.nc', 'data3.nc']
+data = ['data1.nc']
 
-#animate(data, "zeta2")
-
-view_slice("jupiter_1.nc", 99)
+animate(data, "zeta2")

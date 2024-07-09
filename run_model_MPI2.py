@@ -307,7 +307,9 @@ zeroTimes = []
 stormTimes = []
 broke = False
 
-while t <= tmax + lasttime + dt / 2:
+#while t <= tmax + lasttime + dt / 2:
+
+for i in range(10):
     ### Running of the simulation on all ranks but the master rank (0) ###
 
     timer = time.time()
@@ -472,15 +474,10 @@ while t <= tmax + lasttime + dt / 2:
                 for i in range(len(remove_layers)):
                     locs[remove_layers[i]] = newlocs[i]
 
-                #wlayer = hf.pairshapeN2(locs, t) ### use pairshapeBEGIN instead of pairshape
-                #Wmat = hf.pairfieldN2(L, h1, wlayer)
 
         if len(remove_layers) != 0:
             rem = True
             
-            #WmatSplit = [Wmat]
-            #for i in range(1,size+1):
-            #    WmatSplit.append(hf.split(Wmat, offset, ranks, i))
     
     rem = comm.bcast(rem, root=0)
     locs = comm.bcast(locs, root=0)
