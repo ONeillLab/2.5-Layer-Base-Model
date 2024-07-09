@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 
 fixed = True
 
-num_processors = 5
+num_processors = 17
 
 tmax = 1
 ani_interval = 100

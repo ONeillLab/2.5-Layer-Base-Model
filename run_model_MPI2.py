@@ -44,14 +44,15 @@ offset = subdomains[0]
 subdomains = np.reshape(subdomains, (int(np.sqrt(size)),int(np.sqrt(size))))
 ranks = np.reshape(np.arange(0,size), (int(np.sqrt(size)), int(np.sqrt(size)))) + 1
 
-largeranks = np.zeros((6, 6), dtype=ranks.dtype)
+largeranks = np.zeros((int(3*np.sqrt(size)), int(3*np.sqrt(size))), dtype=ranks.dtype)
 
 # Step 3: Use nested loops to copy elements with periodic boundary conditions
-for i in range(6):
-    for j in range(6):
-        largeranks[i, j] = ranks[i % 2, j % 2]
+for i in range(int(3*np.sqrt(size))):
+    for j in range(int(3*np.sqrt(size))):
+        largeranks[i, j] = ranks[i % int(np.sqrt(size)), j % int(np.sqrt(size))]
 
 if rank == 0:
+    #print(offset)
     if restart_name == None:
         #ad.create_file(new_name)
         lasttime = 0
@@ -128,7 +129,7 @@ lasttime = comm.bcast(lasttime, root=0)
 
 
 #print(f"Rank: {rank}, Shape: {Wmat.shape}")
-
+#sys.exit()
 ### END OF INITIALIZATION ###
 
 
@@ -310,12 +311,11 @@ while t <= tmax + lasttime + dt / 2:
     
     if rank != 0:
         ind = np.where(ranks == rank)
-        i = ind[0][0] + 2
-        j = ind[1][0] + 2
+        i = ind[0][0] + int(np.sqrt(size))
+        j = ind[1][0] + int(np.sqrt(size))
         sendranks, recvranks = hf.get_surrounding_points(largeranks, i, j)
         #print(f"rank: {rank}, {sendranks}")
 
-        
         for sendrank in sendranks:
             if (sendrank[0], sendrank[1]) == (-1,-1):
                 comm.send([u1[2:4,:][:,2:4],u2[2:4,:][:,2:4],v1[2:4,:][:,2:4],v2[2:4,:][:,2:4],h1[2:4,:][:,2:4],h2[2:4,:][:,2:4]], 
@@ -359,7 +359,7 @@ while t <= tmax + lasttime + dt / 2:
                 v2[0:2,:][:,offset+2:offset+4] = data[3]
                 h1[0:2,:][:,offset+2:offset+4] = data[4]
                 h2[0:2,:][:,offset+2:offset+4] = data[5]
-            
+
             if (sendrank[0], sendrank[1]) == (-1,0):
                 data = comm.recv(source=sendrank[2], tag=6)
                 u1[0:2,:][:,2:offset+2] = data[0]
@@ -405,7 +405,7 @@ while t <= tmax + lasttime + dt / 2:
                 h1[offset+2:offset+4,:][:,0:2] = data[4]
                 h2[offset+2:offset+4,:][:,0:2] = data[5]
             
-            if (sendrank[0], sendrank[1]) == (-1,0):
+            if (sendrank[0], sendrank[1]) == (1,0):
                 data = comm.recv(source=sendrank[2], tag=1)
                 u1[offset+2:offset+4,:][:,2:offset+2] = data[0]
                 u2[offset+2:offset+4,:][:,2:offset+2] = data[1]
@@ -422,8 +422,7 @@ while t <= tmax + lasttime + dt / 2:
                 v2[offset+2:offset+4,:][:,offset+2:offset+4] = data[3]
                 h1[offset+2:offset+4,:][:,offset+2:offset+4] = data[4]
                 h2[offset+2:offset+4,:][:,offset+2:offset+4] = data[5]
-    
-    #sys.exit()
+
     sendingTimes.append(time.time()-sendtimer)
 
     ### Rank 0 checks for if new storms need to be created and sends out the new Wmat ###
