@@ -2,15 +2,10 @@ import numpy as np
 import math
 import helper_functions_MPI as hf
 import time
-from name_list_jupiter import *
+from name_list import *
 from netCDF4 import Dataset
 import access_data as ad
 from mpi4py import MPI
-import sys
-import os
-
-
-#import matplotlib.pyplot as plt
 
 
 """ 
@@ -52,18 +47,13 @@ for i in range(int(3*np.sqrt(size))):
 if rank == 0:
     #print(largeranks)
     if restart_name == None:
-        #ad.create_file(new_name)
+        if saving == True:
+            ad.create_file(new_name)
         lasttime = 0
         locs = hf.genlocs(num, N, 0) ### use genlocs instead of paircount
     else:
         ad.create_file(new_name)
         u1, u2, v1, v2, h1, h2, locs, lasttime = ad.last_timestep(restart_name)
-
-
-    #stormtimer = time.time()
-    #wlayer = hf.pairshapeN2(locs, 0)
-    #Wmat = hf.pairfieldN2(L, h1, wlayer)
-    #print(f"time to create Wmat {time.time()-stormtimer}")
 
     Wmat = None
     WmatSplit = None
@@ -307,12 +297,12 @@ zeroTimes = []
 stormTimes = []
 broke = False
 
-#while t <= tmax + lasttime + dt / 2:
-
-for i in range(10):
+while t <= tmax + lasttime + dt / 2:
     ### Running of the simulation on all ranks but the master rank (0) ###
 
-    timer = time.time()
+    clocktimer = time.time()
+
+    simtimer = time.time()
 
     if rank != 0:
         u1,u2,v1,v2,h1,h2, u1_p,u2_p,v1_p,v2_p,h1_p,h2_p, broke = timestep(u1,u2,v1,v2,h1,h2,Wmat, u1_p,u2_p,v1_p,v2_p,h1_p,h2_p)
@@ -323,7 +313,7 @@ for i in range(10):
         MPI.Finalize()
         MPI.COMM_WORLD.Abort()
 
-    simTimes.append(time.time()-timer)
+    simTimes.append(time.time()-simtimer)
 
     ### Sending boundary conditions to neighbouring cells
 
@@ -334,7 +324,6 @@ for i in range(10):
         i = ind[0][0] + int(np.sqrt(size))
         j = ind[1][0] + int(np.sqrt(size))
         sendranks, recvranks = hf.get_surrounding_points(largeranks, i, j)
-        #print(f"rank: {rank}, {len(sendranks)}")
         
         for sendrank in sendranks:
             if (sendrank[0], sendrank[1]) == (-1,-1):
@@ -474,10 +463,8 @@ for i in range(10):
                 for i in range(len(remove_layers)):
                     locs[remove_layers[i]] = newlocs[i]
 
-
         if len(remove_layers) != 0:
             rem = True
-            
     
     rem = comm.bcast(rem, root=0)
     locs = comm.bcast(locs, root=0)
@@ -487,36 +474,31 @@ for i in range(10):
         rem = False
     
     stormTimes.append(time.time()-stormtimer)
-    
+
+    if tc % tpl == 0 and saving == True:
+        ### Combining data on rank 0 ###
+        u1matSplit = comm.gather(u1, root=0)
+        v1matSplit = comm.gather(v1, root=0)
+        u2matSplit = comm.gather(u2, root=0)
+        v2matSplit = comm.gather(v2, root=0)
+        h1matSplit = comm.gather(h1, root=0)
+        h2matSplit = comm.gather(h2, root=0)
+
+        if rank == 0:
+            u1 = hf.combine(u1matSplit, offset, ranks, size)
+            u2 = hf.combine(u2matSplit, offset, ranks, size)
+            v1 = hf.combine(v1matSplit, offset, ranks, size)
+            v2 = hf.combine(v2matSplit, offset, ranks, size)
+            h1 = hf.combine(h1matSplit, offset, ranks, size)
+            h2 = hf.combine(h2matSplit, offset, ranks, size)
+
+            print(f"t={t}, time elapsed {time.time()-clocktimer}")
+
+            ad.save_data(u1,u2,v1,v2,h1,h2,locs,t,lasttime,new_name)
+
     tc += 1
     t = tc * dt
 
 print(f"rank: {rank}, simtime avg: {round(np.mean(simTimes),4)}, sendingtime avg: {round(np.mean(sendingTimes),4)}, stormtime avg: {round(np.mean(stormTimes), 4)}, total time: {round(time.time()-tottimer,4)}")
-
-"""
-### Combining data on rank 0 ###
-u1matSplit = comm.gather(u1, root=0)
-v1matSplit = comm.gather(v1, root=0)
-u2matSplit = comm.gather(u2, root=0)
-v2matSplit = comm.gather(v2, root=0)
-h1matSplit = comm.gather(h1, root=0)
-h2matSplit = comm.gather(h2, root=0)
-
-if rank == 0:
-    u1 = hf.combine(u1matSplit, offset, ranks, size)
-    u2 = hf.combine(u2matSplit, offset, ranks, size)
-    v1 = hf.combine(v1matSplit, offset, ranks, size)
-    v2 = hf.combine(v2matSplit, offset, ranks, size)
-    h1 = hf.combine(h1matSplit, offset, ranks, size)
-    h2 = hf.combine(h2matSplit, offset, ranks, size)
-
-### Post running tests ###
-
-if rank == 0:
-    plt.title(f"Rank: {rank}")
-    plt.imshow(h1, cmap='hot')
-    plt.colorbar()
-    plt.show()
-"""
 
 MPI.Finalize()
