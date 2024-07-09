@@ -307,9 +307,8 @@ zeroTimes = []
 stormTimes = []
 broke = False
 
-#while t <= tmax + lasttime + dt / 2:
-
-for i in range(100):
+while t <= tmax + lasttime + dt / 2:
+#for i in range(100):
     ### Running of the simulation on all ranks but the master rank (0) ###
 
     timer = time.time()
