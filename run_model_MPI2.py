@@ -60,12 +60,13 @@ if rank == 0:
         u1, u2, v1, v2, h1, h2, locs, lasttime = ad.last_timestep(restart_name)
 
 
-    stormtimer = time.time()
-    wlayer = hf.pairshapeN2(locs, 0)
-    Wmat = hf.pairfieldN2(L, h1, wlayer)
-    print(f"time to create Wmat {time.time()-stormtimer}")
+    #stormtimer = time.time()
+    #wlayer = hf.pairshapeN2(locs, 0)
+    #Wmat = hf.pairfieldN2(L, h1, wlayer)
+    #print(f"time to create Wmat {time.time()-stormtimer}")
 
-    WmatSplit = [Wmat]
+    Wmat = None
+    WmatSplit = None
     u1matSplit = [u1]
     v1matSplit = [v1]
     u2matSplit = [u2]
@@ -76,9 +77,11 @@ if rank == 0:
     spdrag1Split = [spdrag1]
     spdrag2Split = [spdrag2]
     rdistSplit = [rdist]
+    xSplit = [x]
+    ySplit = [y]
 
     for i in range(1,size+1):
-        WmatSplit.append(hf.split(Wmat, offset, ranks, i))
+        #WmatSplit.append(hf.split(Wmat, offset, ranks, i))
         u1matSplit.append(hf.split(u1, offset, ranks, i))
         v1matSplit.append(hf.split(v1, offset, ranks, i))
         u2matSplit.append(hf.split(u2, offset, ranks, i))
@@ -89,6 +92,8 @@ if rank == 0:
         spdrag1Split.append(hf.split(spdrag1, offset, ranks, i))
         spdrag2Split.append(hf.split(spdrag2, offset, ranks, i))
         rdistSplit.append(hf.split(rdist, offset, ranks, i))
+        xSplit.append(hf.split(x, offset, ranks, i))
+        ySplit.append(hf.split(y, offset, ranks, i))
 
 else:
     WmatSplit = None
@@ -102,6 +107,8 @@ else:
     spdrag1Split = None
     spdrag2Split = None
     rdistSplit = None
+    xSplit = None
+    ySplit = None
 
     u1 = None
     u2 = None
@@ -115,8 +122,11 @@ else:
     spdrag1 = None
     spdrag2 = None
     rdist = None
+    x = None
+    y = None
+    locs = None
 
-Wmat = comm.scatter(WmatSplit, root=0)
+#Wmat = comm.scatter(WmatSplit, root=0)
 u1 = comm.scatter(u1matSplit, root=0)
 u2 = comm.scatter(u2matSplit, root=0)
 v1 = comm.scatter(v1matSplit, root=0)
@@ -127,7 +137,31 @@ spdrag1 = comm.scatter(spdrag1Split, root=0)
 spdrag2 = comm.scatter(spdrag2Split, root=0)
 rdist = comm.scatter(rdistSplit, root=0)
 lasttime = comm.bcast(lasttime, root=0)
+x = comm.scatter(xSplit, root=0)
+y = comm.scatter(ySplit, root=0)
+locs = comm.bcast(locs, root=0)
 
+
+stormtimer = time.time()
+tot=0
+if rank != 0:
+    print(f"rank {rank} {offset}")
+    wlayer, tot = hf.pairshapeN2(locs, 0, x, y, offset)
+    Wmat = hf.pairfieldN2(L, h1, wlayer)
+
+print(f"rank {rank} storm time {time.time()-stormtimer}, tot storms {tot}")
+
+WmatSplit = comm.gather(Wmat, root=0)
+
+if rank == 0:
+    Wmat = hf.combine(WmatSplit, offset, ranks, size)
+
+    plt.imshow(Wmat)
+    plt.colorbar()
+    plt.show()
+
+MPI.Finalize()
+sys.exit()
 
 ### END OF INITIALIZATION ###
 

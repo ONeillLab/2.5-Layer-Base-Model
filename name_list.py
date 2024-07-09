@@ -5,7 +5,7 @@ import numpy.ma as ma
 
 fixed = True
 
-num_processors = 17
+num_processors = 5
 
 tmax = 1
 ani_interval = 100

@@ -3,6 +3,7 @@ from name_list_jupiter import *
 import time
 import sys
 
+
 def pairfieldN2(L, h1, wlayer):
     """
     Creates the weather matrix for the storms, S_st in paper.
@@ -41,23 +42,33 @@ def viscND(vel, Re, n):
 
 
 ### New pairshapeN2 function. Generates Gaussians using entire domain instead of creating sub-domains. (Daniel) ###
-def pairshapeN2(locs, t):
+def pairshapeN2(locs, t, x, y, offset):
 
     wlayer = np.zeros_like(x).astype(np.float64)
 
-    resolution = round((Rst/Ld2)/dx)
-    padding = 5*resolution
-    
-    for i in range(len(locs)):
-        if (t-locs[i][-1]) <= locs[i][2] or t == 0:
-            xloc = locs[i][0]
-            yloc = locs[i][1]
-            zonex = x[yloc-padding:yloc+padding, :][:, xloc-padding:xloc+padding]
-            zoney = y[yloc-padding:yloc+padding, :][:, xloc-padding:xloc+padding]
-            layer = Wsh * np.exp( - (Br2*dx**2)/0.3606 * ( (zonex-locs[i][0])**2 + (zoney-locs[i][1])**2))
-            wlayer[yloc-padding:yloc+padding, :][:, xloc-padding:xloc+padding] += layer
+    resolution = round(np.sqrt(1/Br2)/dx)
+    padding = 3*resolution
 
-    return wlayer
+    #print(round(len(x)/2))
+
+    xcenter = x[round(offset/2), round(offset/2)]
+    ycenter = y[round(offset/2), round(offset/2)]
+
+    tot = 0
+
+    for i in range(len(locs)):
+        if np.abs(locs[i][0] - xcenter) < len(x)/2 + padding and np.abs(locs[i][1] - ycenter) < len(y)/2 + padding:
+            if (t-locs[i][-1]) <= locs[i][2] or t == 0:
+                #xloc = locs[i][0]
+                #yloc = locs[i][1]
+                #zonex = x[yloc-padding:yloc+padding, :][:, xloc-padding:xloc+padding]
+                #zoney = y[yloc-padding:yloc+padding, :][:, xloc-padding:xloc+padding]
+                layer = Wsh * np.exp( - (Br2*dx**2)/0.3606 * ( (x-locs[i][0])**2 + (y-locs[i][1])**2))
+                #wlayer[yloc-padding:yloc+padding, :][:, xloc-padding:xloc+padding] += layer
+                wlayer += layer
+                tot += 1
+
+    return wlayer,tot
 
 def BernN2(u1, v1, u2, v2, gm, c22h, c12h, h1, h2, ord):
     """
