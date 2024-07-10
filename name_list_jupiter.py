@@ -4,13 +4,13 @@ import numpy as np
 fixed = True
 saving = True
 
-num_processors = 65
+num_processors = 17
 
-tmax = 100
+tmax = 1
 ani_interval = 100
 sampfreq = 1
 restart_name = None
-new_name = 'jupiter090724_Test.nc'
+new_name = 'data3.nc'
 
 ### Dimensional, collected from papers, used for normalization ###
 f0 = 3.517e-4     # coriolis parameter from Siegelman [s]

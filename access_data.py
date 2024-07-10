@@ -1,6 +1,6 @@
 import numpy as np
 from netCDF4 import Dataset
-from name_list import *
+from name_list_jupiter import *
 
 
 def display_data(data_name):
