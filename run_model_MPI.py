@@ -384,12 +384,12 @@ while t <= tmax + lasttime + dt / 2:
         for sendrank in sendranks:
             if (sendrank[0], sendrank[1]) == (-1,-1):
                 data = comm.recv(source=sendrank[2], tag=7)
-                u1[0:2,:][:,offset+2:offset+4] = data[0]
-                u2[0:2,:][:,offset+2:offset+4] = data[1]
-                v1[0:2,:][:,offset+2:offset+4] = data[2]
-                v2[0:2,:][:,offset+2:offset+4] = data[3]
-                h1[0:2,:][:,offset+2:offset+4] = data[4]
-                h2[0:2,:][:,offset+2:offset+4] = data[5]
+                u1[0:2,:][:,0:2] = data[0]
+                u2[0:2,:][:,0:2] = data[1]
+                v1[0:2,:][:,0:2] = data[2]
+                v2[0:2,:][:,0:2] = data[3]
+                h1[0:2,:][:,0:2] = data[4]
+                h2[0:2,:][:,0:2] = data[5]
 
             if (sendrank[0], sendrank[1]) == (-1,0):
                 data = comm.recv(source=sendrank[2], tag=6)
