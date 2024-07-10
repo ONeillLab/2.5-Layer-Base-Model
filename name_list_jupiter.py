@@ -4,12 +4,13 @@ import numpy as np
 fixed = True
 saving = True
 
-num_processors = 17
+num_processors = 65
 
-tmax = 10
+tmax = 100
 ani_interval = 100
+sampfreq = 1
 restart_name = None
-new_name = 'data1.nc'
+new_name = 'jupiter090724_Test.nc'
 
 ### Dimensional, collected from papers, used for normalization ###
 f0 = 3.517e-4     # coriolis parameter from Siegelman [s]
@@ -80,7 +81,6 @@ N  = 1024
 dx = round(L/N,4)
 dt = dx / (10 * c12h) #1 / (2**8) # CHANGED TO dx/(10*c12h) SO THAT dt CHANGES TO MATCH dx
 dtinv = 1 / dt
-sampfreq = 10
 tpl = round(sampfreq * dtinv)
 
 x, y = np.meshgrid(np.arange(0.5, N + 0.5) * dx - L / 2, np.arange(0.5, N + 0.5) * dx - L / 2)
@@ -136,3 +136,10 @@ for loc in possibleLocs:
     poslocs.append(np.array(loc))
 
 poslocs = np.array(poslocs)
+
+
+### FOR GRAPHING ###
+lg = np.concatenate((np.array([N]), np.arange(1, N)), axis=None) - 1
+lg2 = np.concatenate((np.arange(N - 1, N + 1), np.arange(1, N - 1)), axis=None) - 1 
+rg = np.concatenate((np.arange(2, N + 1), np.array([1])), axis=None) - 1
+rg2 = np.concatenate((np.arange(3, N + 1), np.arange(1, 3)), axis=None) - 1

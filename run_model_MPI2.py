@@ -2,7 +2,7 @@ import numpy as np
 import math
 import helper_functions_MPI as hf
 import time
-from name_list import *
+from name_list_jupiter import *
 from netCDF4 import Dataset
 import access_data as ad
 from mpi4py import MPI
@@ -107,6 +107,7 @@ else:
     h1 = None
     h2 = None
     Wmat = None
+    wcorrect = None
     lasttime = None
 
     spdrag1 = None
@@ -131,10 +132,24 @@ x = comm.scatter(xSplit, root=0)
 y = comm.scatter(ySplit, root=0)
 locs = comm.bcast(locs, root=0)
 
+Wsum = None
 
 if rank != 0:
     wlayer = hf.pairshapeN2(locs, 0, x, y, offset)
-    Wmat = hf.pairfieldN2(L, h1, wlayer)
+    Wsum = np.sum(wlayer) * dx**2
+    #Wmat = hf.pairfieldN2(L, h1, wlayer)
+    
+Wsums = comm.gather(Wsum, root=0)
+
+if rank == 0:
+    area = L**2
+    wcorrect = np.sum(Wsums[1:]) / area
+
+wcorrect = comm.bcast(wcorrect, root=0)
+
+if rank != 0:
+    Wmat = wlayer - wcorrect
+
 
 ### END OF INITIALIZATION ###
 
@@ -465,14 +480,27 @@ while t <= tmax + lasttime + dt / 2:
 
         if len(remove_layers) != 0:
             rem = True
-    
+            
     rem = comm.bcast(rem, root=0)
     locs = comm.bcast(locs, root=0)
     if rem == True and rank != 0:
-        wlayer = hf.pairshapeN2(locs, 0, x, y, offset)
-        Wmat = hf.pairfieldN2(L, h1, wlayer)
-        rem = False
+        if rank != 0:
+            rem = False
+            wlayer = hf.pairshapeN2(locs, 0, x, y, offset)
+            Wsum = np.sum(wlayer) * dx**2
+
     
+        Wsums = comm.gather(Wsum, root=0)
+
+        if rank == 0:
+            area = L**2
+            wcorrect = np.sum(Wsums[1:]) / area
+
+        wcorrect = comm.bcast(wcorrect, root=0)
+
+        if rank != 0:
+            Wmat = wlayer - wcorrect
+
     stormTimes.append(time.time()-stormtimer)
 
     if tc % tpl == 0 and saving == True:
