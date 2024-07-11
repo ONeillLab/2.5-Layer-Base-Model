@@ -4,11 +4,11 @@ from netCDF4 import Dataset
 import numpy.ma as ma
 
 fixed = True
-saving = True
+saving = False
 
 num_processors = 5
 
-tmax = 100
+tmax = 10
 ani_interval = 100
 sampfreq = 1
 restart_name = None

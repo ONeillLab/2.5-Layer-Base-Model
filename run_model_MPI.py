@@ -2,7 +2,7 @@ import numpy as np
 import math
 import helper_functions_MPI as hf
 import time
-from name_list_jupiter import *
+from name_list import *
 from netCDF4 import Dataset
 import access_data as ad
 from mpi4py import MPI
@@ -141,10 +141,10 @@ Wsum = None
 
 if rank != 0:
     wlayer = hf.pairshapeN2(locs, 0, x, y, offset)
-    #Wsum = np.sum(wlayer) * dx**2
-    Wmat = hf.pairfieldN2(L, h1, wlayer)
+    Wsum = np.sum(wlayer) * dx**2
+    #Wmat = hf.pairfieldN2(L, h1, wlayer)
 
-""" 
+
 Wsums = comm.gather(Wsum, root=0)
 
 if rank == 0:
@@ -155,7 +155,7 @@ wcorrect = comm.bcast(wcorrect, root=0)
 
 if rank != 0:
     Wmat = wlayer - wcorrect
-"""
+
 
 ### END OF INITIALIZATION ###
 
@@ -492,10 +492,9 @@ while t <= tmax + lasttime + dt / 2:
     if rem == True:
         if rank != 0:
             wlayer = hf.pairshapeN2(locs, 0, x, y, offset)
-            Wmat = hf.pairfieldN2(L, h1, wlayer)
-            #Wsum = np.sum(wlayer) * dx**2
+            #Wmat = hf.pairfieldN2(L, h1, wlayer)
+            Wsum = np.sum(wlayer) * dx**2
 
-        """
         Wsums = comm.gather(Wsum, root=0)
 
         if rank == 0:
@@ -506,7 +505,6 @@ while t <= tmax + lasttime + dt / 2:
 
         if rank != 0:
             Wmat = wlayer - wcorrect
-        """
 
         rem = False
 

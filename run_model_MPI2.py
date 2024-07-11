@@ -6,6 +6,7 @@ from name_list_jupiter import *
 from netCDF4 import Dataset
 import access_data as ad
 from mpi4py import MPI
+import psutil
 
 
 """ 
@@ -305,18 +306,18 @@ rem = False
 tottimer = time.time()
 #print("Starting simulation")
 
-sendingTimes = []
-simTimes = []
-zeroTimes = []
-stormTimes = []
+#sendingTimes = []
+#simTimes = []
+#zeroTimes = []
+#stormTimes = []
 broke = False
 
-while t <= tmax + lasttime + dt / 2:
-    ### Running of the simulation on all ranks but the master rank (0) ###
 
+### Running of the simulation on all ranks but the master rank (0) ###
+while t <= tmax + lasttime + dt / 2:
     clocktimer = time.time()
 
-    simtimer = time.time()
+    #simtimer = time.time()
 
     if rank != 0:
         u1,u2,v1,v2,h1,h2, u1_p,u2_p,v1_p,v2_p,h1_p,h2_p, broke = timestep(u1,u2,v1,v2,h1,h2,Wmat, u1_p,u2_p,v1_p,v2_p,h1_p,h2_p)
@@ -327,11 +328,11 @@ while t <= tmax + lasttime + dt / 2:
         MPI.Finalize()
         MPI.COMM_WORLD.Abort()
 
-    simTimes.append(time.time()-simtimer)
+    #simTimes.append(time.time()-simtimer)
 
     ### Sending boundary conditions to neighbouring cells
 
-    sendtimer = time.time()
+    #sendtimer = time.time()
     
     if rank != 0:
         ind = np.where(ranks == rank)
@@ -454,12 +455,12 @@ while t <= tmax + lasttime + dt / 2:
                 h1[offset+2:offset+4,:][:,offset+2:offset+4] = data[4]
                 h2[offset+2:offset+4,:][:,offset+2:offset+4] = data[5]
 
-    sendingTimes.append(time.time()-sendtimer)
+    #sendingTimes.append(time.time()-sendtimer)
     
     
     ### Rank 0 checks for if new storms need to be created and sends out the new Wmat ###
 
-    stormtimer = time.time()
+    #stormtimer = time.time()
     if rank == 0:
         remove_layers = [] # store weather layers that need to be removed here
         rem = False
@@ -501,7 +502,7 @@ while t <= tmax + lasttime + dt / 2:
         
         rem = False
 
-    stormTimes.append(time.time()-stormtimer)
+    #stormTimes.append(time.time()-stormtimer)
 
     if tc % tpl == 0 and saving == True:
         ### Combining data on rank 0 ###
@@ -527,6 +528,6 @@ while t <= tmax + lasttime + dt / 2:
     tc += 1
     t = tc * dt
 
-print(f"rank: {rank}, simtime avg: {round(np.mean(simTimes),4)}, sendingtime avg: {round(np.mean(sendingTimes),4)}, stormtime avg: {round(np.mean(stormTimes), 4)}, total time: {round(time.time()-tottimer,4)}")
+#print(f"rank: {rank}, simtime avg: {round(np.mean(simTimes),4)}, sendingtime avg: {round(np.mean(sendingTimes),4)}, stormtime avg: {round(np.mean(stormTimes), 4)}, total time: {round(time.time()-tottimer,4)}, memory use: {(rss()-initialmem)/(10**6)}")
 
-MPI.Finalize()
+#print(f"rank: {rank}, memory used: {(rss()-initialmem)/(10**6)}")
