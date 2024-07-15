@@ -2,11 +2,15 @@ import math
 import numpy as np
 
 fixed = True
+saving = True
 
-tmax = 200
+num_processors = 65
+
+tmax = 12000
 ani_interval = 100
-restart_name = None
-new_name = 'data_jupiter260624_1.nc'
+sampfreq = 100
+restart_name = 'jupiter100724_7.nc'
+new_name = 'jupiter100724_8.nc'
 
 ### Dimensional, collected from papers, used for normalization ###
 f0 = 3.517e-4     # coriolis parameter from Siegelman [s]
@@ -71,14 +75,13 @@ EpHat = (
     * (Ar / np.sqrt(Br2))
 )
 
-dx = 1 / 5 * round(min(1,L/Lst), 3)
+#dx = 1 / 5 * round(min(1,L/Lst), 3)
+
+N  = 1024
+dx = round(L/N,4)
 dt = dx / (10 * c12h) #1 / (2**8) # CHANGED TO dx/(10*c12h) SO THAT dt CHANGES TO MATCH dx
 dtinv = 1 / dt
-sampfreq = 10
 tpl = round(sampfreq * dtinv)
-
-N = math.ceil(L / dx)  # resolve
-L = N * dx
 
 x, y = np.meshgrid(np.arange(0.5, N + 0.5) * dx - L / 2, np.arange(0.5, N + 0.5) * dx - L / 2)
 H = 1 + 0 * x
@@ -113,10 +116,15 @@ spdrag2 = spongedrag2 * sponge2
 
 x,y = np.meshgrid(np.arange(0,N), np.arange(0,N))
 
-l = np.concatenate((np.array([N]), np.arange(1, N)), axis=None) - 1
-l2 = np.concatenate((np.arange(N - 1, N + 1), np.arange(1, N - 1)), axis=None) - 1 
-r = np.concatenate((np.arange(2, N + 1), np.array([1])), axis=None) - 1
-r2 = np.concatenate((np.arange(3, N + 1), np.arange(1, 3)), axis=None) - 1
+### For rolling the arrays ###
+subdomain_size = int(N // np.sqrt(num_processors-1)) + 4
+
+l = np.concatenate((np.array([subdomain_size]), np.arange(1, subdomain_size)), axis=None) - 1
+l2 = np.concatenate((np.arange(subdomain_size - 1, subdomain_size + 1), np.arange(1, subdomain_size - 1)), axis=None) - 1 
+r = np.concatenate((np.arange(2, subdomain_size + 1), np.array([1])), axis=None) - 1
+r2 = np.concatenate((np.arange(3, subdomain_size + 1), np.arange(1, 3)), axis=None) - 1
+
+subdomain_size = int(N // np.sqrt(num_processors-1))
 
 ### Storm location picking ###
 
@@ -129,5 +137,9 @@ for loc in possibleLocs:
 
 poslocs = np.array(poslocs)
 
-print(dtinv)
-print(dt)
+
+### FOR GRAPHING ###
+lg = np.concatenate((np.array([N]), np.arange(1, N)), axis=None) - 1
+lg2 = np.concatenate((np.arange(N - 1, N + 1), np.arange(1, N - 1)), axis=None) - 1 
+rg = np.concatenate((np.arange(2, N + 1), np.array([1])), axis=None) - 1
+rg2 = np.concatenate((np.arange(3, N + 1), np.arange(1, 3)), axis=None) - 1

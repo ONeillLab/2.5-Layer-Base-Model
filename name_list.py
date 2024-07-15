@@ -2,14 +2,17 @@ import math
 import numpy as np
 from netCDF4 import Dataset
 import numpy.ma as ma
-import matplotlib.pyplot as plt
 
 fixed = True
+saving = False
+
+num_processors = 5
 
 tmax = 100
 ani_interval = 100
-restart_name = 'test1.nc'
-new_name = 'test2.nc'
+sampfreq = 1
+restart_name = None
+new_name = 'data1.nc'
 
 c22h = 4  # 9  # ND 2nd baroclinic gravity wave speed squared
 c12h = 5  # 10  # ND 1st baroclinic gravity wave speed squared
@@ -55,7 +58,6 @@ EpHat = (
 dx = 1/5 * round(min(1, L/Lst), 3)  # Change dx from 5 grid points per Ld2 to 5 grid points per Rst (only if Rst < Ld2) (Daniel). Note this adds the bug for small dx which is unfixed when Br2 is large.
 dt = dx / (10 * c12h) #1 / (2**8) # CHANGED TO dx/(10*c12h) SO THAT dt CHANGES TO MATCH dx
 dtinv = 1 / dt
-sampfreq = 1
 tpl = sampfreq * dtinv
 
 N = math.ceil(L / dx)  # resolve
@@ -93,13 +95,18 @@ spdrag2 = spongedrag2 * sponge2
 
 x,y = np.meshgrid(np.arange(0,N), np.arange(0,N))
 
-l = np.concatenate((np.array([N]), np.arange(1, N)), axis=None) - 1
-l2 = np.concatenate((np.arange(N - 1, N + 1), np.arange(1, N - 1)), axis=None) - 1 
-r = np.concatenate((np.arange(2, N + 1), np.array([1])), axis=None) - 1
-r2 = np.concatenate((np.arange(3, N + 1), np.arange(1, 3)), axis=None) - 1
+
+### For rolling the arrays ###
+subdomain_size = int(N // np.sqrt(num_processors-1)) + 4
+
+l = np.concatenate((np.array([subdomain_size]), np.arange(1, subdomain_size)), axis=None) - 1
+l2 = np.concatenate((np.arange(subdomain_size - 1, subdomain_size + 1), np.arange(1, subdomain_size - 1)), axis=None) - 1 
+r = np.concatenate((np.arange(2, subdomain_size + 1), np.array([1])), axis=None) - 1
+r2 = np.concatenate((np.arange(3, subdomain_size + 1), np.arange(1, 3)), axis=None) - 1
+
+subdomain_size = int(N // np.sqrt(num_processors-1))
 
 ### Storm location picking ###
-
 possibleLocs = np.array(list(zip(*np.where(rlim == 1))))
 
 poslocs = []
@@ -109,7 +116,10 @@ for loc in possibleLocs:
 
 poslocs = np.array(poslocs)
 
-print(EpHat)
-print(aOLd)
-print(1/Br2)
-print(N)
+
+### FOR GRAPHING ###
+
+lg = np.concatenate((np.array([N]), np.arange(1, N)), axis=None) - 1
+lg2 = np.concatenate((np.arange(N - 1, N + 1), np.arange(1, N - 1)), axis=None) - 1 
+rg = np.concatenate((np.arange(2, N + 1), np.array([1])), axis=None) - 1
+rg2 = np.concatenate((np.arange(3, N + 1), np.arange(1, 3)), axis=None) - 1
