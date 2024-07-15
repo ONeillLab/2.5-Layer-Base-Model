@@ -1,5 +1,5 @@
 import numpy as np
-from name_list import *
+from name_list_jupiter import *
 import time
 import sys
 

@@ -8,7 +8,7 @@ saving = False
 
 num_processors = 5
 
-tmax = 10
+tmax = 100
 ani_interval = 100
 sampfreq = 1
 restart_name = None

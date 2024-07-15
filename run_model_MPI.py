@@ -311,17 +311,16 @@ tottimer = time.time()
 
 sendingTimes = []
 simTimes = []
-zeroTimes = []
 stormTimes = []
 broke = False
 
-    
+
 initialmem = rss()
+clocktimer = time.time()
 
-### Running of the simulation on all ranks but the master rank (0) ###
+
 while t <= tmax + lasttime + dt / 2:
-    clocktimer = time.time()
-
+    ### Running of the simulation on all ranks but the master rank (0) ###
     simtimer = time.time()
 
     if rank != 0:
@@ -333,7 +332,7 @@ while t <= tmax + lasttime + dt / 2:
         MPI.Finalize()
         MPI.COMM_WORLD.Abort()
 
-    simTimes.append(time.time()-simtimer)
+    #simTimes.append(time.time()-simtimer)
 
     ### Sending boundary conditions to neighbouring cells
 
@@ -347,35 +346,35 @@ while t <= tmax + lasttime + dt / 2:
         
         for sendrank in sendranks:
             if (sendrank[0], sendrank[1]) == (-1,-1):
-                comm.isend([u1[2:4,:][:,2:4],u2[2:4,:][:,2:4],v1[2:4,:][:,2:4],v2[2:4,:][:,2:4],h1[2:4,:][:,2:4],h2[2:4,:][:,2:4]], 
+                comm.send([u1[2:4,:][:,2:4],u2[2:4,:][:,2:4],v1[2:4,:][:,2:4],v2[2:4,:][:,2:4],h1[2:4,:][:,2:4],h2[2:4,:][:,2:4]], 
                           dest=sendrank[2], tag=0)
 
             if (sendrank[0], sendrank[1]) == (-1,0):
-                comm.isend([u1[2:4,:][:,2:offset+2],u2[2:4,:][:,2:offset+2],v1[2:4,:][:,2:offset+2],v2[2:4,:][:,2:offset+2],h1[2:4,:][:,2:offset+2],h2[2:4,:][:,2:offset+2]], 
+                comm.send([u1[2:4,:][:,2:offset+2],u2[2:4,:][:,2:offset+2],v1[2:4,:][:,2:offset+2],v2[2:4,:][:,2:offset+2],h1[2:4,:][:,2:offset+2],h2[2:4,:][:,2:offset+2]], 
                           dest=sendrank[2], tag=1)
       
             if (sendrank[0], sendrank[1]) == (-1,1):
-                comm.isend([u1[2:4,:][:,offset:offset+2],u2[2:4,:][:,offset:offset+2],v1[2:4,:][:,offset:offset+2],v2[2:4,:][:,offset:offset+2],h1[2:4,:][:,offset:offset+2],h2[2:4,:][:,offset:offset+2]],     
+                comm.send([u1[2:4,:][:,offset:offset+2],u2[2:4,:][:,offset:offset+2],v1[2:4,:][:,offset:offset+2],v2[2:4,:][:,offset:offset+2],h1[2:4,:][:,offset:offset+2],h2[2:4,:][:,offset:offset+2]],     
                           dest=sendrank[2], tag=2)
 
             if (sendrank[0], sendrank[1]) == (0,-1):
-                comm.isend([u1[2:offset+2,:][:,2:4],u2[2:offset+2,:][:,2:4],v1[2:offset+2,:][:,2:4],v2[2:offset+2,:][:,2:4],h1[2:offset+2,:][:,2:4],h2[2:offset+2,:][:,2:4]],
+                comm.send([u1[2:offset+2,:][:,2:4],u2[2:offset+2,:][:,2:4],v1[2:offset+2,:][:,2:4],v2[2:offset+2,:][:,2:4],h1[2:offset+2,:][:,2:4],h2[2:offset+2,:][:,2:4]],
                           dest=sendrank[2], tag=3)
 
             if (sendrank[0], sendrank[1]) == (0,1):
-                comm.isend([u1[2:offset+2,:][:,offset:offset+2],u2[2:offset+2,:][:,offset:offset+2],v1[2:offset+2,:][:,offset:offset+2],v2[2:offset+2,:][:,offset:offset+2],h1[2:offset+2,:][:,offset:offset+2],h2[2:offset+2,:][:,offset:offset+2]],
+                comm.send([u1[2:offset+2,:][:,offset:offset+2],u2[2:offset+2,:][:,offset:offset+2],v1[2:offset+2,:][:,offset:offset+2],v2[2:offset+2,:][:,offset:offset+2],h1[2:offset+2,:][:,offset:offset+2],h2[2:offset+2,:][:,offset:offset+2]],
                           dest=sendrank[2], tag=4)
             
             if (sendrank[0], sendrank[1]) == (1,-1):
-                comm.isend([u1[offset:offset+2,:][:,2:4],u2[offset:offset+2,:][:,2:4],v1[offset:offset+2,:][:,2:4],v2[offset:offset+2,:][:,2:4],h1[offset:offset+2,:][:,2:4],h2[offset:offset+2,:][:,2:4]],
+                comm.send([u1[offset:offset+2,:][:,2:4],u2[offset:offset+2,:][:,2:4],v1[offset:offset+2,:][:,2:4],v2[offset:offset+2,:][:,2:4],h1[offset:offset+2,:][:,2:4],h2[offset:offset+2,:][:,2:4]],
                           dest=sendrank[2], tag=5)
 
             if (sendrank[0], sendrank[1]) == (1,0):
-                comm.isend([u1[offset:offset+2,:][:,2:offset+2],u2[offset:offset+2,:][:,2:offset+2],v1[offset:offset+2,:][:,2:offset+2],v2[offset:offset+2,:][:,2:offset+2],h1[offset:offset+2,:][:,2:offset+2], h2[offset:offset+2,:][:,2:offset+2]], 
+                comm.send([u1[offset:offset+2,:][:,2:offset+2],u2[offset:offset+2,:][:,2:offset+2],v1[offset:offset+2,:][:,2:offset+2],v2[offset:offset+2,:][:,2:offset+2],h1[offset:offset+2,:][:,2:offset+2], h2[offset:offset+2,:][:,2:offset+2]], 
                           dest=sendrank[2], tag=6)
             
             if (sendrank[0], sendrank[1]) == (1,1):
-                comm.isend([u1[offset:offset+2,:][:,offset:offset+2],u2[offset:offset+2,:][:,offset:offset+2],v1[offset:offset+2,:][:,offset:offset+2],v2[offset:offset+2,:][:,offset:offset+2],h1[offset:offset+2,:][:,offset:offset+2],h2[offset:offset+2,:][:,offset:offset+2]],
+                comm.send([u1[offset:offset+2,:][:,offset:offset+2],u2[offset:offset+2,:][:,offset:offset+2],v1[offset:offset+2,:][:,offset:offset+2],v2[offset:offset+2,:][:,offset:offset+2],h1[offset:offset+2,:][:,offset:offset+2],h2[offset:offset+2,:][:,offset:offset+2]],
                           dest=sendrank[2], tag=7)
 
 
@@ -452,7 +451,7 @@ while t <= tmax + lasttime + dt / 2:
                 h1[offset+2:offset+4,:][:,offset+2:offset+4] = data[4]
                 h2[offset+2:offset+4,:][:,offset+2:offset+4] = data[5]
 
-    sendingTimes.append(time.time()-sendtimer)
+    #sendingTimes.append(time.time()-sendtimer)
     
     
     ### Rank 0 checks for if new storms need to be created and sends out the new Wmat ###
@@ -475,17 +474,24 @@ while t <= tmax + lasttime + dt / 2:
                 for i in range(len(remove_layers)):
                     locs[remove_layers[i]] = newlocs[i]
 
+                #wlayer = hf.pairshapeN2(locs, t) ### use pairshapeBEGIN instead of pairshape
+                #Wmat = hf.pairfieldN2(L, h1, wlayer)
+
         if len(remove_layers) != 0:
             rem = True
+            
+            #WmatSplit = [Wmat]
+            #for i in range(1,size+1):
+            #    WmatSplit.append(hf.split(Wmat, offset, ranks, i))
     
     rem = comm.bcast(rem, root=0)
     locs = comm.bcast(locs, root=0)
     if rem == True:
         if rank != 0:
             wlayer = hf.pairshapeN2(locs, 0, x, y, offset)
+            #Wmat = hf.pairfieldN2(L, h1, wlayer)
             Wsum = np.sum(wlayer) * dx**2
 
-        
         Wsums = comm.gather(Wsum, root=0)
 
         if rank == 0:
@@ -496,10 +502,10 @@ while t <= tmax + lasttime + dt / 2:
 
         if rank != 0:
             Wmat = wlayer - wcorrect
-        
+
         rem = False
 
-    stormTimes.append(time.time()-stormtimer)
+    #stormTimes.append(time.time()-stormtimer)
 
     if tc % tpl == 0 and saving == True:
         ### Combining data on rank 0 ###
@@ -525,6 +531,6 @@ while t <= tmax + lasttime + dt / 2:
     tc += 1
     t = tc * dt
 
-print(f"rank: {rank}, simtime avg: {round(np.mean(simTimes),4)}, sendingtime avg: {round(np.mean(sendingTimes),4)}, stormtime avg: {round(np.mean(stormTimes), 4)}, total time: {round(time.time()-tottimer,4)}, memory use: {(rss()-initialmem)/(10**6)}")
+#print(f"rank: {rank}, simtime avg: {round(np.mean(simTimes),4)}, sendingtime avg: {round(np.mean(sendingTimes),4)}, stormtime avg: {round(np.mean(stormTimes), 4)}, total time: {round(time.time()-tottimer,4)}, mem used: {(rss() - initialmem)/10**6} MB")
 
-#print(f"rank: {rank}, memory used: {(rss()-initialmem)/(10**6)}")
+#print(f"mem used: {(rss() - initialmem)/10**6} MB")
