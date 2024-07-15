@@ -73,12 +73,14 @@ EpHat = (
     * (Ar / np.sqrt(Br2))
 )
 
-dx = 1 / 5 * round(min(1,L/Lst), 3)
+#dx = 1 / 5 * round(min(1,L/Lst), 3)
+N  = 376
+dx = round(L/N,4)
 dt = dx / (10 * c12h) #1 / (2**8) # CHANGED TO dx/(10*c12h) SO THAT dt CHANGES TO MATCH dx
 dtinv = 1 / dt
 tpl = round(sampfreq * dtinv)
 
-N = math.ceil(L / dx)  # resolve
+#N = math.ceil(L / dx)  # resolve
 L = N * dx
 
 x, y = np.meshgrid(np.arange(0.5, N + 0.5) * dx - L / 2, np.arange(0.5, N + 0.5) * dx - L / 2)
