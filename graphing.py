@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from netCDF4 import Dataset
-from name_list_jupiter import *
+from name_list_uranus import *
 
 
 def animate(files, element):
