@@ -7,6 +7,7 @@ from netCDF4 import Dataset
 import access_data as ad
 from mpi4py import MPI
 import psutil
+import sys
 
 
 def rss():
@@ -136,6 +137,19 @@ x = comm.scatter(xSplit, root=0)
 y = comm.scatter(ySplit, root=0)
 locs = comm.bcast(locs, root=0)
 
+if seasonalsim == True:
+    pass
+if seasonalsim == False:
+    H1H2 = hf.seasonalH1H2(TSEASONf)
+    tradf = hf.seasonaltrad(TSEASONf)
+
+    gm = p1p2*c22h/c12h*H1H2
+    EpHat = (((1 / 2) * p1p2 * c12h + (1 / 2) * H1H2 * c22h - p1p2 * (c22h / c12h) * H1H2 * c12h)
+    * H1H2
+    * (Wsh * tstf) ** 2
+    * (trad0f / tstpf)
+    * (Ar / np.sqrt(Br2)))
+
 Wsum = None
 
 if rank != 0:
@@ -168,7 +182,7 @@ The time step function...
 This function takes in each threads u1,u2,... and then solves the shallow water equations in them. It is the exact 
 same code as in other files, just wrapped in a function instead of a while loop. 
 """
-def timestep(u1,u2,v1,v2,h1,h2,Wmat, u1_p,u2_p,v1_p,v2_p,h1_p,h2_p):
+def timestep(u1,u2,v1,v2,h1,h2,Wmat, u1_p,u2_p,v1_p,v2_p,h1_p,h2_p, t):
     broke = False
     if AB == 2:
         tmp = u1.copy()
@@ -190,6 +204,10 @@ def timestep(u1,u2,v1,v2,h1,h2,Wmat, u1_p,u2_p,v1_p,v2_p,h1_p,h2_p):
             tmp = h2.copy()
             h2 = 1.5 * h2 - 0.5 * h2_p
             h2_p = tmp
+
+    ### Update the seasonal dependent parameters ###
+    if seasonalsim == True:
+        pass
 
     # add friction
     du1dt = hf.viscND(u1, Re, n)
@@ -223,10 +241,10 @@ def timestep(u1,u2,v1,v2,h1,h2,Wmat, u1_p,u2_p,v1_p,v2_p,h1_p,h2_p):
     dv2dt = dv2dt - 0.25 * (zu2 + zu2[:,r])
 
     ### Cumulus Drag (D) ###
-    du1dt = du1dt - (1 / dx) * u1 / dragf
-    du2dt = du2dt - (1 / dx) * u2 / dragf
-    dv1dt = dv1dt - (1 / dx) * v1 / dragf
-    dv2dt = dv2dt - (1 / dx) * v2 / dragf
+    #du1dt = du1dt - (1 / dx) * u1 / dragf
+    #du2dt = du2dt - (1 / dx) * u2 / dragf
+    #dv1dt = dv1dt - (1 / dx) * v1 / dragf
+    #dv2dt = dv2dt - (1 / dx) * v2 / dragf
 
     B1p, B2p = hf.BernN2(u1, v1, u2, v2, gm, c22h, c12h, h1, h2, ord)
 
@@ -324,7 +342,7 @@ while t <= tmax + lasttime + dt / 2:
     simtimer = time.time()
 
     if rank != 0:
-        u1,u2,v1,v2,h1,h2, u1_p,u2_p,v1_p,v2_p,h1_p,h2_p, broke = timestep(u1,u2,v1,v2,h1,h2,Wmat, u1_p,u2_p,v1_p,v2_p,h1_p,h2_p)
+        u1,u2,v1,v2,h1,h2, u1_p,u2_p,v1_p,v2_p,h1_p,h2_p, broke = timestep(u1,u2,v1,v2,h1,h2,Wmat, u1_p,u2_p,v1_p,v2_p,h1_p,h2_p, t)
 
     
     if broke == True:
@@ -474,22 +492,15 @@ while t <= tmax + lasttime + dt / 2:
                 for i in range(len(remove_layers)):
                     locs[remove_layers[i]] = newlocs[i]
 
-                #wlayer = hf.pairshapeN2(locs, t) ### use pairshapeBEGIN instead of pairshape
-                #Wmat = hf.pairfieldN2(L, h1, wlayer)
-
         if len(remove_layers) != 0:
             rem = True
             
-            #WmatSplit = [Wmat]
-            #for i in range(1,size+1):
-            #    WmatSplit.append(hf.split(Wmat, offset, ranks, i))
     
     rem = comm.bcast(rem, root=0)
     locs = comm.bcast(locs, root=0)
     if rem == True:
         if rank != 0:
             wlayer = hf.pairshapeN2(locs, 0, x, y, offset)
-            #Wmat = hf.pairfieldN2(L, h1, wlayer)
             Wsum = np.sum(wlayer) * dx**2
 
         Wsums = comm.gather(Wsum, root=0)

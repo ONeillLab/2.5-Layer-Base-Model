@@ -4,6 +4,27 @@ import time
 import sys
 
 
+"""
+Seasonal forcing helperfunctions. These will do all the calculations on how different parameters evolve with time
+
+seasonalH1: Calculates H1 as a function of time
+
+seasonalH1H2: Calculates the new H1H2 ratio for a given time
+
+seasonaltrad: Calculates the new radiative timescale for a given time
+
+"""
+
+def seasonalH1(t):
+    return deltaH1 * np.exp((-(t-seasperf)**2)/(2*seasstdf**2)) + deltaH1 * np.exp((-(t)**2)/(2*seasstdf**2)) + 1
+
+def seasonalH1H2(t):
+    return H1H2 + (seasonalH1(t) - 1)
+
+def seasonaltrad(t):
+    return (1 + ((deltatrad * (1/(np.exp((-(t-seasperf)**2)/(2*seasstdf**2)) + np.exp((-(t)**2)/(2*seasstdf**2)) + 1)**3)) - deltatrad))*trad0f
+
+
 def pairfieldN2(L, h1, wlayer):
     """
     Creates the weather matrix for the storms, S_st in paper.
@@ -136,7 +157,7 @@ def genlocs(num, N, t):
 
     return final
 
-### New helper function for MPI ###
+### New helper function for MPI, splits an array into even pieces with 2 elements of padding. Includes wrapping ###
 def split(arr, offset, ranks, rank):
 
     #timer = time.time()
@@ -196,6 +217,7 @@ def split(arr, offset, ranks, rank):
     return result
 
 
+###
 def combine(mats, offset, ranks, size):
     mats = np.array(mats[1:size+1])
 
@@ -225,31 +247,4 @@ def get_surrounding_points(arr, i, j):
         just_ranks.append(arr[ni,nj])
     
     return surrounding_points, set(just_ranks)
-
-"""
-Deprecated functions which might be needed later
-
-def split(mat, offset, ranks, rank):
-    
-    timer = time.time()
-    ind = np.where(ranks == rank)
-
-    temp = np.zeros((subdomain_size + 4, subdomain_size + 4))
-
-    left_padding = np.roll(mat, 2 , axis=1)[offset*ind[0][0] : offset*ind[0][0] + offset, :][:, offset*ind[1][0] : offset*ind[1][0] + 2]
-    right_padding = np.roll(mat, -2, axis=1)[offset*ind[0][0] : offset*ind[0][0] + offset, :][:, offset*ind[1][0] + offset - 2 : offset*ind[1][0] + offset]
-    top_padding = np.roll(mat, 2, axis=0)[offset*ind[0][0] : offset*ind[0][0] + 2, :][:, offset*ind[1][0] : offset*ind[1][0] + offset]
-    bot_padding = np.roll(mat, -2, axis=0)[offset*ind[0][0] + offset -2: offset*ind[0][0] + offset, :][:, offset*ind[1][0] : offset*ind[1][0] + offset]
-
-    temp[0:2, :][:, 2:len(temp)-2] = top_padding
-    temp[subdomain_size+2:subdomain_size+4, :][:, 2:len(temp)-2] = bot_padding
-    temp[2:len(temp)-2, :][:, 0:2] = left_padding
-    temp[2:len(temp)-2, : ][:, subdomain_size+2:subdomain_size+4] = right_padding
-
-    temp[2:subdomain_size+2, :][:, 2:subdomain_size+2] = mat[offset*ind[0][0] : offset*ind[0][0] + offset, :][:, offset*ind[1][0] : offset*ind[1][0] + offset]
-
-    print(time.time()-timer)
-
-    return temp
-
-"""
+ 

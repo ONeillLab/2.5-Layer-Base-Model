@@ -3,13 +3,17 @@ import numpy as np
 
 fixed = True
 saving = True
+seasonalsim = False
+
+
+TSEASON = 42 # Time in Uranian year, 84 will be summer solstice for the north pole, while 42 will be south pole solstice
 
 num_processors = 5
 
-tmax = 1000
+tmax = 10
 ani_interval = 100
-sampfreq = 100
-restart_name = None#'jupiter100724_7.nc'
+sampfreq = 1
+restart_name = None #'jupiter100724_7.nc'
 new_name = 'test1.nc'
 
 ### Dimensional, collected from papers, used for normalization ###
@@ -17,13 +21,36 @@ f0 = 1.0124e-4    # coriolis parameter from Nasa planet facts [s]
 a = 24973e3      # planetary radius from Nasa planet facts [m]
 g = 9.01         # Uranus' gravity from Nasa planet facts [m/s^2] 
 Ld2 = 1200e3      # 2nd baroclinic Rossby deformation radius [m] from O'Neill
-trad = 142858080  # 4.53 years from https://pds-atmospheres.nmsu.edu/education_and_outreach/encyclopedia/radiative_time_constant.htm [s]
-drag = np.inf     # Cumulus Drag (placeholder)
+drag = 100000     # Cumulus Drag (placeholder)
+
+### Dimensional Seasonal Forcing Parameters ###
+T0 = 123 # From Milcareck (2024) (at 3 Bar) [K]
+Tamp = 4.1 # From Milcareck (2024) (at 0.3 Bar) [K]
+seasper = 84 # Nasa Facts [year]
+seasstd = 10 # Hueso et al. (big estimate) [year]
+R = 766.32 # Specific gas constant of methane at 1 bar 123 K
+rho = 1.5914 # Density of methane at 1 bar 123 K
+p0 = 1e5 # Top of upper layer from Sromovsky (2024)
+H10 = (T0 - p0/(rho*R))*(2*R/g) #calculated
+deltaH1 = (Tamp*(2*R))/g
+cp = 8600 # Heat capacity of methane at (3 Bar) from Milcareck
+sigma = 5.670e-8 # Stefan-Boltzmann constant
+eps = 0.3 # emissivity, estimated
+trad0 = (cp*p0) / (4*g*sigma*eps*T0**3)
+deltatrad = (12/T0)*trad0
+
+### Dimensionless Seasonal Forcing Parameters ###
+seasperf = round((seasper*365*24*60*60)*f0)
+seasstdf = round((seasstd*365*24*60*60)*f0)
+deltaH1 = deltaH1/H10
+trad0f = trad0*f0
+deltatrad = (12/T0)*trad0 / trad0
+TSEASONf = (TSEASON*365*24*60*60)*f0
 
 
 ### Dimensional, Storm parameters ###
-Rst = 350e3       # Storm size [m] from Siegelman [m]
-tst = 260000      # 3 day storm duration from Siegelman [s]
+Rst = 350e3       # Storm size [m] calculated from Sromovsky (2024) [m]
+tst = 260000      # 3 day storm duration from Sromovsky (2024) [s]
 tstp = tst*1.1   # Period between forced storms (Guess)
 
 ### Dimensonal, Atmosphere parameters, these are not known and must be adjusted ###
@@ -35,14 +62,13 @@ c2 = Ld2 * f0 # Second baroclinic gravity wave speed
 
 ### ND Derived Parameters ###
 tstf = round(tst*f0)
-tradf = trad*f0
 tstpf = round(tstp*f0)
 dragf = drag*f0
 Br2 = Ld2**2 / Rst**2   # Burger Number
 c22h = 3 # ND 2nd baroclinic gravity wave speed squared
 c12h = 4 # ND 1st baroclinic gravity wave speed squared
 Bt = (Ld2**2)/(2*a**2) # scaled beta (for beta plane)
-Ar = 0.07 # From calcualtions
+Ar = 0.20 # Calculated from Sromovsky
 Re = 5e4
 Wsh = 0.012 / 2 #Wst / (H1 * f0) Place holder
 
@@ -69,7 +95,7 @@ EpHat = (
     ((1 / 2) * p1p2 * c12h + (1 / 2) * H1H2 * c22h - p1p2 * (c22h / c12h) * H1H2 * c12h)
     * H1H2
     * (Wsh * tstf) ** 2
-    * (tradf / tstpf)
+    * (trad0f / tstpf)
     * (Ar / np.sqrt(Br2))
 )
 
@@ -143,6 +169,3 @@ lg = np.concatenate((np.array([N]), np.arange(1, N)), axis=None) - 1
 lg2 = np.concatenate((np.arange(N - 1, N + 1), np.arange(1, N - 1)), axis=None) - 1 
 rg = np.concatenate((np.arange(2, N + 1), np.array([1])), axis=None) - 1
 rg2 = np.concatenate((np.arange(3, N + 1), np.arange(1, 3)), axis=None) - 1
-
-
-print(EpHat, aOLd, N, dt)

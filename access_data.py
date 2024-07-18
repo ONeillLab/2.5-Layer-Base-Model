@@ -29,7 +29,7 @@ def create_file(data_name):
     rootgroup.p1p2 = p1p2
     rootgroup.tstf = tstf
     rootgroup.tstpf = tstpf
-    rootgroup.tradf = tradf
+    rootgroup.trad0f = trad0f
     rootgroup.dragf = dragf
     rootgroup.Ar = Ar
     rootgroup.Re = Re
