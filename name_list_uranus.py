@@ -4,6 +4,7 @@ import numpy as np
 fixed = True
 saving = True
 seasonalsim = False
+season = "summer" # "winter"
 
 
 TSEASON = 42 # Time in Uranian year, 84 will be summer solstice for the north pole, while 42 will be south pole solstice
@@ -47,7 +48,6 @@ trad0f = trad0*f0
 deltatrad = (12/T0)*trad0 / trad0
 TSEASONf = (TSEASON*365*24*60*60)*f0
 
-
 ### Dimensional, Storm parameters ###
 Rst = 350e3       # Storm size [m] calculated from Sromovsky (2024) [m]
 tst = 260000      # 3 day storm duration from Sromovsky (2024) [s]
@@ -73,6 +73,12 @@ Re = 5e4
 Wsh = 0.012 / 2 #Wst / (H1 * f0) Place holder
 
 
+if season == "summer":
+    H1H2 = (1+deltaH1)*H1H2
+    Wsh = Wsh / (1+deltaH1)
+    trad0f = (1-deltatrad)*trad0f
+    
+
 #### Derived Quantities ###
 gm = p1p2*c22h/c12h*H1H2            # ND reduced gravity
 aOLd = a/Ld2;             # ND planetary radius to deformation radius ratio
@@ -96,13 +102,14 @@ EpHat = (
     * H1H2
     * (Wsh * tstf) ** 2
     * (trad0f / tstpf)
+    * (tstf / tstpf)
     * (Ar / np.sqrt(Br2))
 )
 
 #dx = 1 / 5 * round(min(1,L/Lst), 3)
 N  = 376
 dx = round(L/N,4)
-dt = dx / (10 * c12h) #1 / (2**8) # CHANGED TO dx/(10*c12h) SO THAT dt CHANGES TO MATCH dx
+dt = dx / (5 * c12h) #1 / (2**8) # CHANGED TO dx/(10*c12h) SO THAT dt CHANGES TO MATCH dx
 dtinv = 1 / dt
 tpl = round(sampfreq * dtinv)
 
