@@ -22,7 +22,7 @@ def seasonalH1H2(t):
     return H1H2 + (seasonalH1(t) - 1)
 
 def seasonaltrad(t):
-    return (1 + ((deltatrad * (1/(np.exp((-(t-seasperf)**2)/(2*seasstdf**2)) + np.exp((-(t)**2)/(2*seasstdf**2)) + 1)**3)) - deltatrad))*trad0f
+    return (1 - deltatrad * (np.exp((-(t-seasperf)**2)/(2*seasstdf**2)) + np.exp((-(t)**2)/(2*seasstdf**2))))*trad0f
 
 
 def pairfieldN2(L, h1, wlayer):

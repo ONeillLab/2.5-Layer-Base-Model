@@ -4,16 +4,16 @@ import numpy as np
 fixed = True
 saving = True
 seasonalsim = False
-season = "summer" # "winter"
+season = "summer" # "summer" for summer settings and "winter" for winter settings
 
 
 TSEASON = 42 # Time in Uranian year, 84 will be summer solstice for the north pole, while 42 will be south pole solstice
 
 num_processors = 5
 
-tmax = 10
+tmax = 40000
 ani_interval = 100
-sampfreq = 1
+sampfreq = 100
 restart_name = None #'jupiter100724_7.nc'
 new_name = 'test1.nc'
 
@@ -70,14 +70,16 @@ c12h = 4 # ND 1st baroclinic gravity wave speed squared
 Bt = (Ld2**2)/(2*a**2) # scaled beta (for beta plane)
 Ar = 0.20 # Calculated from Sromovsky
 Re = 5e4
-Wsh = 0.012 / 2 #Wst / (H1 * f0) Place holder
+Wsh = 0.001 / 2 #Wst / (H1 * f0) Place holder
 
 
 if season == "summer":
     H1H2 = (1+deltaH1)*H1H2
     Wsh = Wsh / (1+deltaH1)
-    trad0f = (1-deltatrad)*trad0f
-    
+    tradf = (1-deltatrad)*trad0f
+if season == "winter":
+    tradf = trad0f
+
 
 #### Derived Quantities ###
 gm = p1p2*c22h/c12h*H1H2            # ND reduced gravity
@@ -94,8 +96,8 @@ layers = 2.5  # of layers (2 or 2.5)
 n = 2  # order of Laplacian '2' is hyperviscosity
 kappa = 1e-6
 ord = 2  # must equal 1 for Glenn's order, otherwise for Sadourney's (squares before avgs)
-spongedrag1 = 0.01
-spongedrag2 = 0.01
+spongedrag1 = 0.1
+spongedrag2 = 0.1
 
 EpHat = (
     ((1 / 2) * p1p2 * c12h + (1 / 2) * H1H2 * c22h - p1p2 * (c22h / c12h) * H1H2 * c12h)
@@ -109,7 +111,7 @@ EpHat = (
 #dx = 1 / 5 * round(min(1,L/Lst), 3)
 N  = 376
 dx = round(L/N,4)
-dt = dx / (5 * c12h) #1 / (2**8) # CHANGED TO dx/(10*c12h) SO THAT dt CHANGES TO MATCH dx
+dt = dx / (10 * c12h) #1 / (2**8) # CHANGED TO dx/(10*c12h) SO THAT dt CHANGES TO MATCH dx
 dtinv = 1 / dt
 tpl = round(sampfreq * dtinv)
 

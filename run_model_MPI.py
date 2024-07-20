@@ -137,19 +137,6 @@ x = comm.scatter(xSplit, root=0)
 y = comm.scatter(ySplit, root=0)
 locs = comm.bcast(locs, root=0)
 
-if seasonalsim == True:
-    pass
-if seasonalsim == False:
-    H1H2 = hf.seasonalH1H2(TSEASONf)
-    tradf = hf.seasonaltrad(TSEASONf)
-
-    gm = p1p2*c22h/c12h*H1H2
-    EpHat = (((1 / 2) * p1p2 * c12h + (1 / 2) * H1H2 * c22h - p1p2 * (c22h / c12h) * H1H2 * c12h)
-    * H1H2
-    * (Wsh * tstf) ** 2
-    * (trad0f / tstpf)
-    * (Ar / np.sqrt(Br2)))
-
 Wsum = None
 
 if rank != 0:
@@ -274,7 +261,7 @@ def timestep(u1,u2,v1,v2,h1,h2,Wmat, u1_p,u2_p,v1_p,v2_p,h1_p,h2_p, t):
 
     if tradf > 0:
         dh1dt = dh1dt - 1 / tradf * (h1 - 1)
-        dh2dt = dh2dt - 1 / tradf * (h2 - 1)
+        dh2dt = dh2dt - 1 / trad0f * (h2 - 1)
 
     if mode == 1:
         dh1dt = dh1dt + Wmat.astype(np.float64)
@@ -536,11 +523,14 @@ while t <= tmax + lasttime + dt / 2:
             h2 = hf.combine(h2matSplit, offset, ranks, size)
 
             print(f"t={t}, time elapsed {time.time()-clocktimer}")
+            clocktimer = time.time()
 
             ad.save_data(u1,u2,v1,v2,h1,h2,locs,t,lasttime,new_name)
 
     tc += 1
     t = tc * dt
+
+print(tradf, trad0f)
 
 #print(f"rank: {rank}, simtime avg: {round(np.mean(simTimes),4)}, sendingtime avg: {round(np.mean(sendingTimes),4)}, stormtime avg: {round(np.mean(stormTimes), 4)}, total time: {round(time.time()-tottimer,4)}, mem used: {(rss() - initialmem)/10**6} MB")
 
