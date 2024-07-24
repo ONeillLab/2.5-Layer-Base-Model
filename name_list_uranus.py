@@ -4,18 +4,18 @@ import numpy as np
 fixed = True
 saving = True
 seasonalsim = False
-season = "summer" # "summer" for summer settings and "winter" for winter settings
+season = "winter" # "summer" for summer settings and "winter" for winter settings
 
 
 TSEASON = 42 # Time in Uranian year, 84 will be summer solstice for the north pole, while 42 will be south pole solstice
 
 num_processors = 5
 
-tmax = 40000
+tmax = 100
 ani_interval = 100
-sampfreq = 100
+sampfreq = 1
 restart_name = None #'jupiter100724_7.nc'
-new_name = 'test1.nc'
+new_name = 'test2.nc'
 
 ### Dimensional, collected from papers, used for normalization ###
 f0 = 1.0124e-4    # coriolis parameter from Nasa planet facts [s]
@@ -39,6 +39,12 @@ sigma = 5.670e-8 # Stefan-Boltzmann constant
 eps = 0.3 # emissivity, estimated
 trad0 = (cp*p0) / (4*g*sigma*eps*T0**3)
 deltatrad = (12/T0)*trad0
+
+TIMESCALING = 30
+seasper = seasper/TIMESCALING
+seasstd = seasstd/TIMESCALING
+trad0 = trad0/TIMESCALING
+TSEASON = TSEASON/TIMESCALING
 
 ### Dimensionless Seasonal Forcing Parameters ###
 seasperf = round((seasper*365*24*60*60)*f0)
@@ -84,8 +90,8 @@ if season == "winter":
 #### Derived Quantities ###
 gm = p1p2*c22h/c12h*H1H2            # ND reduced gravity
 aOLd = a/Ld2;             # ND planetary radius to deformation radius ratio
-deglim = np.pi/6  # domain size [degrees]
-L = 2*(deglim * a)/Ld2  # domain radius 30 deg from pole, normalized by deformation radius
+deglim = (np.pi/6)*1.25 # domain size [degrees]
+L = 2*(deglim * a)/Ld2  # domain radius from pole, normalized by deformation radius
 num = round(Ar*(L**2)*Br2/np.pi)    # number of storms
 
 Lst = L * Ld2/Rst
@@ -137,7 +143,7 @@ v2 = v1
 # zeta grid
 x, y = np.meshgrid(np.arange(0, N) * dx - L / 2, np.arange(0, N) * dx - L / 2)
 rdist = np.sqrt((x**2) + (y**2))
-outerlim = L / 2 - 0.5
+outerlim = L / 2.5 #- 0.5
 rlim = (rdist <= outerlim).astype(float)  # 1* converts the Boolean values to integers 1 or 0
 
 

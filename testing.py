@@ -5,7 +5,7 @@ from name_list_uranus import *
 
 
 
-ts = np.linspace(0,(84*365*24*60*60)*f0, 1000)
+ts = np.linspace(0,(seasper*365*24*60*60)*f0, 1000)
 ys = hf.seasonaltrad(ts)
 
 plt.plot(ts, ys)

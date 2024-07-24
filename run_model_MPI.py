@@ -530,8 +530,6 @@ while t <= tmax + lasttime + dt / 2:
     tc += 1
     t = tc * dt
 
-print(tradf, trad0f)
-
 #print(f"rank: {rank}, simtime avg: {round(np.mean(simTimes),4)}, sendingtime avg: {round(np.mean(sendingTimes),4)}, stormtime avg: {round(np.mean(stormTimes), 4)}, total time: {round(time.time()-tottimer,4)}, mem used: {(rss() - initialmem)/10**6} MB")
 
 #print(f"mem used: {(rss() - initialmem)/10**6} MB")
