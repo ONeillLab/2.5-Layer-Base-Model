@@ -52,7 +52,7 @@ Wsh = Wst / (H1 * f0)
 #### Derived Quantities ###
 gm = p1p2*c22h/c12h*H1H2            # ND reduced gravity
 aOLd = a/Ld2;             # ND planetary radius to deformation radius ratio
-deglim = np.pi/6  # domain size [degrees]
+deglim = (np.pi/6)*1.25  # domain size [degrees]
 L = 2*(deglim * a)/Ld2  # domain radius 30 deg from pole, normalized by deformation radius
 num = round(Ar*(L**2)*Br2/np.pi)    # number of storms
 
@@ -102,7 +102,7 @@ v2 = v1
 # zeta grid
 x, y = np.meshgrid(np.arange(0, N) * dx - L / 2, np.arange(0, N) * dx - L / 2)
 rdist = np.sqrt((x**2) + (y**2))
-outerlim = L / 2 - 0.5
+outerlim = L / 2.5
 rlim = (rdist <= outerlim).astype(float)  # 1* converts the Boolean values to integers 1 or 0
 
 
