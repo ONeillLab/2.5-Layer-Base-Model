@@ -9,8 +9,8 @@ num_processors = 65
 tmax = 12000
 ani_interval = 100
 sampfreq = 100
-restart_name = 'jupiter100724_7.nc'
-new_name = 'jupiter100724_8.nc'
+restart_name = 'jupiter100724_14.nc'
+new_name = 'jupiter100724_15.nc'
 
 ### Dimensional, collected from papers, used for normalization ###
 f0 = 3.517e-4     # coriolis parameter from Siegelman [s]
