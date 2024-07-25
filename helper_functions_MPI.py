@@ -15,14 +15,17 @@ seasonaltrad: Calculates the new radiative timescale for a given time
 
 """
 
+def seasonal_forcing(t):
+    return np.exp((-(t-seasperf)**2)/(2*seasstdf**2)) + np.exp((-(t)**2)/(2*seasstdf**2))
+
 def seasonalH1(t):
-    return deltaH1 * np.exp((-(t-seasperf)**2)/(2*seasstdf**2)) + deltaH1 * np.exp((-(t)**2)/(2*seasstdf**2)) + 1
+    return deltaH1 * seasonal_forcing(t) + 1
 
 def seasonalH1H2(t):
     return H1H2 + (seasonalH1(t) - 1)
 
 def seasonaltrad(t):
-    return (1 - deltatrad * (np.exp((-(t-seasperf)**2)/(2*seasstdf**2)) + np.exp((-(t)**2)/(2*seasstdf**2))))*trad0f
+    return (1 - deltatrad * seasonal_forcing(t))*trad0f
 
 
 def pairfieldN2(L, h1, wlayer):
