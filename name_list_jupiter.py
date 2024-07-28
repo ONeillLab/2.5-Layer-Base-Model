@@ -4,7 +4,7 @@ import numpy as np
 fixed = True
 saving = True
 
-num_processors = 5
+num_processors = 65
 
 tmax = 12000
 ani_interval = 100
