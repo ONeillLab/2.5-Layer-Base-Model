@@ -18,7 +18,7 @@ a = 5.44e7      # planetary radius from Siegelman [m]
 g = 11.19        # Jupiter's gravity [m/s^2] 
 H = 9e3           # Moist convection height anomoly scale [m] from Siegelman
 Ld2 = 1000e3      # 2nd baroclinic Rossby deformation radius [m] from Siegelman
-trad = 142858080  # 4.53 years from https://pds-atmospheres.nmsu.edu/education_and_outreach/encyclopedia/radiative_time_constant.htm [s]
+trad = 142858080#*4  # 4.53 years from https://pds-atmospheres.nmsu.edu/education_and_outreach/encyclopedia/radiative_time_constant.htm [s]
 drag = 10000     # Cumulus Drag (Guess)
 
 ### Dimensional, Storm parameters ###
