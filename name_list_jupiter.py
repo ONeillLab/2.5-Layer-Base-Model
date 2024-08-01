@@ -28,7 +28,7 @@ tstp = tst*1.1   # Period between forced storms (Guess)
 
 ### Dimensonal, Atmosphere parameters, these are not known and must be adjusted ###
 p1p2 = 0.95
-H1H2 = 1
+H1H2 = 0.51
 
 # Dimensional, Derived Parameters ###
 Wst = H / tst
@@ -143,3 +143,10 @@ lg = np.concatenate((np.array([N]), np.arange(1, N)), axis=None) - 1
 lg2 = np.concatenate((np.arange(N - 1, N + 1), np.arange(1, N - 1)), axis=None) - 1 
 rg = np.concatenate((np.arange(2, N + 1), np.array([1])), axis=None) - 1
 rg2 = np.concatenate((np.arange(3, N + 1), np.arange(1, 3)), axis=None) - 1
+
+
+print(EpHat)
+print(gm)
+print((1-p1p2)*g)
+print(c2)
+print(Wsh)
