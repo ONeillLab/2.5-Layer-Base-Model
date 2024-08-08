@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from netCDF4 import Dataset
-from name_list_uranus import *
+from name_list_general import *
 
 
 def animate(files, element):
@@ -143,12 +143,12 @@ def view_slice(data, slice):
 
 
 #### examples ####
-data = ['test1.nc', 'test2.nc']
+data = ['testing_1.nc']
 
-animate(data, "zeta2")
+#animate(data, "zeta2")
 
 
-"""
+
 root = Dataset(data[0], 'r')
 
 h2mat = np.array(root.variables['h2mat'])
@@ -158,4 +158,3 @@ root.close()
 plt.imshow(h2mat[0])
 plt.colorbar()
 plt.show()
-"""

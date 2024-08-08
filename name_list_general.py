@@ -4,79 +4,53 @@ import numpy as np
 fixed = True
 saving = True
 seasonalsim = False
-season = "summer" # "summer" for summer settings and "winter" for winter settings
-
-
-TSEASON = 42 # Time in Uranian year, 84 will be summer solstice for the north pole, while 42 will be south pole solstice
+season = "winter" # "summer" for summer settings and "winter" for winter settings
 
 num_processors = 10
 
-tmax = 5000
+tmax = 100
 ani_interval = 100
-sampfreq = 100
-restart_name = "test1.nc" #'jupiter100724_7.nc'
-new_name = 'test2.nc'
+sampfreq = 10
+restart_name = None
+new_name = 'testing_1.nc'
 
-### Dimensional, collected from papers, used for normalization ###
-f0 = 1.0124e-4    # coriolis parameter from Nasa planet facts [s]
-a = 24973e3      # planetary radius from Nasa planet facts [m]
-g = 9.01         # Uranus' gravity from Nasa planet facts [m/s^2] 
-Ld2 = 1200e3      # 2nd baroclinic Rossby deformation radius [m] from O'Neill
-drag = 100000     # Cumulus Drag (placeholder)
+### ND seasonal parameters ###
+deltatrad = 0.1
+deltaH1 = 0.1
+seasperf = 5000
 
-### Dimensional Seasonal Forcing Parameters ###
-T0 = 123 # From Milcareck (2024) (at 3 Bar) [K]
-Tamp = 4.1 # From Milcareck (2024) (at 0.3 Bar) [K]
-seasper = 84 # Nasa Facts [year]
-seasstd = 10 # Hueso et al. (big estimate) [year]
-R = 766.32 # Specific gas constant of methane at 1 bar 123 K
-rho = 1.5914 # Density of methane at 1 bar 123 K
-p0 = 3*1e5 # Top of upper layer from Sromovsky (2024)
-H10 = (T0 - p0/(rho*R))*(2*R/g) #calculated
-deltaH1 = (Tamp*(2*R))/g
-cp = 8600 # Heat capacity of methane at (3 Bar) from Milcareck
-sigma = 5.670e-8 # Stefan-Boltzmann constant
-eps = 0.3 # emissivity, estimated
-trad0 = (cp*p0) / (4*g*sigma*eps*T0**3)
-deltatrad = (12/T0)*trad0
+c22h = 4  # 9  # ND 2nd baroclinic gravity wave speed squared
+c12h = 5  # 10  # ND 1st baroclinic gravity wave speed squared
+H1H2 = 1  # ND upper to lower layer height ratio
+Bt = (1**2) / 2 / (30**2)  # ND scaled beta Ld2^2/4a^2 ### adjust this
+Br2 = 9  # 1.5  # ND scaled storm size: Burger number Ld2^2/Rst^2
+p1p2 = 0.95  # ND upper to lower layer density ratio
+tstf = 6  # 48  # ND storm duration tst*f0
+tstpf = 15  # 60  # ND period between forced storms tstp*f0
+trad0f = 2000  # ND Newtonian damping of layer thickness trad*f0
+dragf = 1000000  # Cumulus drag time scale (Li and O'Neill) (D)
+Ar = 0.20  # ND areal storm coverage
+Re = 5e4  # ND Reynolds number
+Wsh = 0.02 / 2  # ND convective Rossby number
 
-TIMESCALING = 1#10
-seasper = seasper/TIMESCALING
-seasstd = seasstd/TIMESCALING
-trad0 = trad0/TIMESCALING
-TSEASON = TSEASON/TIMESCALING
+#### Derived Quantities ###  
+gm = p1p2 * c22h / c12h * H1H2  # ND reduced gravity
+aOLd = np.sqrt(1 / Bt / 2)  # ND planetary radius to deformation radius ratio ### adjust this
+L = 3 * np.pi / 9 * aOLd  # ND num = ceil(numfrc.*L.^2./Br2)
+num = round(Ar * (L**2) * Br2 / np.pi)  # number of storms
+deglim = 90 - 3 * L / 2 * aOLd * 180 / np.pi  # domain size [degrees]
 
-### Dimensionless Seasonal Forcing Parameters ###
-seasperf = round((seasper*365*24*60*60)*f0)
-seasstdf = round((seasstd*365*24*60*60)*f0)
-deltaH1 = deltaH1/H10
-trad0f = trad0*f0
-deltatrad = (12/T0)*trad0 / trad0
-TSEASONf = (TSEASON*365*24*60*60)*f0
+Lst = L * np.sqrt(Br2)  # Convert the length of domain per Ld2 to length of domain per Rst (Daniel)
 
-### Dimensional, Storm parameters ###
-Rst = 350e3       # Storm size [m] calculated from Sromovsky (2024) [m]
-tst = 260000      # 3 day storm duration from Sromovsky (2024) [s]
-tstp = tst*2   # Period between forced storms (Guess)
+################## engineering params ##########################
 
-### Dimensonal, Atmosphere parameters, these are not known and must be adjusted ###
-p1p2 = 0.95
-H1H2 = 1
-
-# Dimensional, Derived Parameters ###
-c2 = Ld2 * f0 # Second baroclinic gravity wave speed
-
-### ND Derived Parameters ###
-tstf = round(tst*f0)
-tstpf = round(tstp*f0)
-dragf = drag*f0
-Br2 = Ld2**2 / Rst**2   # Burger Number
-c22h = 3 # ND 2nd baroclinic gravity wave speed squared
-c12h = 4 # ND 1st baroclinic gravity wave speed squared
-Bt = (Ld2**2)/(2*a**2) # scaled beta (for beta plane)
-Ar = 0.20 # Calculated from Sromovsky
-Re = 5e4
-Wsh = 0.001/ 2 #Wst / (H1 * f0) Place holder
+AB = 2  # order of Adams-Bashforth scheme (2 or 3)
+layers = 2.5  # # of layers (2 or 2.5)
+n = 2  # order of Laplacian '2' is hyperviscosity
+kappa = 1e-6
+ord = 2  # must equal 1 for Glenn's order, otherwise for Sadourney's (squares before avgs)
+spongedrag1 = 0.01
+spongedrag2 = 0.01
 
 
 if season == "summer":
@@ -89,12 +63,11 @@ if season == "winter":
 
 #### Derived Quantities ###
 gm = p1p2*c22h/c12h*H1H2            # ND reduced gravity
-aOLd = a/Ld2;             # ND planetary radius to deformation radius ratio
 deglim = (np.pi/6)*1.25 # domain size [degrees]
-L = 2*(deglim * a)/Ld2  # domain radius from pole, normalized by deformation radius
+L = 2*deglim * aOLd  # domain radius from pole, normalized by deformation radius
 num = round(Ar*(L**2)*Br2/np.pi)    # number of storms
 
-Lst = L * Ld2/Rst
+#Lst = L * Ld2/Rst
 
 ################## engineering params ##########################
 AB = 2  # order of Adams-Bashforth scheme (2 or 3)
@@ -102,8 +75,8 @@ layers = 2.5  # of layers (2 or 2.5)
 n = 2  # order of Laplacian '2' is hyperviscosity
 kappa = 1e-6
 ord = 2  # must equal 1 for Glenn's order, otherwise for Sadourney's (squares before avgs)
-spongedrag1 = 0.005
-spongedrag2 = 0.005
+spongedrag1 = 0.01
+spongedrag2 = 0.01
 
 EpHat = (
     ((1 / 2) * p1p2 * c12h + (1 / 2) * H1H2 * c22h - p1p2 * (c22h / c12h) * H1H2 * c12h)
@@ -114,8 +87,8 @@ EpHat = (
     * (Ar / np.sqrt(Br2))
 )
 
-#dx = 1 / 5 * round(min(1,L/Lst), 3)
-N  = 156 #376
+
+N  = 360
 dx = round(L/N,4)
 dt = dx / (10 * c12h) #1 / (2**8) # CHANGED TO dx/(10*c12h) SO THAT dt CHANGES TO MATCH dx
 dtinv = 1 / dt
@@ -184,6 +157,3 @@ lg = np.concatenate((np.array([N]), np.arange(1, N)), axis=None) - 1
 lg2 = np.concatenate((np.arange(N - 1, N + 1), np.arange(1, N - 1)), axis=None) - 1 
 rg = np.concatenate((np.arange(2, N + 1), np.array([1])), axis=None) - 1
 rg2 = np.concatenate((np.arange(3, N + 1), np.arange(1, 3)), axis=None) - 1
-
-
-print(trad0)

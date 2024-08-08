@@ -1,5 +1,5 @@
 import numpy as np
-from name_list_uranus import *
+from name_list_general import *
 import time
 import sys
 
@@ -16,7 +16,8 @@ seasonaltrad: Calculates the new radiative timescale for a given time
 """
 
 def seasonal_forcing(t):
-    return np.exp((-(t-seasperf)**2)/(2*seasstdf**2)) + np.exp((-(t)**2)/(2*seasstdf**2))
+    forcing = np.max(np.cos((2*np.pi)/seasperf * t),0)
+    return forcing #np.exp((-(t-seasperf)**2)/(2*seasstdf**2)) + np.exp((-(t)**2)/(2*seasstdf**2))
 
 def seasonalH1(t):
     return deltaH1 * seasonal_forcing(t) + 1

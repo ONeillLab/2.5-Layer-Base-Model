@@ -1,6 +1,6 @@
 import numpy as np
 from netCDF4 import Dataset
-from name_list_uranus import *
+from name_list_general import *
 
 
 def display_data(data_name):

@@ -2,7 +2,7 @@ import numpy as np
 import math
 import helper_functions_MPI as hf
 import time
-from name_list_uranus import *
+from name_list_general import *
 from netCDF4 import Dataset
 import access_data as ad
 from mpi4py import MPI
@@ -193,8 +193,11 @@ def timestep(u1,u2,v1,v2,h1,h2,Wmat, u1_p,u2_p,v1_p,v2_p,h1_p,h2_p, t):
             h2_p = tmp
 
     ### Update the seasonal dependent parameters ###
-    if seasonalsim == True:
-        pass
+    #if seasonalsim == True:
+    #    tradf = hf.seasonaltrad(t)
+    #    H1H2 = hf.seasonalH1H2(t)
+    #    #Wsh = Wsh / hf.seasonalH1(t)
+    #    h1 = h1 / hf.seasonalH1(t)
 
     # add friction
     du1dt = hf.viscND(u1, Re, n)
