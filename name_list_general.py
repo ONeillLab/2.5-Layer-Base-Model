@@ -31,7 +31,7 @@ trad0f = 2000  # ND Newtonian damping of layer thickness trad*f0
 dragf = 1000000  # Cumulus drag time scale (Li and O'Neill) (D)
 Ar = 0.20  # ND areal storm coverage
 Re = 5e4  # ND Reynolds number
-Wsh = 0.02 / 2  # ND convective Rossby number
+Wsh = 0.005 / 2  # ND convective Rossby number
 
 #### Derived Quantities ###  
 gm = p1p2 * c22h / c12h * H1H2  # ND reduced gravity
@@ -157,3 +157,5 @@ lg = np.concatenate((np.array([N]), np.arange(1, N)), axis=None) - 1
 lg2 = np.concatenate((np.arange(N - 1, N + 1), np.arange(1, N - 1)), axis=None) - 1 
 rg = np.concatenate((np.arange(2, N + 1), np.array([1])), axis=None) - 1
 rg2 = np.concatenate((np.arange(3, N + 1), np.arange(1, 3)), axis=None) - 1
+
+print(EpHat, num)
