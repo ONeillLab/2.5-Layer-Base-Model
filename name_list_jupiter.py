@@ -6,23 +6,23 @@ saving = True
 
 num_processors = 65
 
-tmax = 12000
+tmax = 14000
 ani_interval = 100
 sampfreq = 100
-restart_name = 'jupiter100724_14.nc'
-new_name = 'jupiter100724_15.nc'
+restart_name = None #'jupiter250724_11.nc'
+new_name = 'jupiter250724_12.nc' #"small_N_test_1.nc"
 
 ### Dimensional, collected from papers, used for normalization ###
 f0 = 3.517e-4     # coriolis parameter from Siegelman [s]
 a = 6.6854e7      # planetary radius from Siegelman [m]
 g = 24.79         # Jupiter's gravity [m/s^2] 
-H = 9e3           # Moist convection height anomoly scale [m] from Siegelman
+H = 5e3           # Moist convection height anomoly scale [m] from Siegelman
 Ld2 = 1500e3      # 2nd baroclinic Rossby deformation radius [m] from Siegelman
 trad = 142858080  # 4.53 years from https://pds-atmospheres.nmsu.edu/education_and_outreach/encyclopedia/radiative_time_constant.htm [s]
 drag = 10000     # Cumulus Drag (Guess)
 
 ### Dimensional, Storm parameters ###
-Rst = 300e3       # Storm size [m] from Siegelman [m]
+Rst = 200e3       # Storm size [m] from Siegelman [m]
 tst = 260000      # 3 day storm duration from Siegelman [s]
 tstp = tst*1.1   # Period between forced storms (Guess)
 
@@ -77,7 +77,8 @@ EpHat = (
 
 #dx = 1 / 5 * round(min(1,L/Lst), 3)
 
-N  = 1024
+N  = 1032 #512
+
 dx = round(L/N,4)
 dt = dx / (10 * c12h) #1 / (2**8) # CHANGED TO dx/(10*c12h) SO THAT dt CHANGES TO MATCH dx
 dtinv = 1 / dt
@@ -143,5 +144,3 @@ lg = np.concatenate((np.array([N]), np.arange(1, N)), axis=None) - 1
 lg2 = np.concatenate((np.arange(N - 1, N + 1), np.arange(1, N - 1)), axis=None) - 1 
 rg = np.concatenate((np.arange(2, N + 1), np.array([1])), axis=None) - 1
 rg2 = np.concatenate((np.arange(3, N + 1), np.arange(1, 3)), axis=None) - 1
-
-print(EpHat, Br2, aOLd)
