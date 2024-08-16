@@ -16,13 +16,13 @@ new_name = 'jupiter250724_12.nc' #"small_N_test_1.nc"
 f0 = 3.517e-4     # coriolis parameter from Siegelman [s]
 a = 6.6854e7      # planetary radius from Siegelman [m]
 g = 24.79         # Jupiter's gravity [m/s^2] 
-H = 5e3           # Moist convection height anomoly scale [m] from Siegelman
+H = 9e3           # Moist convection height anomoly scale [m] from Siegelman
 Ld2 = 1500e3      # 2nd baroclinic Rossby deformation radius [m] from Siegelman
 trad = 142858080  # 4.53 years from https://pds-atmospheres.nmsu.edu/education_and_outreach/encyclopedia/radiative_time_constant.htm [s]
 drag = 10000     # Cumulus Drag (Guess)
 
 ### Dimensional, Storm parameters ###
-Rst = 200e3       # Storm size [m] from Siegelman [m]
+Rst = 300e3       # Storm size [m] from Siegelman [m]
 tst = 260000      # 3 day storm duration from Siegelman [s]
 tstp = tst*1.1   # Period between forced storms (Guess)
 
@@ -49,12 +49,16 @@ Re = 5e4
 Wsh = Wst / (H1 * f0)
 
 
-#### Derived Quantities ###
-gm = p1p2*c22h/c12h*H1H2            # ND reduced gravity
+### NEW DERIVED QUANTITIES ###
+"""
+The old one had some problems when expanding the domain, that is that num was dependent
+"""
+gm = p1p2*c22h/c12h*H1H2  # ND reduced gravity
 aOLd = a/Ld2;             # ND planetary radius to deformation radius ratio
-deglim = (np.pi/6)*1.25  # domain size [degrees]
-L = 2*(deglim * a)/Ld2  # domain radius 30 deg from pole, normalized by deformation radius
-num = round(Ar*(L**2)*Br2/np.pi)    # number of storms
+deglim = (np.pi/6)*1.25   # domain size [degrees]
+L = 2*(deglim * a)/Ld2
+
+num = round((aOLd**2 * np.pi**2 * Ar) / (36 * 1/Br2))
 
 Lst = L * Ld2/Rst
 
@@ -144,3 +148,5 @@ lg = np.concatenate((np.array([N]), np.arange(1, N)), axis=None) - 1
 lg2 = np.concatenate((np.arange(N - 1, N + 1), np.arange(1, N - 1)), axis=None) - 1 
 rg = np.concatenate((np.arange(2, N + 1), np.array([1])), axis=None) - 1
 rg2 = np.concatenate((np.arange(3, N + 1), np.arange(1, 3)), axis=None) - 1
+
+print(EpHat, num)
