@@ -8,22 +8,22 @@ season = "winter" # "summer" for summer settings and "winter" for winter setting
 
 num_processors = 10
 
-tmax = 100
+tmax = 5000
 ani_interval = 100
-sampfreq = 10
-restart_name = None
-new_name = 'testing_1.nc'
+sampfreq = 100
+restart_name = 'testing_1.nc' #None
+new_name = 'testing_2.nc'
 
 ### ND seasonal parameters ###
 deltatrad = 0.1
 deltaH1 = 0.1
 seasperf = 5000
 
-c22h = 4  # 9  # ND 2nd baroclinic gravity wave speed squared
-c12h = 5  # 10  # ND 1st baroclinic gravity wave speed squared
+c22h = 3  # 9  # ND 2nd baroclinic gravity wave speed squared
+c12h = 4  # 10  # ND 1st baroclinic gravity wave speed squared
 H1H2 = 1  # ND upper to lower layer height ratio
 Bt = (1**2) / 2 / (30**2)  # ND scaled beta Ld2^2/4a^2 ### adjust this
-Br2 = 9  # 1.5  # ND scaled storm size: Burger number Ld2^2/Rst^2
+Br2 = 1  # 1.5  # ND scaled storm size: Burger number Ld2^2/Rst^2
 p1p2 = 0.95  # ND upper to lower layer density ratio
 tstf = 6  # 48  # ND storm duration tst*f0
 tstpf = 15  # 60  # ND period between forced storms tstp*f0
@@ -31,7 +31,7 @@ trad0f = 2000  # ND Newtonian damping of layer thickness trad*f0
 dragf = 1000000  # Cumulus drag time scale (Li and O'Neill) (D)
 Ar = 0.20  # ND areal storm coverage
 Re = 5e4  # ND Reynolds number
-Wsh = 0.005 / 2  # ND convective Rossby number
+Wsh = 0.002 / 2  # ND convective Rossby number
 
 #### Derived Quantities ###  
 gm = p1p2 * c22h / c12h * H1H2  # ND reduced gravity
@@ -88,7 +88,7 @@ EpHat = (
 )
 
 
-N  = 360
+N  = 156
 dx = round(L/N,4)
 dt = dx / (10 * c12h) #1 / (2**8) # CHANGED TO dx/(10*c12h) SO THAT dt CHANGES TO MATCH dx
 dtinv = 1 / dt
@@ -158,4 +158,4 @@ lg2 = np.concatenate((np.arange(N - 1, N + 1), np.arange(1, N - 1)), axis=None) 
 rg = np.concatenate((np.arange(2, N + 1), np.array([1])), axis=None) - 1
 rg2 = np.concatenate((np.arange(3, N + 1), np.arange(1, 3)), axis=None) - 1
 
-print(EpHat, num)
+print(EpHat)
