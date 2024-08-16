@@ -121,14 +121,14 @@ def yflux(f, v):  # removed dx, dt from input
 
     return fa
 
-def calculate_KE(u1,u2,v1,v2,h1,h2):
+def calculate_KE(u1,u2,v1,v2,h1,h2, H1H2, p1p2):
     first = p1p2*H1H2*h1*(u1**2 + v1**2)
     second = h2*(u2**2 + v2**2)
 
     return 0.5 * np.sum(first + second)
 
 
-def calculate_APE(h1, h2):
+def calculate_APE(h1, h2, H1H2, p1p2, c12h, c22h):
     first = 0.5*p1p2*H1H2*c12h*(h1-1)**2
     second = 0.5*c22h*(h2-1)**2
     third = p1p2*H1H2*(c22h/c12h)*c12h*(h1-1)*(h2-1)
