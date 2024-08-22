@@ -253,6 +253,7 @@ def timestep(u1,u2,v1,v2,h1,h2,Wmat, u1_p,u2_p,v1_p,v2_p,h1_p,h2_p):
     dv1dt = dv1dt - (1 / dx) * v1 / dragf
     dv2dt = dv2dt - (1 / dx) * v2 / dragf
 
+    # add Bernoulli to momentum equations
     B1p, B2p = hf.BernN2(u1, v1, u2, v2, gm, c22h, c12h, h1, h2, ord)
 
     du1dtsq = du1dt - (1 / dx) * (B1p - B1p[:,l])
@@ -261,6 +262,7 @@ def timestep(u1,u2,v1,v2,h1,h2,Wmat, u1_p,u2_p,v1_p,v2_p,h1_p,h2_p):
     dv1dtsq = dv1dt - (1 / dx) * (B1p - B1p[l,:])
     dv2dtsq = dv2dt - (1 / dx) * (B2p - B2p[l,:])
 
+    # Adam-Bashforth scheme
     if AB == 2:
         u1sq = u1_p + dt * du1dtsq
         u2sq = u2_p + dt * du2dtsq
@@ -269,6 +271,7 @@ def timestep(u1,u2,v1,v2,h1,h2,Wmat, u1_p,u2_p,v1_p,v2_p,h1_p,h2_p):
         v2sq = v2_p + dt * dv2dtsq
 
 
+    # Calculating divergence out of a cell and changing height variables, this is solving the continuity equation.
     Fx1 = hf.xflux(h1, u1) - kappa / dx * (h1 - h1[:,l])
     Fy1 = hf.yflux(h1, v1) - kappa / dx * (h1 - h1[l,:])
     dh1dt = -(1 / dx) * (Fx1[:,r] - Fx1 + Fy1[r,:] - Fy1)
@@ -279,10 +282,12 @@ def timestep(u1,u2,v1,v2,h1,h2,Wmat, u1_p,u2_p,v1_p,v2_p,h1_p,h2_p):
 
         dh2dt = -(1 / dx) * (Fx2[:,r] - Fx2 + Fy2[r,:] - Fy2)
 
+    # Applying radiative forcing.
     if tradf > 0:
         dh1dt = dh1dt - 1 / tradf * (h1 - 1)
         dh2dt = dh2dt - 1 / tradf * (h2 - 1)
 
+    # Adding the weather layer to the height variables.
     if mode == 1:
         dh1dt = dh1dt + Wmat.astype(np.float64)
         if layers == 2.5:
@@ -293,11 +298,13 @@ def timestep(u1,u2,v1,v2,h1,h2,Wmat, u1_p,u2_p,v1_p,v2_p,h1_p,h2_p):
         if layers == 2.5:
             h2 = h2_p + dt * dh2dt
 
+    # Final updating of dynamical variables.
     u1 = u1sq
     u2 = u2sq
     v1 = v1sq
     v2 = v2sq
 
+    # Check if anything is broken.
     if math.isnan(h1[0, 0]):
         print(f"Rank: {rank}, h1 is nan")
         broke = True
@@ -307,7 +314,9 @@ def timestep(u1,u2,v1,v2,h1,h2,Wmat, u1_p,u2_p,v1_p,v2_p,h1_p,h2_p):
 
 
 """
-This is the start of the simulation
+This is the start of the simulation. This section is defines how each process communicates boundary data. 
+The simulation is stepped forward one step, then the padding of each process' subarray is updated using the subarrays of its
+neighbouring processes. A new weather layer is then calculated, data is combined and saved by rank 0.
 
 """
 
@@ -326,86 +335,95 @@ if AB == 2:
 ts = []
 ii = 0
 
+# Setting up the time variables
 t = lasttime
 tc = round(t/dt)
 
 rem = False
 
-tottimer = time.time()
-#print("Starting simulation")
+tottimer = time.time() # timer for the simulations
 
+# These are timers for the different sections of the loop. Used for testing, just uncomment the append statements in the loop
 sendingTimes = []
 simTimes = []
 stormTimes = []
 broke = False
 
 
-initialmem = rss()
-clocktimer = time.time()
+initialmem = rss() # calculate the initial memory used. This was used for tracking down a memory leak error. Currenlty, memory use does not change over the course of a simulation.
+clocktimer = time.time() # Timer for the saving process.
 
 
 while t <= tmax + lasttime + dt / 2:
     ### Running of the simulation on all ranks but the master rank (0) ###
     simtimer = time.time()
 
+
+    # Make one timestep of the simulation on all process (but 0).
     if rank != 0:
         u1,u2,v1,v2,h1,h2, u1_p,u2_p,v1_p,v2_p,h1_p,h2_p, broke = timestep(u1,u2,v1,v2,h1,h2,Wmat, u1_p,u2_p,v1_p,v2_p,h1_p,h2_p)
 
-    
+    # Check if anything broke, and if so kill all process.
     if broke == True:
         print(f"h1 Nan on rank {rank}")
         MPI.Finalize()
         MPI.COMM_WORLD.Abort()
 
-    #simTimes.append(time.time()-simtimer)
+    #simTimes.append(time.time()-simtimer) # Uncomment to time the simulation step.
 
-    ### Sending boundary conditions to neighbouring cells
+
+    ### Sending boundary conditions to neighbouring cells ###
 
     sendtimer = time.time()
     
+    # Each process finds it's neighbouring processes and sends them the necessary padding data.
+    # Note that each piece of data has a tag to indicate which "side" the data is coming from, which the receiving process can read.
     if rank != 0:
         ind = np.where(ranks == rank)
         i = ind[0][0] + int(np.sqrt(size))
         j = ind[1][0] + int(np.sqrt(size))
-        sendranks, recvranks = hf.get_surrounding_points(largeranks, i, j)
+        sendranks, recvranks = hf.get_surrounding_points(largeranks, i, j) # get the surrounding ranks and relative locations
         
+        # Process sends data from its subarrays to update the padding of its neighbours.
         for sendrank in sendranks:
-            if (sendrank[0], sendrank[1]) == (-1,-1):
+            if (sendrank[0], sendrank[1]) == (-1,-1): #Sending to top left corner to top left neighbour.
                 comm.send([u1[2:4,:][:,2:4],u2[2:4,:][:,2:4],v1[2:4,:][:,2:4],v2[2:4,:][:,2:4],h1[2:4,:][:,2:4],h2[2:4,:][:,2:4]], 
                           dest=sendrank[2], tag=0)
 
-            if (sendrank[0], sendrank[1]) == (-1,0):
+            if (sendrank[0], sendrank[1]) == (-1,0): # Sending top 2 rows to top neighbour.
                 comm.send([u1[2:4,:][:,2:offset+2],u2[2:4,:][:,2:offset+2],v1[2:4,:][:,2:offset+2],v2[2:4,:][:,2:offset+2],h1[2:4,:][:,2:offset+2],h2[2:4,:][:,2:offset+2]], 
                           dest=sendrank[2], tag=1)
       
-            if (sendrank[0], sendrank[1]) == (-1,1):
+            if (sendrank[0], sendrank[1]) == (-1,1): # Sending top right corner to top right neighbour.
                 comm.send([u1[2:4,:][:,offset:offset+2],u2[2:4,:][:,offset:offset+2],v1[2:4,:][:,offset:offset+2],v2[2:4,:][:,offset:offset+2],h1[2:4,:][:,offset:offset+2],h2[2:4,:][:,offset:offset+2]],     
                           dest=sendrank[2], tag=2)
 
-            if (sendrank[0], sendrank[1]) == (0,-1):
+            if (sendrank[0], sendrank[1]) == (0,-1): # Sending left two columns to left neighbour.
                 comm.send([u1[2:offset+2,:][:,2:4],u2[2:offset+2,:][:,2:4],v1[2:offset+2,:][:,2:4],v2[2:offset+2,:][:,2:4],h1[2:offset+2,:][:,2:4],h2[2:offset+2,:][:,2:4]],
                           dest=sendrank[2], tag=3)
 
-            if (sendrank[0], sendrank[1]) == (0,1):
+            if (sendrank[0], sendrank[1]) == (0,1): # Sending right two columns to right neighbour.
                 comm.send([u1[2:offset+2,:][:,offset:offset+2],u2[2:offset+2,:][:,offset:offset+2],v1[2:offset+2,:][:,offset:offset+2],v2[2:offset+2,:][:,offset:offset+2],h1[2:offset+2,:][:,offset:offset+2],h2[2:offset+2,:][:,offset:offset+2]],
                           dest=sendrank[2], tag=4)
             
-            if (sendrank[0], sendrank[1]) == (1,-1):
+            if (sendrank[0], sendrank[1]) == (1,-1): # Sending bottom left corner to bottom left neighbour.
                 comm.send([u1[offset:offset+2,:][:,2:4],u2[offset:offset+2,:][:,2:4],v1[offset:offset+2,:][:,2:4],v2[offset:offset+2,:][:,2:4],h1[offset:offset+2,:][:,2:4],h2[offset:offset+2,:][:,2:4]],
                           dest=sendrank[2], tag=5)
 
-            if (sendrank[0], sendrank[1]) == (1,0):
+            if (sendrank[0], sendrank[1]) == (1,0): # Sending bottom two rows to bottom neighbour.
                 comm.send([u1[offset:offset+2,:][:,2:offset+2],u2[offset:offset+2,:][:,2:offset+2],v1[offset:offset+2,:][:,2:offset+2],v2[offset:offset+2,:][:,2:offset+2],h1[offset:offset+2,:][:,2:offset+2], h2[offset:offset+2,:][:,2:offset+2]], 
                           dest=sendrank[2], tag=6)
             
-            if (sendrank[0], sendrank[1]) == (1,1):
+            if (sendrank[0], sendrank[1]) == (1,1): # Sending bottom right corner to bottom right corner neighbour.
                 comm.send([u1[offset:offset+2,:][:,offset:offset+2],u2[offset:offset+2,:][:,offset:offset+2],v1[offset:offset+2,:][:,offset:offset+2],v2[offset:offset+2,:][:,offset:offset+2],h1[offset:offset+2,:][:,offset:offset+2],h2[offset:offset+2,:][:,offset:offset+2]],
                           dest=sendrank[2], tag=7)
 
 
+        # Each process now receives the new padding data from all its neighbours.
+        # Note the tag is used to specify which piece of data it should look for.
         for sendrank in sendranks:
-            if (sendrank[0], sendrank[1]) == (-1,-1):
-                data = comm.recv(source=sendrank[2], tag=7)
+            if (sendrank[0], sendrank[1]) == (-1,-1): # Update top left padding with top left neighbour.
+                data = comm.recv(source=sendrank[2], tag=7) # Note that it looks for the bottom right tag, which is 7. (see above).
                 u1[0:2,:][:,0:2] = data[0]
                 u2[0:2,:][:,0:2] = data[1]
                 v1[0:2,:][:,0:2] = data[2]
@@ -413,7 +431,7 @@ while t <= tmax + lasttime + dt / 2:
                 h1[0:2,:][:,0:2] = data[4]
                 h2[0:2,:][:,0:2] = data[5]
 
-            if (sendrank[0], sendrank[1]) == (-1,0):
+            if (sendrank[0], sendrank[1]) == (-1,0): # See above.
                 data = comm.recv(source=sendrank[2], tag=6)
                 u1[0:2,:][:,2:offset+2] = data[0]
                 u2[0:2,:][:,2:offset+2] = data[1]
@@ -422,7 +440,7 @@ while t <= tmax + lasttime + dt / 2:
                 h1[0:2,:][:,2:offset+2] = data[4]
                 h2[0:2,:][:,2:offset+2] = data[5]
 
-            if (sendrank[0], sendrank[1]) == (-1,1):
+            if (sendrank[0], sendrank[1]) == (-1,1): # See above.
                 data = comm.recv(source=sendrank[2], tag=5)
                 u1[0:2,:][:,offset+2:offset+4] = data[0]
                 u2[0:2,:][:,offset+2:offset+4] = data[1]
@@ -431,7 +449,7 @@ while t <= tmax + lasttime + dt / 2:
                 h1[0:2,:][:,offset+2:offset+4] = data[4]
                 h2[0:2,:][:,offset+2:offset+4] = data[5]
 
-            if (sendrank[0], sendrank[1]) == (0,-1):
+            if (sendrank[0], sendrank[1]) == (0,-1): # See above.
                 data = comm.recv(source=sendrank[2], tag=4)
                 u1[2:offset+2,:][:,0:2] = data[0]
                 u2[2:offset+2,:][:,0:2] = data[1]
@@ -440,7 +458,7 @@ while t <= tmax + lasttime + dt / 2:
                 h1[2:offset+2,:][:,0:2] = data[4]
                 h2[2:offset+2,:][:,0:2] = data[5]
 
-            if (sendrank[0], sendrank[1]) == (0,1):
+            if (sendrank[0], sendrank[1]) == (0,1): # See above.
                 data = comm.recv(source=sendrank[2], tag=3)
                 u1[2:offset+2,:][:,offset+2:offset+4] = data[0]
                 u2[2:offset+2,:][:,offset+2:offset+4] = data[1]
@@ -449,7 +467,7 @@ while t <= tmax + lasttime + dt / 2:
                 h1[2:offset+2,:][:,offset+2:offset+4] = data[4]
                 h2[2:offset+2,:][:,offset+2:offset+4] = data[5]
             
-            if (sendrank[0], sendrank[1]) == (1,-1):
+            if (sendrank[0], sendrank[1]) == (1,-1): # See above.
                 data = comm.recv(source=sendrank[2], tag=2)
                 u1[offset+2:offset+4,:][:,0:2] = data[0]
                 u2[offset+2:offset+4,:][:,0:2] = data[1]
@@ -457,8 +475,8 @@ while t <= tmax + lasttime + dt / 2:
                 v2[offset+2:offset+4,:][:,0:2] = data[3]
                 h1[offset+2:offset+4,:][:,0:2] = data[4]
                 h2[offset+2:offset+4,:][:,0:2] = data[5]
-            
-            if (sendrank[0], sendrank[1]) == (1,0):
+             
+            if (sendrank[0], sendrank[1]) == (1,0): # See above.
                 data = comm.recv(source=sendrank[2], tag=1)
                 u1[offset+2:offset+4,:][:,2:offset+2] = data[0]
                 u2[offset+2:offset+4,:][:,2:offset+2] = data[1]
@@ -467,7 +485,7 @@ while t <= tmax + lasttime + dt / 2:
                 h1[offset+2:offset+4,:][:,2:offset+2] = data[4]
                 h2[offset+2:offset+4,:][:,2:offset+2] = data[5]
 
-            if (sendrank[0], sendrank[1]) == (1,1):
+            if (sendrank[0], sendrank[1]) == (1,1): # See above.
                 data = comm.recv(source=sendrank[2], tag=0)
                 u1[offset+2:offset+4,:][:,offset+2:offset+4] = data[0]
                 u2[offset+2:offset+4,:][:,offset+2:offset+4] = data[1]
@@ -476,16 +494,19 @@ while t <= tmax + lasttime + dt / 2:
                 h1[offset+2:offset+4,:][:,offset+2:offset+4] = data[4]
                 h2[offset+2:offset+4,:][:,offset+2:offset+4] = data[5]
 
-    #sendingTimes.append(time.time()-sendtimer)
+    #sendingTimes.append(time.time()-sendtimer) # Uncomment to time the padding communication step.
     
     
     ### Rank 0 checks for if new storms need to be created and sends out the new Wmat ###
 
     stormtimer = time.time()
+
+    # Rank zero checks which storms need to be removed.
     if rank == 0:
         remove_layers = [] # store weather layers that need to be removed here
         rem = False
 
+        # Check if a storm is past its lifetime, tstpf < lifetime.
         if mode == 1:
             for i in range(len(locs)):
                 if (t-locs[i][-1]) >= locs[i][3] and t != 0:
@@ -493,47 +514,52 @@ while t <= tmax + lasttime + dt / 2:
 
             add = len(remove_layers) # number of storms that were removed
 
+            # If new storms need to be created, create a list of new storms to add.
             if add != 0:
                 newlocs = hf.genlocs(add, N, t)
 
+                # update the old list of storms with the new ones.
                 for i in range(len(remove_layers)):
                     locs[remove_layers[i]] = newlocs[i]
 
-                #wlayer = hf.pairshapeN2(locs, t) ### use pairshapeBEGIN instead of pairshape
-                #Wmat = hf.pairfieldN2(L, h1, wlayer)
-
+        # Update a flag letting the other process know they need to update their weather layers.
         if len(remove_layers) != 0:
             rem = True
-            
-            #WmatSplit = [Wmat]
-            #for i in range(1,size+1):
-            #    WmatSplit.append(hf.split(Wmat, offset, ranks, i))
     
-    rem = comm.bcast(rem, root=0)
-    locs = comm.bcast(locs, root=0)
+    rem = comm.bcast(rem, root=0) # Communicate tag to all processes.
+    locs = comm.bcast(locs, root=0) # Communicate updated storms to all processes.
+
+    # If storms need to be updated, do it.
     if rem == True:
+
+        # each process (except 0) calculates its own storms
         if rank != 0:
             wlayer = hf.pairshapeN2(locs, 0, x, y, offset)
             #Wmat = hf.pairfieldN2(L, h1, wlayer)
             Wsum = np.sum(wlayer) * dx**2
 
-        Wsums = comm.gather(Wsum, root=0)
+        Wsums = comm.gather(Wsum, root=0) # Gather the sums on rank 0 for subsidence calculations.
 
+        # Calculate subsidence correction on rank 0
         if rank == 0:
             area = L**2
             wcorrect = np.sum(Wsums[1:]) / area
 
-        wcorrect = comm.bcast(wcorrect, root=0)
+        wcorrect = comm.bcast(wcorrect, root=0) # Distribute subsidence calculation to all process.
 
+        # Update weather layer of each process with subsidence.
         if rank != 0:
             Wmat = wlayer - wcorrect
 
-        rem = False
+        rem = False # Reset flag
 
-    #stormTimes.append(time.time()-stormtimer)
+    #stormTimes.append(time.time()-stormtimer) # Uncomment to time the storm creation section.
 
+    ### Data saving. Rank 0 gathers all data from processes, combines it, and then saves it to a NETCDF file. ###
+
+    # Check if it is time to save.
     if tc % tpl == 0 and saving == True:
-        ### Combining data on rank 0 ###
+        # Gather all dynamical data to rank 0. These will be a list of each subarray of each process.
         u1matSplit = comm.gather(u1, root=0)
         v1matSplit = comm.gather(v1, root=0)
         u2matSplit = comm.gather(u2, root=0)
@@ -541,6 +567,8 @@ while t <= tmax + lasttime + dt / 2:
         h1matSplit = comm.gather(h1, root=0)
         h2matSplit = comm.gather(h2, root=0)
 
+
+        # Combine all the data into one large array on rank 0
         if rank == 0:
             u1 = hf.combine(u1matSplit, offset, ranks, size)
             u2 = hf.combine(u2matSplit, offset, ranks, size)
@@ -549,13 +577,12 @@ while t <= tmax + lasttime + dt / 2:
             h1 = hf.combine(h1matSplit, offset, ranks, size)
             h2 = hf.combine(h2matSplit, offset, ranks, size)
 
+            # Print the time the cycle from saving to saving has taken
             print(f"t={t}, time elapsed {time.time()-clocktimer}")
 
+            # Save the data to NETCDF.
             ad.save_data(u1,u2,v1,v2,h1,h2,locs,t,lasttime,new_name)
 
-    tc += 1
+    # Update times.
+    tc += 1 
     t = tc * dt
-
-#print(f"rank: {rank}, simtime avg: {round(np.mean(simTimes),4)}, sendingtime avg: {round(np.mean(sendingTimes),4)}, stormtime avg: {round(np.mean(stormTimes), 4)}, total time: {round(time.time()-tottimer,4)}, mem used: {(rss() - initialmem)/10**6} MB")
-
-#print(f"mem used: {(rss() - initialmem)/10**6} MB")
