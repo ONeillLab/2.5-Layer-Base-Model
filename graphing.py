@@ -143,7 +143,7 @@ def view_slice(data, slice):
 
 
 #### examples ####
-data = ['testing_1.nc', 'testing_2.nc']
+data = ['testing_1.nc']
 
 animate(data, "zeta2")
 

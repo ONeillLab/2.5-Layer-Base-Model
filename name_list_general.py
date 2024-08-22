@@ -8,28 +8,28 @@ season = "winter" # "summer" for summer settings and "winter" for winter setting
 
 num_processors = 10
 
-tmax = 5000
+tmax = 10000
 ani_interval = 100
 sampfreq = 100
-restart_name = 'testing_1.nc' #None
-new_name = 'testing_2.nc'
+restart_name = None #'testing_1.nc' #None
+new_name = 'testing_1.nc'
 
 ### ND seasonal parameters ###
 deltatrad = 0.1
 deltaH1 = 0.1
-seasperf = 5000
+seasperf = 10000
 
 c22h = 3  # 9  # ND 2nd baroclinic gravity wave speed squared
 c12h = 4  # 10  # ND 1st baroclinic gravity wave speed squared
 H1H2 = 1  # ND upper to lower layer height ratio
 Bt = (1**2) / 2 / (30**2)  # ND scaled beta Ld2^2/4a^2 ### adjust this
-Br2 = 1  # 1.5  # ND scaled storm size: Burger number Ld2^2/Rst^2
+Br2 = 1.5  # 1  # ND scaled storm size: Burger number Ld2^2/Rst^2
 p1p2 = 0.95  # ND upper to lower layer density ratio
-tstf = 6  # 48  # ND storm duration tst*f0
-tstpf = 15  # 60  # ND period between forced storms tstp*f0
+tstf = 48  # 6  # ND storm duration tst*f0
+tstpf = 60  # 15  # ND period between forced storms tstp*f0
 trad0f = 2000  # ND Newtonian damping of layer thickness trad*f0
 dragf = 1000000  # Cumulus drag time scale (Li and O'Neill) (D)
-Ar = 0.20  # ND areal storm coverage
+Ar = 0.15  # ND areal storm coverage
 Re = 5e4  # ND Reynolds number
 Wsh = 0.002 / 2  # ND convective Rossby number
 
@@ -50,8 +50,8 @@ layers = 2.5  # # of layers (2 or 2.5)
 n = 2  # order of Laplacian '2' is hyperviscosity
 kappa = 1e-6
 ord = 2  # must equal 1 for Glenn's order, otherwise for Sadourney's (squares before avgs)
-spongedrag1 = 0.01
-spongedrag2 = 0.01
+spongedrag1 = 0.05
+spongedrag2 = 0.05
 
 
 if season == "summer":
@@ -61,23 +61,6 @@ if season == "summer":
 if season == "winter":
     tradf = trad0f
 
-
-#### Derived Quantities ###
-gm = p1p2*c22h/c12h*H1H2            # ND reduced gravity
-deglim = (np.pi/6)*1.25 # domain size [degrees]
-L = 2*deglim * aOLd  # domain radius from pole, normalized by deformation radius
-num = round(Ar*(L**2)*Br2/np.pi)    # number of storms
-
-#Lst = L * Ld2/Rst
-
-################## engineering params ##########################
-AB = 2  # order of Adams-Bashforth scheme (2 or 3)
-layers = 2.5  # of layers (2 or 2.5)
-n = 2  # order of Laplacian '2' is hyperviscosity
-kappa = 1e-6
-ord = 2  # must equal 1 for Glenn's order, otherwise for Sadourney's (squares before avgs)
-spongedrag1 = 0.01
-spongedrag2 = 0.01
 
 EpHat = (
     ((1 / 2) * p1p2 * c12h + (1 / 2) * H1H2 * c22h - p1p2 * (c22h / c12h) * H1H2 * c12h)
