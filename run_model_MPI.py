@@ -22,6 +22,11 @@ Note for this to work the number of threads used has to be a square number and t
 with the square root of the number of threads. This is easy to do if everything is in powers of 2, i.e domain size = 1024 and num 
 threads = 64, then the domain size on each thread is 128.
 
+
+This program uses rank 0 to compute all "overarching" (needed by all process) variables, along with performing all data saving.
+The other ranks are worker ranks, and solve the shallow-water equations on each of their subarray (subdomains). They recieve a subdomain
+with padding so that they can solve ODEs on them, this padding is updated at the end of each timestep.
+
 """
 
 comm = MPI.COMM_WORLD
@@ -29,6 +34,7 @@ rank = comm.Get_rank()
 size = comm.Get_size() - 1
 
 
+# Calculating the size of the subdomains given to each process
 def distribute_domain(domain_size, num_procs):
     subdomain_size = domain_size // np.sqrt(num_procs)
     remainder = domain_size % np.sqrt(num_procs)
@@ -36,20 +42,26 @@ def distribute_domain(domain_size, num_procs):
     subdomains = [int(subdomain_size + 1) if i < remainder else int(subdomain_size) for i in range(num_procs)]
     return subdomains
 
+# assign each process a subdomain.
 subdomains = distribute_domain(N, size)
 offset = subdomains[0]
 
+# Create an array containing which rank has which location of the larger array. This is the ranks array.
 subdomains = np.reshape(subdomains, (int(np.sqrt(size)),int(np.sqrt(size))))
 ranks = np.reshape(np.arange(0,size), (int(np.sqrt(size)), int(np.sqrt(size)))) + 1
 
+# Make the ranks array periodic for later calculations.
 largeranks = np.zeros((int(3*np.sqrt(size)), int(3*np.sqrt(size))), dtype=ranks.dtype)
 
 for i in range(int(3*np.sqrt(size))):
     for j in range(int(3*np.sqrt(size))):
         largeranks[i, j] = ranks[i % int(np.sqrt(size)), j % int(np.sqrt(size))]
 
+
+# Perform data loading/Saving on rank 0. Also distrubution of initial data and storm locations.
 if rank == 0:
-    #print(largeranks)
+    
+    # Loads initial data or creates new data file.
     if restart_name == None:
         if saving == True:
             ad.create_file(new_name)
@@ -59,6 +71,7 @@ if rank == 0:
         ad.create_file(new_name)
         u1, u2, v1, v2, h1, h2, locs, lasttime = ad.last_timestep(restart_name)
 
+    # Initialize dynamical variable arrays before splitting then into subarrays
     Wmat = None
     WmatSplit = None
     u1matSplit = [u1]
@@ -74,6 +87,8 @@ if rank == 0:
     xSplit = [x]
     ySplit = [y]
 
+
+    # Split each dynamical array into subarrays, and append the subarray to the split list. These will be distributed to each process.
     for i in range(1,size+1):
         #WmatSplit.append(hf.split(Wmat, offset, ranks, i))
         u1matSplit.append(hf.split(u1, offset, ranks, i))
@@ -90,6 +105,7 @@ if rank == 0:
         ySplit.append(hf.split(y, offset, ranks, i))
 
 else:
+    # Initialize empty data for each process, which will be filled by the split arrays computed on rank 0.
     WmatSplit = None
     u1matSplit = None
     v1matSplit = None
@@ -121,7 +137,9 @@ else:
     y = None
     locs = None
 
-#Wmat = comm.scatter(WmatSplit, root=0)
+
+# Dynamical data set for each process. comm.scatter sends the ith index of rank 0 Split data to the ith process. So each 
+# process recieves its own subarray. 
 u1 = comm.scatter(u1matSplit, root=0)
 u2 = comm.scatter(u2matSplit, root=0)
 v1 = comm.scatter(v1matSplit, root=0)
@@ -136,20 +154,25 @@ x = comm.scatter(xSplit, root=0)
 y = comm.scatter(ySplit, root=0)
 locs = comm.bcast(locs, root=0)
 
-Wsum = None
 
+Wsum = None # Current weather layer set to none
+
+# Each process (not 0) generates the storms in their own subarray
 if rank != 0:
     wlayer = hf.pairshapeN2(locs, 0, x, y, offset)
     Wsum = np.sum(wlayer) * dx**2
 
-Wsums = comm.gather(Wsum, root=0)
+Wsums = comm.gather(Wsum, root=0) # Send all weather layers to rank 0 for subsidence calculation
 
+
+# Rank 0 calculates subsidence from all the storms and creates a final weather layer
 if rank == 0:
     area = L**2
     wcorrect = np.sum(Wsums[1:]) / area
 
-wcorrect = comm.bcast(wcorrect, root=0)
+wcorrect = comm.bcast(wcorrect, root=0) # Distribute the subsidence correction to all process
 
+# Each process adds subsidence to the final weather layer. Note this code replaces helper_function pairfieldN2.
 if rank != 0:
     Wmat = wlayer - wcorrect
 
@@ -161,7 +184,7 @@ if rank != 0:
 This is the start of time stepping.
 
 Each thread solves the 2.5 layer shallow water equations on their own grid cell and then sends boundary data to its 
-neighbouring cells so that there are no weird boundaries
+neighbouring cells.
 
 The time step function...
 
@@ -170,6 +193,8 @@ same code as in other files, just wrapped in a function instead of a while loop.
 """
 def timestep(u1,u2,v1,v2,h1,h2,Wmat, u1_p,u2_p,v1_p,v2_p,h1_p,h2_p):
     broke = False
+
+    # initialize Adam-Bashforth scheme.
     if AB == 2:
         tmp = u1.copy()
         u1 = 1.5 * u1 - 0.5 * u1_p
@@ -197,6 +222,7 @@ def timestep(u1,u2,v1,v2,h1,h2,Wmat, u1_p,u2_p,v1_p,v2_p,h1_p,h2_p):
     dv1dt = hf.viscND(v1, Re, n)
     dv2dt = hf.viscND(v2, Re, n)
 
+    # Add spongedrag
     if spongedrag1 > 0:
         du1dt = du1dt - spdrag1 * (u1)
         du2dt = du2dt - spdrag2 * (u2)
@@ -205,14 +231,13 @@ def timestep(u1,u2,v1,v2,h1,h2,Wmat, u1_p,u2_p,v1_p,v2_p,h1_p,h2_p):
 
     # absolute vorticity
     zeta1 = 1 - Bt * rdist**2 + (1 / dx) * (v1 - v1[:,l] + u1[l,:] - u1)
-    
     zeta2 = 1 - Bt * rdist**2 + (1 / dx) * (v2 - v2[:,l] + u2[l,:] - u2)
-
 
     # add vorticity flux, zeta*u
     zv1 = zeta1 * (v1 + v1[:,l])
     zv2 = zeta2 * (v2 + v2[:,l])
 
+    # add vorticity to momentum equations
     du1dt = du1dt + 0.25 * (zv1 + zv1[r,:])
     du2dt = du2dt + 0.25 * (zv2 + zv2[r,:])
 
@@ -222,7 +247,7 @@ def timestep(u1,u2,v1,v2,h1,h2,Wmat, u1_p,u2_p,v1_p,v2_p,h1_p,h2_p):
     dv1dt = dv1dt - 0.25 * (zu1 + zu1[:,r])
     dv2dt = dv2dt - 0.25 * (zu2 + zu2[:,r])
 
-    ### Cumulus Drag (D) ###
+    ### Cumulus Drag ###
     du1dt = du1dt - (1 / dx) * u1 / dragf
     du2dt = du2dt - (1 / dx) * u2 / dragf
     dv1dt = dv1dt - (1 / dx) * v1 / dragf

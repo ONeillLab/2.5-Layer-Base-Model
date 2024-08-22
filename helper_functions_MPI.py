@@ -134,6 +134,28 @@ def genlocs(num, N, t):
     return final
 
 
+def xflux(f, u):
+    """
+    Calculates flux of field f in the x direction
+    """
+    fl = f[:,l]
+    fr = f
+
+    fa = 0.5 * u * (fl + fr)
+
+    return fa
+
+def yflux(f, v):
+    """
+    Calculates flux of field f in the y direction
+    """
+    fl = f[l,:]
+    fr = f
+
+    fa = 0.5 * v * (fl + fr)
+
+    return fa
+
 ### New helper functions for MPI ###
 
 def split(arr, offset, ranks, rank):
