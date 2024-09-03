@@ -579,6 +579,7 @@ while t <= tmax + lasttime + dt / 2:
 
             # Print the time the cycle from saving to saving has taken
             print(f"t={t}, time elapsed {time.time()-clocktimer}")
+            print(f"memory used {rss()-initialmem}")
 
             # Save the data to NETCDF.
             ad.save_data(u1,u2,v1,v2,h1,h2,locs,t,lasttime,new_name)

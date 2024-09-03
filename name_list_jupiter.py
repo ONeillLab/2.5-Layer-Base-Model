@@ -6,23 +6,23 @@ saving = True
 
 num_processors = 65
 
-tmax = 14000
+tmax = 200
 ani_interval = 100
-sampfreq = 100
+sampfreq = 10
 restart_name = None #'jupiter250724_11.nc'
-new_name = 'jupiter250724_12.nc' #"small_N_test_1.nc"
+new_name = 'testing_006.nc' #"small_N_test_1.nc"
 
 ### Dimensional, collected from papers, used for normalization ###
 f0 = 3.517e-4     # coriolis parameter from Siegelman [s]
 a = 6.6854e7      # planetary radius from Siegelman [m]
 g = 24.79         # Jupiter's gravity [m/s^2] 
-H = 9e3           # Moist convection height anomoly scale [m] from Siegelman
+H = 3e3 #9e3           # Moist convection height anomoly scale [m] from Siegelman
 Ld2 = 1500e3      # 2nd baroclinic Rossby deformation radius [m] from Siegelman
 trad = 142858080  # 4.53 years from https://pds-atmospheres.nmsu.edu/education_and_outreach/encyclopedia/radiative_time_constant.htm [s]
 drag = 10000     # Cumulus Drag (Guess)
 
 ### Dimensional, Storm parameters ###
-Rst = 300e3       # Storm size [m] from Siegelman [m]
+Rst = 200e3 #300e3       # Storm size [m] from Siegelman [m]
 tst = 260000      # 3 day storm duration from Siegelman [s]
 tstp = tst*1.1   # Period between forced storms (Guess)
 
