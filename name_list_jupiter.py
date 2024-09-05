@@ -11,7 +11,7 @@ tmax = 200
 ani_interval = 100
 sampfreq = 10
 restart_name = None #'jupiter250724_11.nc'
-new_name = 'testing_006.nc' #"small_N_test_1.nc"
+new_name = 'testing_001.nc' #"small_N_test_1.nc"
 
 ### Dimensional, collected from papers, used for normalization ###
 f0 = 3.517e-4     # coriolis parameter from Siegelman [s]
@@ -82,7 +82,7 @@ EpHat = (
 
 #dx = 1 / 5 * round(min(1,L/Lst), 3)
 
-N  = 1032 #512
+N  = 240 #1032 #512
 
 dx = round(L/N,4)
 dt = dx / (10 * c12h) #1 / (2**8) # CHANGED TO dx/(10*c12h) SO THAT dt CHANGES TO MATCH dx

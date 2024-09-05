@@ -141,11 +141,12 @@ def view_slice(data, slice):
 
 
 #### examples ####
-data = ['data3.nc']
+data = ['data1.nc']
 
-#animate(data, "zeta2")
+animate(data, "h2mat")
 
 
+"""
 root = Dataset(data[0], 'r')
 
 h2mat = np.array(root.variables['h2mat'])
@@ -155,3 +156,4 @@ root.close()
 plt.imshow(h2mat[0])
 plt.colorbar()
 plt.show()
+"""

@@ -4,13 +4,13 @@ from netCDF4 import Dataset
 import numpy.ma as ma
 
 fixed = True
-saving = False
+saving = True
 
-num_processors = 5
+num_processors = 10
 
-tmax = 100
+tmax = 300
 ani_interval = 100
-sampfreq = 1
+sampfreq = 10
 restart_name = None
 new_name = 'data1.nc'
 
@@ -60,7 +60,7 @@ dt = dx / (10 * c12h) #1 / (2**8) # CHANGED TO dx/(10*c12h) SO THAT dt CHANGES T
 dtinv = 1 / dt
 tpl = sampfreq * dtinv
 
-N = math.ceil(L / dx)  # resolve
+N = 159 #math.ceil(L / dx)  # resolve
 L = N * dx
 
 x, y = np.meshgrid(np.arange(0.5, N + 0.5) * dx - L / 2, np.arange(0.5, N + 0.5) * dx - L / 2)

@@ -7,7 +7,11 @@ from netCDF4 import Dataset
 import access_data as ad
 from mpi4py import MPI
 import psutil
+import sys
 
+
+def rss():
+    return psutil.Process().memory_info().rss
 
 """ 
 Initialization of MPI and each thread.
@@ -119,12 +123,12 @@ else:
     locs = None
 
 #Wmat = comm.scatter(WmatSplit, root=0)
-u1 = comm.scatter(u1matSplit, root=0)
-u2 = comm.scatter(u2matSplit, root=0)
-v1 = comm.scatter(v1matSplit, root=0)
-v2 = comm.scatter(v2matSplit, root=0)
-h1 = comm.scatter(h1matSplit, root=0)
-h2 = comm.scatter(h2matSplit, root=0)
+u1 = np.array(comm.scatter(u1matSplit, root=0))
+u2 = np.array(comm.scatter(u2matSplit, root=0))
+v1 = np.array(comm.scatter(v1matSplit, root=0))
+v2 = np.array(comm.scatter(v2matSplit, root=0))
+h1 = np.array(comm.scatter(h1matSplit, root=0))
+h2 = np.array(comm.scatter(h2matSplit, root=0))
 spdrag1 = comm.scatter(spdrag1Split, root=0)
 spdrag2 = comm.scatter(spdrag2Split, root=0)
 rdist = comm.scatter(rdistSplit, root=0)
@@ -150,6 +154,20 @@ wcorrect = comm.bcast(wcorrect, root=0)
 if rank != 0:
     Wmat = wlayer - wcorrect
 
+"""
+print(np.array([u1[2:4,:][:,2:4],u2[2:4,:][:,2:4],v1[2:4,:][:,2:4],v2[2:4,:][:,2:4],h1[2:4,:][:,2:4],h2[2:4,:][:,2:4]]).dtype)
+if rank != 0:
+    print(tlbuf.dtype)
+"""
+
+tlbuf = np.array([u1[offset:offset+2,:][:,offset:offset+2],u2[offset:offset+2,:][:,offset:offset+2],v1[offset:offset+2,:][:,offset:offset+2],v2[offset:offset+2,:][:,offset:offset+2],h1[offset:offset+2,:][:,offset:offset+2],h2[offset:offset+2,:][:,offset:offset+2]], dtype=float)
+tbuf = np.array([u1[2:4,:][:,2:offset+2],u2[2:4,:][:,2:offset+2],v1[2:4,:][:,2:offset+2],v2[2:4,:][:,2:offset+2],h1[2:4,:][:,2:offset+2],h2[2:4,:][:,2:offset+2]], dtype=float)
+trbuf = np.array([u1[2:4,:][:,offset:offset+2],u2[2:4,:][:,offset:offset+2],v1[2:4,:][:,offset:offset+2],v2[2:4,:][:,offset:offset+2],h1[2:4,:][:,offset:offset+2],h2[2:4,:][:,offset:offset+2]], dtype=float)
+lbuf = np.array([u1[2:offset+2,:][:,2:4],u2[2:offset+2,:][:,2:4],v1[2:offset+2,:][:,2:4],v2[2:offset+2,:][:,2:4],h1[2:offset+2,:][:,2:4],h2[2:offset+2,:][:,2:4]], dtype=float)
+rbuf = np.array([u1[2:offset+2,:][:,offset:offset+2],u2[2:offset+2,:][:,offset:offset+2],v1[2:offset+2,:][:,offset:offset+2],v2[2:offset+2,:][:,offset:offset+2],h1[2:offset+2,:][:,offset:offset+2],h2[2:offset+2,:][:,offset:offset+2]], dtype=float)
+blbuf = np.array([u1[offset:offset+2,:][:,2:4],u2[offset:offset+2,:][:,2:4],v1[offset:offset+2,:][:,2:4],v2[offset:offset+2,:][:,2:4],h1[offset:offset+2,:][:,2:4],h2[offset:offset+2,:][:,2:4]], dtype=float)
+bbuf = np.array([u1[offset:offset+2,:][:,2:offset+2],u2[offset:offset+2,:][:,2:offset+2],v1[offset:offset+2,:][:,2:offset+2],v2[offset:offset+2,:][:,2:offset+2],h1[offset:offset+2,:][:,2:offset+2], h2[offset:offset+2,:][:,2:offset+2]], dtype=float)
+brbuf = np.array([u1[offset:offset+2,:][:,offset:offset+2],u2[offset:offset+2,:][:,offset:offset+2],v1[offset:offset+2,:][:,offset:offset+2],v2[offset:offset+2,:][:,offset:offset+2],h1[offset:offset+2,:][:,offset:offset+2],h2[offset:offset+2,:][:,offset:offset+2]], dtype=float)
 
 ### END OF INITIALIZATION ###
 
@@ -313,6 +331,8 @@ tottimer = time.time()
 broke = False
 
 
+initialmem = rss()
+
 ### Running of the simulation on all ranks but the master rank (0) ###
 while t <= tmax + lasttime + dt / 2:
     clocktimer = time.time()
@@ -342,119 +362,121 @@ while t <= tmax + lasttime + dt / 2:
         
         for sendrank in sendranks:
             if (sendrank[0], sendrank[1]) == (-1,-1):
-                comm.isend([u1[2:4,:][:,2:4],u2[2:4,:][:,2:4],v1[2:4,:][:,2:4],v2[2:4,:][:,2:4],h1[2:4,:][:,2:4],h2[2:4,:][:,2:4]], 
+                comm.Send(np.array([u1[2:4,:][:,2:4],u2[2:4,:][:,2:4],v1[2:4,:][:,2:4],v2[2:4,:][:,2:4],h1[2:4,:][:,2:4],h2[2:4,:][:,2:4]], dtype=np.float64), 
                           dest=sendrank[2], tag=0)
 
             if (sendrank[0], sendrank[1]) == (-1,0):
-                comm.isend([u1[2:4,:][:,2:offset+2],u2[2:4,:][:,2:offset+2],v1[2:4,:][:,2:offset+2],v2[2:4,:][:,2:offset+2],h1[2:4,:][:,2:offset+2],h2[2:4,:][:,2:offset+2]], 
+                comm.Send(np.array([u1[2:4,:][:,2:offset+2],u2[2:4,:][:,2:offset+2],v1[2:4,:][:,2:offset+2],v2[2:4,:][:,2:offset+2],h1[2:4,:][:,2:offset+2],h2[2:4,:][:,2:offset+2]], dtype=np.float64), 
                           dest=sendrank[2], tag=1)
       
             if (sendrank[0], sendrank[1]) == (-1,1):
-                comm.isend([u1[2:4,:][:,offset:offset+2],u2[2:4,:][:,offset:offset+2],v1[2:4,:][:,offset:offset+2],v2[2:4,:][:,offset:offset+2],h1[2:4,:][:,offset:offset+2],h2[2:4,:][:,offset:offset+2]],     
+                comm.Send(np.array([u1[2:4,:][:,offset:offset+2],u2[2:4,:][:,offset:offset+2],v1[2:4,:][:,offset:offset+2],v2[2:4,:][:,offset:offset+2],h1[2:4,:][:,offset:offset+2],h2[2:4,:][:,offset:offset+2]], dtype=np.float64),     
                           dest=sendrank[2], tag=2)
 
             if (sendrank[0], sendrank[1]) == (0,-1):
-                comm.isend([u1[2:offset+2,:][:,2:4],u2[2:offset+2,:][:,2:4],v1[2:offset+2,:][:,2:4],v2[2:offset+2,:][:,2:4],h1[2:offset+2,:][:,2:4],h2[2:offset+2,:][:,2:4]],
+                comm.Send(np.array([u1[2:offset+2,:][:,2:4],u2[2:offset+2,:][:,2:4],v1[2:offset+2,:][:,2:4],v2[2:offset+2,:][:,2:4],h1[2:offset+2,:][:,2:4],h2[2:offset+2,:][:,2:4]], dtype=np.float64),
                           dest=sendrank[2], tag=3)
 
             if (sendrank[0], sendrank[1]) == (0,1):
-                comm.isend([u1[2:offset+2,:][:,offset:offset+2],u2[2:offset+2,:][:,offset:offset+2],v1[2:offset+2,:][:,offset:offset+2],v2[2:offset+2,:][:,offset:offset+2],h1[2:offset+2,:][:,offset:offset+2],h2[2:offset+2,:][:,offset:offset+2]],
+                comm.Send(np.array([u1[2:offset+2,:][:,offset:offset+2],u2[2:offset+2,:][:,offset:offset+2],v1[2:offset+2,:][:,offset:offset+2],v2[2:offset+2,:][:,offset:offset+2],h1[2:offset+2,:][:,offset:offset+2],h2[2:offset+2,:][:,offset:offset+2]], dtype=np.float64),
                           dest=sendrank[2], tag=4)
             
             if (sendrank[0], sendrank[1]) == (1,-1):
-                comm.isend([u1[offset:offset+2,:][:,2:4],u2[offset:offset+2,:][:,2:4],v1[offset:offset+2,:][:,2:4],v2[offset:offset+2,:][:,2:4],h1[offset:offset+2,:][:,2:4],h2[offset:offset+2,:][:,2:4]],
+                comm.Send(np.array([u1[offset:offset+2,:][:,2:4],u2[offset:offset+2,:][:,2:4],v1[offset:offset+2,:][:,2:4],v2[offset:offset+2,:][:,2:4],h1[offset:offset+2,:][:,2:4],h2[offset:offset+2,:][:,2:4]], dtype=np.float64),
                           dest=sendrank[2], tag=5)
 
             if (sendrank[0], sendrank[1]) == (1,0):
-                comm.isend([u1[offset:offset+2,:][:,2:offset+2],u2[offset:offset+2,:][:,2:offset+2],v1[offset:offset+2,:][:,2:offset+2],v2[offset:offset+2,:][:,2:offset+2],h1[offset:offset+2,:][:,2:offset+2], h2[offset:offset+2,:][:,2:offset+2]], 
+                comm.Send(np.array([u1[offset:offset+2,:][:,2:offset+2],u2[offset:offset+2,:][:,2:offset+2],v1[offset:offset+2,:][:,2:offset+2],v2[offset:offset+2,:][:,2:offset+2],h1[offset:offset+2,:][:,2:offset+2], h2[offset:offset+2,:][:,2:offset+2]], dtype=np.float64), 
                           dest=sendrank[2], tag=6)
             
             if (sendrank[0], sendrank[1]) == (1,1):
-                comm.isend([u1[offset:offset+2,:][:,offset:offset+2],u2[offset:offset+2,:][:,offset:offset+2],v1[offset:offset+2,:][:,offset:offset+2],v2[offset:offset+2,:][:,offset:offset+2],h1[offset:offset+2,:][:,offset:offset+2],h2[offset:offset+2,:][:,offset:offset+2]],
+                comm.Send(np.array([u1[offset:offset+2,:][:,offset:offset+2],u2[offset:offset+2,:][:,offset:offset+2],v1[offset:offset+2,:][:,offset:offset+2],v2[offset:offset+2,:][:,offset:offset+2],h1[offset:offset+2,:][:,offset:offset+2],h2[offset:offset+2,:][:,offset:offset+2]], dtype=float),
                           dest=sendrank[2], tag=7)
 
 
         for sendrank in sendranks:
             if (sendrank[0], sendrank[1]) == (-1,-1):
-                req = comm.irecv(source=sendrank[2], tag=7)
-                data = req.wait()
-                u1[0:2,:][:,0:2] = data[0]
-                u2[0:2,:][:,0:2] = data[1]
-                v1[0:2,:][:,0:2] = data[2]
-                v2[0:2,:][:,0:2] = data[3]
-                h1[0:2,:][:,0:2] = data[4]
-                h2[0:2,:][:,0:2] = data[5]
+                req = comm.Irecv(buf=tlbuf, source=sendrank[2], tag=7)
+                req.wait()
+                u1[0:2,:][:,0:2] = tlbuf[0]
+                u2[0:2,:][:,0:2] = tlbuf[1]
+                v1[0:2,:][:,0:2] = tlbuf[2]
+                v2[0:2,:][:,0:2] = tlbuf[3]
+                h1[0:2,:][:,0:2] = tlbuf[4]
+                h2[0:2,:][:,0:2] = tlbuf[5]
 
             if (sendrank[0], sendrank[1]) == (-1,0):
-                req = comm.irecv(source=sendrank[2], tag=6)
-                data = req.wait()
-                u1[0:2,:][:,2:offset+2] = data[0]
-                u2[0:2,:][:,2:offset+2] = data[1]
-                v1[0:2,:][:,2:offset+2] = data[2]
-                v2[0:2,:][:,2:offset+2] = data[3]
-                h1[0:2,:][:,2:offset+2] = data[4]
-                h2[0:2,:][:,2:offset+2] = data[5]
+                req = comm.Irecv(buf=tbuf, source=sendrank[2], tag=6)
+                req.wait()
+                u1[0:2,:][:,2:offset+2] = tbuf[0]
+                u2[0:2,:][:,2:offset+2] = tbuf[1]
+                v1[0:2,:][:,2:offset+2] = tbuf[2]
+                v2[0:2,:][:,2:offset+2] = tbuf[3]
+                h1[0:2,:][:,2:offset+2] = tbuf[4]
+                h2[0:2,:][:,2:offset+2] = tbuf[5]
 
             if (sendrank[0], sendrank[1]) == (-1,1):
-                req = comm.irecv(source=sendrank[2], tag=5)
-                data = req.wait()
-                u1[0:2,:][:,offset+2:offset+4] = data[0]
-                u2[0:2,:][:,offset+2:offset+4] = data[1]
-                v1[0:2,:][:,offset+2:offset+4] = data[2]
-                v2[0:2,:][:,offset+2:offset+4] = data[3]
-                h1[0:2,:][:,offset+2:offset+4] = data[4]
-                h2[0:2,:][:,offset+2:offset+4] = data[5]
+                req = comm.Irecv(buf=trbuf, source=sendrank[2], tag=5)
+                req.wait()
+                u1[0:2,:][:,offset+2:offset+4] = trbuf[0]
+                u2[0:2,:][:,offset+2:offset+4] = trbuf[1]
+                v1[0:2,:][:,offset+2:offset+4] = trbuf[2]
+                v2[0:2,:][:,offset+2:offset+4] = trbuf[3]
+                h1[0:2,:][:,offset+2:offset+4] = trbuf[4]
+                h2[0:2,:][:,offset+2:offset+4] = trbuf[5]
 
             if (sendrank[0], sendrank[1]) == (0,-1):
-                req = comm.irecv(source=sendrank[2], tag=4)
-                data = req.wait()
-                u1[2:offset+2,:][:,0:2] = data[0]
-                u2[2:offset+2,:][:,0:2] = data[1]
-                v1[2:offset+2,:][:,0:2] = data[2]
-                v2[2:offset+2,:][:,0:2] = data[3]
-                h1[2:offset+2,:][:,0:2] = data[4]
-                h2[2:offset+2,:][:,0:2] = data[5]
+                req = comm.Irecv(buf=lbuf, source=sendrank[2], tag=4)
+                req.wait()
+                u1[2:offset+2,:][:,0:2] = lbuf[0]
+                u2[2:offset+2,:][:,0:2] = lbuf[1]
+                v1[2:offset+2,:][:,0:2] = lbuf[2]
+                v2[2:offset+2,:][:,0:2] = lbuf[3]
+                h1[2:offset+2,:][:,0:2] = lbuf[4]
+                h2[2:offset+2,:][:,0:2] = lbuf[5]
 
             if (sendrank[0], sendrank[1]) == (0,1):
-                req = comm.irecv(source=sendrank[2], tag=3)
-                data = req.wait()
-                u1[2:offset+2,:][:,offset+2:offset+4] = data[0]
-                u2[2:offset+2,:][:,offset+2:offset+4] = data[1]
-                v1[2:offset+2,:][:,offset+2:offset+4] = data[2]
-                v2[2:offset+2,:][:,offset+2:offset+4] = data[3]
-                h1[2:offset+2,:][:,offset+2:offset+4] = data[4]
-                h2[2:offset+2,:][:,offset+2:offset+4] = data[5]
+                req = comm.Irecv(buf=rbuf, source=sendrank[2], tag=3)
+                req.wait()
+                u1[2:offset+2,:][:,offset+2:offset+4] = rbuf[0]
+                u2[2:offset+2,:][:,offset+2:offset+4] = rbuf[1]
+                v1[2:offset+2,:][:,offset+2:offset+4] = rbuf[2]
+                v2[2:offset+2,:][:,offset+2:offset+4] = rbuf[3]
+                h1[2:offset+2,:][:,offset+2:offset+4] = rbuf[4]
+                h2[2:offset+2,:][:,offset+2:offset+4] = rbuf[5]
             
             if (sendrank[0], sendrank[1]) == (1,-1):
-                req = comm.irecv(source=sendrank[2], tag=2)
-                data = req.wait()
-                u1[offset+2:offset+4,:][:,0:2] = data[0]
-                u2[offset+2:offset+4,:][:,0:2] = data[1]
-                v1[offset+2:offset+4,:][:,0:2] = data[2]
-                v2[offset+2:offset+4,:][:,0:2] = data[3]
-                h1[offset+2:offset+4,:][:,0:2] = data[4]
-                h2[offset+2:offset+4,:][:,0:2] = data[5]
+                req = comm.Irecv(buf=blbuf, source=sendrank[2], tag=2)
+                req.wait()
+                u1[offset+2:offset+4,:][:,0:2] = blbuf[0]
+                u2[offset+2:offset+4,:][:,0:2] = blbuf[1]
+                v1[offset+2:offset+4,:][:,0:2] = blbuf[2]
+                v2[offset+2:offset+4,:][:,0:2] = blbuf[3]
+                h1[offset+2:offset+4,:][:,0:2] = blbuf[4]
+                h2[offset+2:offset+4,:][:,0:2] = blbuf[5]
             
             if (sendrank[0], sendrank[1]) == (1,0):
-                req = comm.irecv(source=sendrank[2], tag=1)
-                data = req.wait()
-                u1[offset+2:offset+4,:][:,2:offset+2] = data[0]
-                u2[offset+2:offset+4,:][:,2:offset+2] = data[1]
-                v1[offset+2:offset+4,:][:,2:offset+2] = data[2]
-                v2[offset+2:offset+4,:][:,2:offset+2] = data[3]
-                h1[offset+2:offset+4,:][:,2:offset+2] = data[4]
-                h2[offset+2:offset+4,:][:,2:offset+2] = data[5]
+                req = comm.Irecv(buf=bbuf, source=sendrank[2], tag=1)
+                req.wait()
+                u1[offset+2:offset+4,:][:,2:offset+2] = bbuf[0]
+                u2[offset+2:offset+4,:][:,2:offset+2] = bbuf[1]
+                v1[offset+2:offset+4,:][:,2:offset+2] = bbuf[2]
+                v2[offset+2:offset+4,:][:,2:offset+2] = bbuf[3]
+                h1[offset+2:offset+4,:][:,2:offset+2] = bbuf[4]
+                h2[offset+2:offset+4,:][:,2:offset+2] = bbuf[5]
 
             if (sendrank[0], sendrank[1]) == (1,1):
-                req = comm.irecv(source=sendrank[2], tag=0)
-                data = req.wait()
-                u1[offset+2:offset+4,:][:,offset+2:offset+4] = data[0]
-                u2[offset+2:offset+4,:][:,offset+2:offset+4] = data[1]
-                v1[offset+2:offset+4,:][:,offset+2:offset+4] = data[2]
-                v2[offset+2:offset+4,:][:,offset+2:offset+4] = data[3]
-                h1[offset+2:offset+4,:][:,offset+2:offset+4] = data[4]
-                h2[offset+2:offset+4,:][:,offset+2:offset+4] = data[5]
+                req = comm.Irecv(buf=brbuf, source=sendrank[2], tag=0)
+                req.wait()
+                u1[offset+2:offset+4,:][:,offset+2:offset+4] = brbuf[0]
+                u2[offset+2:offset+4,:][:,offset+2:offset+4] = brbuf[1]
+                v1[offset+2:offset+4,:][:,offset+2:offset+4] = brbuf[2]
+                v2[offset+2:offset+4,:][:,offset+2:offset+4] = brbuf[3]
+                h1[offset+2:offset+4,:][:,offset+2:offset+4] = brbuf[4]
+                h2[offset+2:offset+4,:][:,offset+2:offset+4] = brbuf[5]
 
+
+    #sys.exit()
     #sendingTimes.append(time.time()-sendtimer)
     
     
@@ -522,6 +544,7 @@ while t <= tmax + lasttime + dt / 2:
             h2 = hf.combine(h2matSplit, offset, ranks, size)
 
             print(f"t={t}, time elapsed {time.time()-clocktimer}")
+            print(f"memory used {rss() - initialmem}")
 
             ad.save_data(u1,u2,v1,v2,h1,h2,locs,t,lasttime,new_name)
 

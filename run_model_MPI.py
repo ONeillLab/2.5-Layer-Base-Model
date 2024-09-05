@@ -7,6 +7,7 @@ from netCDF4 import Dataset
 import access_data as ad
 from mpi4py import MPI
 import psutil
+import sys
 
 
 def rss():
