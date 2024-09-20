@@ -2,7 +2,7 @@ import numpy as np
 import math
 import helper_functions_MPI as hf
 import time
-from name_list_general import *
+from name_list_uranus import *
 from netCDF4 import Dataset
 import access_data as ad
 from mpi4py import MPI

@@ -4,18 +4,18 @@ import numpy as np
 fixed = True
 saving = True
 seasonalsim = False
-season = "summer" # "summer" for summer settings and "winter" for winter settings
+season = "winter" # "summer" for summer settings and "winter" for winter settings
 
 
 TSEASON = 42 # Time in Uranian year, 84 will be summer solstice for the north pole, while 42 will be south pole solstice
 
 num_processors = 10
 
-tmax = 5000
+tmax = 100
 ani_interval = 100
-sampfreq = 100
-restart_name = "test1.nc" #'jupiter100724_7.nc'
-new_name = 'test2.nc'
+sampfreq = 1
+restart_name = None #"test1.nc" #'jupiter100724_7.nc'
+new_name = 'test1.nc'
 
 ### Dimensional, collected from papers, used for normalization ###
 f0 = 1.0124e-4    # coriolis parameter from Nasa planet facts [s]
@@ -25,13 +25,13 @@ Ld2 = 1200e3      # 2nd baroclinic Rossby deformation radius [m] from O'Neill
 drag = 100000     # Cumulus Drag (placeholder)
 
 ### Dimensional Seasonal Forcing Parameters ###
-T0 = 123 # From Milcareck (2024) (at 3 Bar) [K]
+T0 = 70 # From Milcareck (2024) (at 1 Bar) [K]
 Tamp = 4.1 # From Milcareck (2024) (at 0.3 Bar) [K]
 seasper = 84 # Nasa Facts [year]
 seasstd = 10 # Hueso et al. (big estimate) [year]
 R = 766.32 # Specific gas constant of methane at 1 bar 123 K
 rho = 1.5914 # Density of methane at 1 bar 123 K
-p0 = 3*1e5 # Top of upper layer from Sromovsky (2024)
+p0 = 1*1e5 # Top of upper layer from Sromovsky (2024)
 H10 = (T0 - p0/(rho*R))*(2*R/g) #calculated
 deltaH1 = (Tamp*(2*R))/g
 cp = 8600 # Heat capacity of methane at (3 Bar) from Milcareck
@@ -61,7 +61,7 @@ tstp = tst*2   # Period between forced storms (Guess)
 
 ### Dimensonal, Atmosphere parameters, these are not known and must be adjusted ###
 p1p2 = 0.95
-H1H2 = 1
+H1H2 = 0.93
 
 # Dimensional, Derived Parameters ###
 c2 = Ld2 * f0 # Second baroclinic gravity wave speed
@@ -116,7 +116,7 @@ EpHat = (
 )
 
 #dx = 1 / 5 * round(min(1,L/Lst), 3)
-N  = 376
+N  = 270
 dx = round(L/N,4)
 dt = dx / (10 * c12h) #1 / (2**8) # CHANGED TO dx/(10*c12h) SO THAT dt CHANGES TO MATCH dx
 dtinv = 1 / dt

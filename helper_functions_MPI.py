@@ -1,5 +1,5 @@
 import numpy as np
-from name_list_general import *
+from name_list_uranus import *
 import time
 import sys
 
