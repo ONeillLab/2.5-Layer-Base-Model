@@ -9,11 +9,11 @@ season = "winter" # "summer" for summer settings and "winter" for winter setting
 
 TSEASON = 42 # Time in Uranian year, 84 will be summer solstice for the north pole, while 42 will be south pole solstice
 
-num_processors = 10
+num_processors = 65
 
-tmax = 100
+tmax = 80000
 ani_interval = 100
-sampfreq = 1
+sampfreq = 100
 restart_name = None #"test1.nc" #'jupiter100724_7.nc'
 new_name = 'test1.nc'
 
@@ -29,15 +29,18 @@ T0 = 70 # From Milcareck (2024) (at 1 Bar) [K]
 Tamp = 4.1 # From Milcareck (2024) (at 0.3 Bar) [K]
 seasper = 84 # Nasa Facts [year]
 seasstd = 10 # Hueso et al. (big estimate) [year]
-R = 766.32 # Specific gas constant of methane at 1 bar 123 K
-rho = 1.5914 # Density of methane at 1 bar 123 K
-p0 = 1*1e5 # Top of upper layer from Sromovsky (2024)
-H10 = (T0 - p0/(rho*R))*(2*R/g) #calculated
-deltaH1 = (Tamp*(2*R))/g
+M = 2.3e-3 # mean molecular weight of the atmosphere (Clement et al.) [kg/mol]
+R = 8.316 # ideal gas constant
+RM = 766.32 # Specific gas constant of methane at 1 bar 123 K
+p0 = 1.1 # Top of upper layer from Sromovsky (2024) [bar]
+scaleHeight = (R*T0)/(M*g) # The scale height of the uranian atmosphere [m]
+H2 = scaleHeight * np.log(p0/0.7)
+H10 = scaleHeight * np.log(p0/0.45) - H2
+deltaH1 = (Tamp*(2*RM))/g
 cp = 8600 # Heat capacity of methane at (3 Bar) from Milcareck
 sigma = 5.670e-8 # Stefan-Boltzmann constant
 eps = 0.3 # emissivity, estimated
-trad0 = (cp*p0) / (4*g*sigma*eps*T0**3)
+trad0 = (cp*p0*(10**5)) / (4*g*sigma*eps*T0**3)
 deltatrad = (12/T0)*trad0
 
 TIMESCALING = 1#10
@@ -57,11 +60,11 @@ TSEASONf = (TSEASON*365*24*60*60)*f0
 ### Dimensional, Storm parameters ###
 Rst = 350e3       # Storm size [m] calculated from Sromovsky (2024) [m]
 tst = 260000      # 3 day storm duration from Sromovsky (2024) [s]
-tstp = tst*2   # Period between forced storms (Guess)
+tstp = tst*2 #100*24*60*60 #tst*2   # 100 day Period between forced storms (Clement)
 
 ### Dimensonal, Atmosphere parameters, these are not known and must be adjusted ###
 p1p2 = 0.95
-H1H2 = 0.93
+H1H2 = H10/H2
 
 # Dimensional, Derived Parameters ###
 c2 = Ld2 * f0 # Second baroclinic gravity wave speed
@@ -78,14 +81,12 @@ Ar = 0.20 # Calculated from Sromovsky
 Re = 5e4
 Wsh = 0.001/ 2 #Wst / (H1 * f0) Place holder
 
-
 if season == "summer":
     H1H2 = (1+deltaH1)*H1H2
     Wsh = Wsh / (1+deltaH1)
     tradf = (1-deltatrad)*trad0f
 if season == "winter":
     tradf = trad0f
-
 
 #### Derived Quantities ###
 gm = p1p2*c22h/c12h*H1H2  # ND reduced gravity
