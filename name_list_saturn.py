@@ -54,7 +54,8 @@ gm = p1p2*c22h/c12h*H1H2            # ND reduced gravity
 aOLd = a/Ld2;             # ND planetary radius to deformation radius ratio
 deglim = (np.pi/6)*1.25  # domain size [degrees]
 L = 2*(deglim * a)/Ld2  # domain radius 30 deg from pole, normalized by deformation radius
-num = round(Ar*(L**2)*Br2/np.pi)    # number of storms
+
+num = round( (16*np.pi*aOLd**2 * deglim**2 * Ar) / (25*np.pi* 1/Br2) )
 
 Lst = L * Ld2/Rst
 

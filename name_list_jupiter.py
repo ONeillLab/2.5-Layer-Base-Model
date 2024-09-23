@@ -59,7 +59,7 @@ aOLd = a/Ld2;             # ND planetary radius to deformation radius ratio
 deglim = (np.pi/6)*1.25   # domain size [degrees]
 L = 2*(deglim * a)/Ld2
 
-num = round((aOLd**2 * np.pi**2 * Ar) / (36 * 1/Br2))
+num = round( (16*np.pi*aOLd**2 * deglim**2 * Ar) / (25*np.pi* 1/Br2) )
 
 Lst = L * Ld2/Rst
 
