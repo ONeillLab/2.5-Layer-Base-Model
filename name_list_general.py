@@ -37,9 +37,9 @@ Wsh = 0.002 / 2  # ND convective Rossby number
 gm = p1p2 * c22h / c12h * H1H2  # ND reduced gravity
 aOLd = np.sqrt(1 / Bt / 2)  # ND planetary radius to deformation radius ratio ### adjust this
 deglim = (np.pi/6)*1.25 
-L = deglim * aOLd  # ND num = ceil(numfrc.*L.^2./Br2)
+L = 2*(deglim * aOLd)  # ND num = ceil(numfrc.*L.^2./Br2)
 
-num = round((aOLd**2 * np.pi**2 * Ar) / (36 * 1/Br2))
+num = round( (16*np.pi*aOLd**2 * deglim**2 * Ar) / (25*np.pi* 1/Br2) )
 
 Lst = L * np.sqrt(Br2)  # Convert the length of domain per Ld2 to length of domain per Rst (Daniel)
 
