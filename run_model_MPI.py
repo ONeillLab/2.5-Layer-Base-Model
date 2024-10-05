@@ -105,8 +105,6 @@ if rank == 0:
         xSplit.append(hf.split(x, offset, ranks, i))
         ySplit.append(hf.split(y, offset, ranks, i))
 
-    #locs = np.array([[200,200, 6, 20, 0]])
-
 else:
     # Initialize empty data for each process, which will be filled by the split arrays computed on rank 0.
     WmatSplit = None
