@@ -559,8 +559,6 @@ while t <= tmax + lasttime + dt / 2:
         v2matSplit = comm.gather(v2, root=0)
         h1matSplit = comm.gather(h1, root=0)
         h2matSplit = comm.gather(h2, root=0)
-        WmatSplit = comm.gather(Wmat, root=0)
-
 
         # Combine all the data into one large array on rank 0
         if rank == 0:
@@ -570,8 +568,7 @@ while t <= tmax + lasttime + dt / 2:
             v2 = hf.combine(v2matSplit, offset, ranks, size)
             h1 = hf.combine(h1matSplit, offset, ranks, size)
             h2 = hf.combine(h2matSplit, offset, ranks, size)
-            Wmat = hf.combine(WmatSplit, offset, ranks, size)
-
+            
             # Print the time the cycle from saving to saving has taken
             print(f"t={t}, time elapsed {time.time()-clocktimer}")
             print(f"memory used {rss()-initialmem}")
