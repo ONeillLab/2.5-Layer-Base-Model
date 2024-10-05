@@ -482,11 +482,13 @@ while t <= tmax + lasttime + dt / 2:
     
     ### Rank 0 checks for if new storms need to be created and sends out the new Wmat ###
 
-    #stormtimer = time.time()
+    stormtimer = time.time()
+
+    # Rank zero checks which storms need to be removed.
     if rank == 0:
         remove_layers = [] # store weather layers that need to be removed here
-        rem = False
 
+        # Check if a storm is past its lifetime, tstpf < lifetime.
         if mode == 1:
             for i in range(len(locs)):
                 if (t-locs[i][-1]) >= locs[i][3] and t != 0:
@@ -494,47 +496,53 @@ while t <= tmax + lasttime + dt / 2:
 
             add = len(remove_layers) # number of storms that were removed
 
+            # If new storms need to be created, create a list of new storms to add.
             if add != 0:
                 newlocs = hf.genlocs(add, N, t)
 
+                # update the old list of storms with the new ones.
                 for i in range(len(remove_layers)):
                     locs[remove_layers[i]] = newlocs[i]
 
-        if len(remove_layers) != 0:
-            rem = True
-    
-    rem = comm.bcast(rem, root=0)
-    locs = comm.bcast(locs, root=0)
-    if rem == True:
-        if rank != 0:
-            wlayer = hf.pairshapeN2(locs, 0, x, y, offset)
-            Wsum = np.sum(wlayer) * dx**2
 
-        
-        Wsums = comm.gather(Wsum, root=0)
+    locs = comm.bcast(locs, root=0) # Communicate updated storms to all processes.
 
-        if rank == 0:
-            area = L**2
-            wcorrect = np.sum(Wsums[1:]) / area
+    # each process (except 0) calculates its own storms
+    if rank != 0:
+        wlayer = hf.pairshapeN2(locs, t, x, y, offset)
+        #Wmat = hf.pairfieldN2(L, h1, wlayer)
+        Wsum = np.sum(wlayer) * dx**2
 
-        wcorrect = comm.bcast(wcorrect, root=0)
+    Wsums = comm.gather(Wsum, root=0) # Gather the sums on rank 0 for subsidence calculations.
 
-        if rank != 0:
-            Wmat = wlayer - wcorrect
-        
-        rem = False
+    # Calculate subsidence correction on rank 0
+    if rank == 0:
+        area = L**2
+        wcorrect = np.sum(Wsums[1:]) / area
 
-    #stormTimes.append(time.time()-stormtimer)
+    wcorrect = comm.bcast(wcorrect, root=0) # Distribute subsidence calculation to all process.
 
+    # Update weather layer of each process with subsidence.
+    if rank != 0:
+        Wmat = wlayer - wcorrect
+
+    #stormTimes.append(time.time()-stormtimer) # Uncomment to time the storm creation section.
+
+    ### Data saving. Rank 0 gathers all data from processes, combines it, and then saves it to a NETCDF file. ###
+
+    # Check if it is time to save.
     if tc % tpl == 0 and saving == True:
-        ### Combining data on rank 0 ###
+        # Gather all dynamical data to rank 0. These will be a list of each subarray of each process.
         u1matSplit = comm.gather(u1, root=0)
         v1matSplit = comm.gather(v1, root=0)
         u2matSplit = comm.gather(u2, root=0)
         v2matSplit = comm.gather(v2, root=0)
         h1matSplit = comm.gather(h1, root=0)
         h2matSplit = comm.gather(h2, root=0)
+        WmatSplit = comm.gather(Wmat, root=0)
 
+
+        # Combine all the data into one large array on rank 0
         if rank == 0:
             u1 = hf.combine(u1matSplit, offset, ranks, size)
             u2 = hf.combine(u2matSplit, offset, ranks, size)
@@ -542,13 +550,17 @@ while t <= tmax + lasttime + dt / 2:
             v2 = hf.combine(v2matSplit, offset, ranks, size)
             h1 = hf.combine(h1matSplit, offset, ranks, size)
             h2 = hf.combine(h2matSplit, offset, ranks, size)
+            Wmat = hf.combine(WmatSplit, offset, ranks, size)
 
+            # Print the time the cycle from saving to saving has taken
             print(f"t={t}, time elapsed {time.time()-clocktimer}")
-            print(f"memory used {rss() - initialmem}")
+            print(f"memory used {rss()-initialmem}")
 
-            ad.save_data(u1,u2,v1,v2,h1,h2,locs,t,lasttime,new_name)
+            # Save the data to NETCDF.
+            ad.save_data(u1,u2,v1,v2,h1,h2,locs,t,lasttime,new_name, Wmat)
 
-    tc += 1
+    # Update times.
+    tc += 1 
     t = tc * dt
 
 #print(f"rank: {rank}, simtime avg: {round(np.mean(simTimes),4)}, sendingtime avg: {round(np.mean(sendingTimes),4)}, stormtime avg: {round(np.mean(stormTimes), 4)}, total time: {round(time.time()-tottimer,4)}, memory use: {(rss()-initialmem)/(10**6)}")

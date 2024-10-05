@@ -1,5 +1,5 @@
 import numpy as np
-from name_list_jupiter import *
+from name_list_betadrift import *
 import time
 import sys
 
@@ -117,6 +117,8 @@ def genlocs(num, N, t):
     choices = np.random.randint(0, len(poslocs), num) 
 
     locs = poslocs[choices] # make random choices of loction from all possible storm locations (not in the sponge layer)
+
+    locs = [[100,100]]
     
     newdur = np.round(np.random.normal(tstf, 2, (num, 1)))  # Pick durations for the storms from a normal distribution
     newper = np.round(np.random.normal(tstpf, 2, (num, 1))) # Pick periods for the storms from a normal distribution

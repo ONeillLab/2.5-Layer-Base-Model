@@ -2,7 +2,7 @@ import numpy as np
 import math
 import helper_functions_MPI as hf
 import time
-from name_list_jupiter import *
+from name_list_betadrift import *
 from netCDF4 import Dataset
 import access_data as ad
 from mpi4py import MPI
@@ -104,6 +104,8 @@ if rank == 0:
         rdistSplit.append(hf.split(rdist, offset, ranks, i))
         xSplit.append(hf.split(x, offset, ranks, i))
         ySplit.append(hf.split(y, offset, ranks, i))
+
+    #locs = np.array([[200,200, 6, 20, 0]])
 
 else:
     # Initialize empty data for each process, which will be filled by the split arrays computed on rank 0.
@@ -505,7 +507,6 @@ while t <= tmax + lasttime + dt / 2:
     # Rank zero checks which storms need to be removed.
     if rank == 0:
         remove_layers = [] # store weather layers that need to be removed here
-        rem = False
 
         # Check if a storm is past its lifetime, tstpf < lifetime.
         if mode == 1:
@@ -523,36 +524,27 @@ while t <= tmax + lasttime + dt / 2:
                 for i in range(len(remove_layers)):
                     locs[remove_layers[i]] = newlocs[i]
 
-        # Update a flag letting the other process know they need to update their weather layers.
-        if len(remove_layers) != 0:
-            rem = True
-    
-    rem = comm.bcast(rem, root=0) # Communicate tag to all processes.
+
     locs = comm.bcast(locs, root=0) # Communicate updated storms to all processes.
 
-    # If storms need to be updated, do it.
-    if rem == True:
+    # each process (except 0) calculates its own storms
+    if rank != 0:
+        wlayer = hf.pairshapeN2(locs, t, x, y, offset)
+        #Wmat = hf.pairfieldN2(L, h1, wlayer)
+        Wsum = np.sum(wlayer) * dx**2
 
-        # each process (except 0) calculates its own storms
-        if rank != 0:
-            wlayer = hf.pairshapeN2(locs, 0, x, y, offset)
-            #Wmat = hf.pairfieldN2(L, h1, wlayer)
-            Wsum = np.sum(wlayer) * dx**2
+    Wsums = comm.gather(Wsum, root=0) # Gather the sums on rank 0 for subsidence calculations.
 
-        Wsums = comm.gather(Wsum, root=0) # Gather the sums on rank 0 for subsidence calculations.
+    # Calculate subsidence correction on rank 0
+    if rank == 0:
+        area = L**2
+        wcorrect = np.sum(Wsums[1:]) / area
 
-        # Calculate subsidence correction on rank 0
-        if rank == 0:
-            area = L**2
-            wcorrect = np.sum(Wsums[1:]) / area
+    wcorrect = comm.bcast(wcorrect, root=0) # Distribute subsidence calculation to all process.
 
-        wcorrect = comm.bcast(wcorrect, root=0) # Distribute subsidence calculation to all process.
-
-        # Update weather layer of each process with subsidence.
-        if rank != 0:
-            Wmat = wlayer - wcorrect
-
-        rem = False # Reset flag
+    # Update weather layer of each process with subsidence.
+    if rank != 0:
+        Wmat = wlayer - wcorrect
 
     #stormTimes.append(time.time()-stormtimer) # Uncomment to time the storm creation section.
 
@@ -567,6 +559,7 @@ while t <= tmax + lasttime + dt / 2:
         v2matSplit = comm.gather(v2, root=0)
         h1matSplit = comm.gather(h1, root=0)
         h2matSplit = comm.gather(h2, root=0)
+        WmatSplit = comm.gather(Wmat, root=0)
 
 
         # Combine all the data into one large array on rank 0
@@ -577,13 +570,14 @@ while t <= tmax + lasttime + dt / 2:
             v2 = hf.combine(v2matSplit, offset, ranks, size)
             h1 = hf.combine(h1matSplit, offset, ranks, size)
             h2 = hf.combine(h2matSplit, offset, ranks, size)
+            Wmat = hf.combine(WmatSplit, offset, ranks, size)
 
             # Print the time the cycle from saving to saving has taken
             print(f"t={t}, time elapsed {time.time()-clocktimer}")
             print(f"memory used {rss()-initialmem}")
 
             # Save the data to NETCDF.
-            ad.save_data(u1,u2,v1,v2,h1,h2,locs,t,lasttime,new_name)
+            ad.save_data(u1,u2,v1,v2,h1,h2,locs,t,lasttime,new_name, Wmat)
 
     # Update times.
     tc += 1 
