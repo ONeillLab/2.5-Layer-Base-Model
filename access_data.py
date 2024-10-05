@@ -68,7 +68,6 @@ def create_file(data_name):
     rootgroup.createDimension("xlocs", num) 
     rootgroup.createDimension("ylocs", 5)
     rootgroup.createDimension("time", None)
-    rootgroup.createDimension("tWmat", None)
 
     u1mat = rootgroup.createVariable("u1mat", "f8", ("tu1", "x", "y",),compression='zlib') # variables (list of arrays)
     u2mat = rootgroup.createVariable("u2mat", "f8", ("tu2", "x", "y",),compression='zlib')
@@ -76,7 +75,6 @@ def create_file(data_name):
     v2mat = rootgroup.createVariable("v2mat", "f8", ("tv2", "x", "y",),compression='zlib')
     h1mat = rootgroup.createVariable("h1mat", "f8", ("th1", "x", "y",),compression='zlib')
     h2mat = rootgroup.createVariable("h2mat", "f8", ("th2", "x", "y",),compression='zlib')
-    Wmat = rootgroup.createVariable("Wmat", 'f8', ('tWmat', 'x', 'y',),compression='zlib')
     locsmat = rootgroup.createVariable("locsmat", "f8", ("tlocs", "xlocs", "ylocs",),compression='zlib')
     ts = rootgroup.createVariable("ts", "f8", ("time",),compression='zlib')
 
@@ -95,7 +93,6 @@ def store_data(data_name, u1mat, u2mat, h1mat, h2mat, v1mat, v2mat, locsmat, ts,
     rootgroup.variables["v2mat"][:] = v2mat#.astype("float64") 
     rootgroup.variables["h1mat"][:] = h1mat#.astype("float64") 
     rootgroup.variables["h2mat"][:] = h2mat#.astype("float64") 
-    rootgroup.variables["Wmat"][:] = Wmat
     rootgroup.variables["locsmat"][:] = locsmat#.astype("float64") 
     rootgroup.variables["ts"][:] = ts#.astype("float64") 
     rootgroup.time = ts[-1]
@@ -139,6 +136,5 @@ def save_data(u1,u2,v1,v2,h1,h2,locs,t,lasttime,file_name, Wmat):
     storedata("h2mat", h2, file_name)
     storedata("v1mat", v1, file_name)
     storedata("v2mat", v2, file_name)
-    storedata("Wmat", Wmat, file_name)
     storedata("locsmat", locs, file_name)
     storetime(t, file_name)
