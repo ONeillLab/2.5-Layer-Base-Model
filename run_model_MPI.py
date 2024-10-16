@@ -155,6 +155,19 @@ if rank != 0:
     Wmat = wlayer - wcorrect
 
 
+import matplotlib.pyplot as plt
+
+Wmatsplit = comm.gather(Wmat, root=0)
+if rank == 0:
+    Wmat = hf.combine(Wmatsplit, offset, ranks, size)
+
+    plt.imshow(Wmat)
+    plt.show()
+    
+sys.exit()
+
+
+
 ### END OF INITIALIZATION ###
 
 
@@ -536,7 +549,7 @@ while t <= tmax + lasttime + dt / 2:
             print(f"memory used {rss()-initialmem}")
 
             # Save the data to NETCDF.
-            ad.save_data(u1,u2,v1,v2,h1,h2,locs,t,lasttime,new_name, Wmat)
+            ad.save_data(u1,u2,v1,v2,h1,h2,locs,t,lasttime,new_name)
 
     # Update times.
     tc += 1 

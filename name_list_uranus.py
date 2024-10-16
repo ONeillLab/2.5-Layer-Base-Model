@@ -2,7 +2,7 @@ import math
 import numpy as np
 
 fixed = True
-saving = True
+saving = False
 seasonalsim = False
 season = "winter" # "summer" for summer settings and "winter" for winter settings
 
@@ -46,7 +46,7 @@ deltatrad = (3*Tamp/T0)*trad0
 Wst = 0.02 # RMS vertical velocity at 0.7 bar. (Clement et al.) [m/s]
 
 
-TIMESCALING = 1 #10
+TIMESCALING = 15
 seasper = seasper/TIMESCALING
 seasstd = seasstd/TIMESCALING
 trad0 = trad0/TIMESCALING
@@ -61,7 +61,7 @@ deltatrad = (3*Tamp/T0)*trad0 / trad0
 TSEASONf = (TSEASON*365*24*60*60)*f0
 
 ### Dimensional, Storm parameters ###
-Rst = 50e3       # Storm size [m] calculated from Sromovsky (2024) [m]
+Rst = 500e3 #350e3       # Storm size [m] calculated from Sromovsky (2024) [m]
 tst = 260000      # 3 day storm duration from Sromovsky (2024) [s]
 tstp = tst*2 #100*24*60*60 #tst*2   # 100 day Period between forced storms (Clement)
 
@@ -83,7 +83,6 @@ Bt = (Ld2**2)/(2*a**2) # scaled beta (for beta plane)
 Ar = 0.20 # Calculated from Sromovsky
 Re = 5e4
 Wsh = Wst / (H10 * f0) # Calculated from O'Neill
-
 
 if season == "summer":
     H1H2 = (1+deltaH1)*H1H2
