@@ -72,7 +72,7 @@ def pairshapeN2(locs, t, x, y, offset):
     wlayer = np.zeros_like(x).astype(np.float64)
 
     resolution = round(np.sqrt(1/Br2)/dx)
-    padding = 3*resolution
+    padding = 5*resolution
 
     #print(round(len(x)/2))
 

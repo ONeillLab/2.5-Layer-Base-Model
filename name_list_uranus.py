@@ -11,7 +11,7 @@ TSEASON = 42 # Time in Uranian year, 84 will be summer solstice for the north po
 
 num_processors = 65 #10
 
-tmax = 80000
+tmax = 20000
 ani_interval = 100
 sampfreq = 100
 restart_name = None #"test1.nc" #'jupiter100724_7.nc'
@@ -125,6 +125,7 @@ dx = round(L/N,4)
 dt = dx / (10 * c12h) #1 / (2**8) # CHANGED TO dx/(10*c12h) SO THAT dt CHANGES TO MATCH dx
 dtinv = 1 / dt
 tpl = round(sampfreq * dtinv)
+tp1 = round(dtinv)
 
 #N = math.ceil(L / dx)  # resolve
 L = N * dx

@@ -340,7 +340,7 @@ while t <= tmax + lasttime + dt / 2:
         MPI.Finalize()
         MPI.COMM_WORLD.Abort()
 
-    #simTimes.append(time.time()-simtimer)
+    simTimes.append(time.time()-simtimer)
 
     ### Sending boundary conditions to neighbouring cells
 
@@ -459,7 +459,7 @@ while t <= tmax + lasttime + dt / 2:
                 h1[offset+2:offset+4,:][:,offset+2:offset+4] = data[4]
                 h2[offset+2:offset+4,:][:,offset+2:offset+4] = data[5]
 
-    #sendingTimes.append(time.time()-sendtimer)
+    sendingTimes.append(time.time()-sendtimer)
     
     
     ### Rank 0 checks for if new storms need to be created and sends out the new Wmat ###
@@ -489,26 +489,28 @@ while t <= tmax + lasttime + dt / 2:
 
     locs = comm.bcast(locs, root=0) # Communicate updated storms to all processes.
 
+
     # each process (except 0) calculates its own storms
-    if rank != 0:
-        wlayer = hf.pairshapeN2(locs, t, x, y, offset)
-        #Wmat = hf.pairfieldN2(L, h1, wlayer)
-        Wsum = np.sum(wlayer) * dx**2
+    if tc % tp1 == 0:
+        if rank != 0:
+            wlayer = hf.pairshapeN2(locs, t, x, y, offset)
+            #Wmat = hf.pairfieldN2(L, h1, wlayer)
+            Wsum = np.sum(wlayer) * dx**2
 
-    Wsums = comm.gather(Wsum, root=0) # Gather the sums on rank 0 for subsidence calculations.
+        Wsums = comm.gather(Wsum, root=0) # Gather the sums on rank 0 for subsidence calculations.
 
-    # Calculate subsidence correction on rank 0
-    if rank == 0:
-        area = L**2
-        wcorrect = np.sum(Wsums[1:]) / area
+        # Calculate subsidence correction on rank 0
+        if rank == 0:
+            area = L**2
+            wcorrect = np.sum(Wsums[1:]) / area
 
-    wcorrect = comm.bcast(wcorrect, root=0) # Distribute subsidence calculation to all process.
+        wcorrect = comm.bcast(wcorrect, root=0) # Distribute subsidence calculation to all process.
 
-    # Update weather layer of each process with subsidence.
-    if rank != 0:
-        Wmat = wlayer - wcorrect
+        # Update weather layer of each process with subsidence.
+        if rank != 0:
+            Wmat = wlayer - wcorrect
 
-    #stormTimes.append(time.time()-stormtimer) # Uncomment to time the storm creation section.
+    stormTimes.append(time.time()-stormtimer) # Uncomment to time the storm creation section.
 
     ### Data saving. Rank 0 gathers all data from processes, combines it, and then saves it to a NETCDF file. ###
 
@@ -533,7 +535,9 @@ while t <= tmax + lasttime + dt / 2:
 
             # Print the time the cycle from saving to saving has taken
             print(f"t={t}, time elapsed {time.time()-clocktimer}")
-            print(f"memory used {rss()-initialmem}")
+
+            clocktimer = time.time()
+            #print(f"memory used {rss()-initialmem}")
 
             # Save the data to NETCDF.
             ad.save_data(u1,u2,v1,v2,h1,h2,locs,t,lasttime,new_name)
@@ -542,6 +546,6 @@ while t <= tmax + lasttime + dt / 2:
     tc += 1 
     t = tc * dt
 
-#print(f"rank: {rank}, simtime avg: {round(np.mean(simTimes),4)}, sendingtime avg: {round(np.mean(sendingTimes),4)}, stormtime avg: {round(np.mean(stormTimes), 4)}, total time: {round(time.time()-tottimer,4)}, mem used: {(rss() - initialmem)/10**6} MB")
+print(f"rank: {rank}, simtime avg: {round(np.mean(simTimes),4)}, sendingtime avg: {round(np.mean(sendingTimes),4)}, stormtime avg: {round(np.mean(stormTimes), 4)}, total time: {round(time.time()-tottimer,4)}")
 
 #print(f"mem used: {(rss() - initialmem)/10**6} MB")
