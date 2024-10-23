@@ -155,19 +155,6 @@ if rank != 0:
     Wmat = wlayer - wcorrect
 
 
-import matplotlib.pyplot as plt
-
-Wmatsplit = comm.gather(Wmat, root=0)
-if rank == 0:
-    Wmat = hf.combine(Wmatsplit, offset, ranks, size)
-
-    plt.imshow(Wmat)
-    plt.show()
-    
-sys.exit()
-
-
-
 ### END OF INITIALIZATION ###
 
 

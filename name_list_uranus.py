@@ -2,18 +2,18 @@ import math
 import numpy as np
 
 fixed = True
-saving = False
+saving = True
 seasonalsim = False
 season = "winter" # "summer" for summer settings and "winter" for winter settings
 
 
 TSEASON = 42 # Time in Uranian year, 84 will be summer solstice for the north pole, while 42 will be south pole solstice
 
-num_processors = 10 #65
+num_processors = 65 #10
 
 tmax = 80000
 ani_interval = 100
-sampfreq = 1
+sampfreq = 100
 restart_name = None #"test1.nc" #'jupiter100724_7.nc'
 new_name = 'test1.nc'
 
@@ -43,10 +43,10 @@ sigma = 5.670e-8 # Stefan-Boltzmann constant
 eps = 0.3 # emissivity, estimated
 trad0 = (cp*ptop*(10**5)) / (4*g*sigma*eps*T0**3)
 deltatrad = (3*Tamp/T0)*trad0
-Wst = 0.02 # RMS vertical velocity at 0.7 bar. (Clement et al.) [m/s]
+Wst = 0.015 # RMS vertical velocity at 0.7 bar. (Clement et al.) [m/s]
 
 
-TIMESCALING = 15
+TIMESCALING = 50
 seasper = seasper/TIMESCALING
 seasstd = seasstd/TIMESCALING
 trad0 = trad0/TIMESCALING
@@ -61,7 +61,7 @@ deltatrad = (3*Tamp/T0)*trad0 / trad0
 TSEASONf = (TSEASON*365*24*60*60)*f0
 
 ### Dimensional, Storm parameters ###
-Rst = 500e3 #350e3       # Storm size [m] calculated from Sromovsky (2024) [m]
+Rst = 2*300e3 #350e3       # Storm size [m] calculated from Sromovsky (2024) [m]
 tst = 260000      # 3 day storm duration from Sromovsky (2024) [s]
 tstp = tst*2 #100*24*60*60 #tst*2   # 100 day Period between forced storms (Clement)
 
@@ -81,7 +81,7 @@ c22h = 3 # ND 2nd baroclinic gravity wave speed squared
 c12h = 4 # ND 1st baroclinic gravity wave speed squared
 Bt = (Ld2**2)/(2*a**2) # scaled beta (for beta plane)
 Ar = 0.20 # Calculated from Sromovsky
-Re = 5e4
+Re = 5e7
 Wsh = Wst / (H10 * f0) # Calculated from O'Neill
 
 if season == "summer":
@@ -107,8 +107,8 @@ layers = 2.5  # of layers (2 or 2.5)
 n = 2  # order of Laplacian '2' is hyperviscosity
 kappa = 1e-6
 ord = 2  # must equal 1 for Glenn's order, otherwise for Sadourney's (squares before avgs)
-spongedrag1 = 0.005
-spongedrag2 = 0.005
+spongedrag1 = 0.05
+spongedrag2 = 0.05
 
 EpHat = (
     ((1 / 2) * p1p2 * c12h + (1 / 2) * H1H2 * c22h - p1p2 * (c22h / c12h) * H1H2 * c12h)
@@ -120,7 +120,7 @@ EpHat = (
 )
 
 #dx = 1 / 5 * round(min(1,L/Lst), 3)
-N  = 270
+N  = 640
 dx = round(L/N,4)
 dt = dx / (10 * c12h) #1 / (2**8) # CHANGED TO dx/(10*c12h) SO THAT dt CHANGES TO MATCH dx
 dtinv = 1 / dt

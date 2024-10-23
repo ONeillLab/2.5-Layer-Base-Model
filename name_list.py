@@ -63,6 +63,8 @@ tpl = sampfreq * dtinv
 N = math.ceil(L / dx)  # resolve
 L = N * dx
 
+print(4*dx)
+
 x, y = np.meshgrid(np.arange(0.5, N + 0.5) * dx - L / 2, np.arange(0.5, N + 0.5) * dx - L / 2)
 H = 1 + 0 * x
 eta = 0 * x
