@@ -11,11 +11,11 @@ TSEASON = 42 # Time in Uranian year, 84 will be summer solstice for the north po
 
 num_processors = 65 #10
 
-tmax = 20000
+tmax = 35000
 ani_interval = 100
 sampfreq = 100
 restart_name = None #"test1.nc" #'jupiter100724_7.nc'
-new_name = 'test1.nc'
+new_name = '271024/winter_002.nc'
 
 ### Dimensional, collected from papers, used for normalization ###
 f0 = 1.0124e-4    # coriolis parameter from Nasa planet facts [s]
@@ -46,7 +46,7 @@ deltatrad = (3*Tamp/T0)*trad0
 Wst = 0.015 # RMS vertical velocity at 0.7 bar. (Clement et al.) [m/s]
 
 
-TIMESCALING = 50
+TIMESCALING = 1
 seasper = seasper/TIMESCALING
 seasstd = seasstd/TIMESCALING
 trad0 = trad0/TIMESCALING
@@ -61,8 +61,8 @@ deltatrad = (3*Tamp/T0)*trad0 / trad0
 TSEASONf = (TSEASON*365*24*60*60)*f0
 
 ### Dimensional, Storm parameters ###
-Rst = 2*300e3 #350e3       # Storm size [m] calculated from Sromovsky (2024) [m]
-tst = 260000      # 3 day storm duration from Sromovsky (2024) [s]
+Rst = 300e3 #350e3       # Storm size [m] calculated from Sromovsky (2024) [m]
+tst = 172800      # 2 day storm duration from Sromovsky (2024) [s]
 tstp = tst*2 #100*24*60*60 #tst*2   # 100 day Period between forced storms (Clement)
 
 ### Dimensonal, Atmosphere parameters, these are not known and must be adjusted ###
@@ -81,7 +81,7 @@ c22h = 3 # ND 2nd baroclinic gravity wave speed squared
 c12h = 4 # ND 1st baroclinic gravity wave speed squared
 Bt = (Ld2**2)/(2*a**2) # scaled beta (for beta plane)
 Ar = 0.20 # Calculated from Sromovsky
-Re = 5e7
+Re = 5e6
 Wsh = Wst / (H10 * f0) # Calculated from O'Neill
 
 if season == "summer":
@@ -98,6 +98,10 @@ deglim = (np.pi/6)*1.25   # domain size [degrees]
 L = 2*(deglim * a)/Ld2
 
 num = round( (16*np.pi*aOLd**2 * deglim**2 * Ar) / (25*np.pi* 1/Br2) )
+
+num = 300
+
+Ar = (num*25*np.pi * 1/Br2) / (16*np.pi*aOLd**2 * deglim**2)
 
 Lst = L * Ld2/Rst
 
@@ -120,9 +124,9 @@ EpHat = (
 )
 
 #dx = 1 / 5 * round(min(1,L/Lst), 3)
-N  = 640
+N  = 800
 dx = round(L/N,4)
-dt = dx / (10 * c12h) #1 / (2**8) # CHANGED TO dx/(10*c12h) SO THAT dt CHANGES TO MATCH dx
+dt = dt = dx / (2*np.sqrt(c2)) #1 / (2**8) # CHANGED TO dx/(10*c12h) SO THAT dt CHANGES TO MATCH dx
 dtinv = 1 / dt
 tpl = round(sampfreq * dtinv)
 tp1 = round(dtinv)
@@ -158,7 +162,7 @@ sponge1 = sponge1 / np.max(sponge1)
 spdrag1 = spongedrag1 * sponge1
 
 sponge2 = np.ones(N) * np.maximum(rdist - outerlim, 0)
-sponge2 = sponge2 / np.max(sponge1)
+sponge2 = sponge2 / np.max(sponge2)
 spdrag2 = spongedrag2 * sponge2
 
 x,y = np.meshgrid(np.arange(0,N), np.arange(0,N))

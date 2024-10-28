@@ -180,10 +180,10 @@ def timestep(u1,u2,v1,v2,h1,h2,Wmat, u1_p,u2_p,v1_p,v2_p,h1_p,h2_p, t):
         u2_p = tmp  #
         tmp = v1.copy()
         v1 = 1.5 * v1 - 0.5 * v1_p
-        v1_p = tmp
+        v1_p = tmp  
         tmp = v2.copy()
         v2 = 1.5 * v2 - 0.5 * v2_p
-        v2_p = tmp
+        v2_p = tmp  
         tmp = h1.copy()
         h1 = 1.5 * h1 - 0.5 * h1_p
         h1_p = tmp
@@ -200,11 +200,11 @@ def timestep(u1,u2,v1,v2,h1,h2,Wmat, u1_p,u2_p,v1_p,v2_p,h1_p,h2_p, t):
     #    h1 = h1 / hf.seasonalH1(t)
 
     # add friction
-    du1dt = hf.viscND(u1, Re, n)
-    du2dt = hf.viscND(u2, Re, n)
-    dv1dt = hf.viscND(v1, Re, n)
-    dv2dt = hf.viscND(v2, Re, n)
-
+    du1dt = hf.viscND(u1, Re, n, dx)    
+    du2dt = hf.viscND(u2, Re, n, dx)
+    dv1dt = hf.viscND(v1, Re, n, dx)
+    dv2dt = hf.viscND(v2, Re, n, dx)
+    
     if spongedrag1 > 0:
         du1dt = du1dt - spdrag1 * (u1)
         du2dt = du2dt - spdrag2 * (u2)
@@ -212,38 +212,36 @@ def timestep(u1,u2,v1,v2,h1,h2,Wmat, u1_p,u2_p,v1_p,v2_p,h1_p,h2_p, t):
         dv2dt = dv2dt - spdrag2 * (v2)
 
     # absolute vorticity
-    zeta1 = 1 - Bt * rdist**2 + (1 / dx) * (v1 - v1[:,l] + u1[l,:] - u1)
-    
-    zeta2 = 1 - Bt * rdist**2 + (1 / dx) * (v2 - v2[:,l] + u2[l,:] - u2)
-
+    zeta1 = 1 - Bt * rdist ** 2 + (1 / dx) * (v1 - np.roll(v1, 1, axis=1) + np.roll(u1, 1, axis=0) - u1)  
+    zeta2 = 1 - Bt * rdist ** 2 + (1 / dx) * (v2 - np.roll(v2, 1, axis=1) + np.roll(u2, 1, axis=0) - u2)  
 
     # add vorticity flux, zeta*u
-    zv1 = zeta1 * (v1 + v1[:,l])
-    zv2 = zeta2 * (v2 + v2[:,l])
+    zv1 = zeta1 * (v1 + np.roll(v1, 1, axis=1))
+    zv2 = zeta2 * (v2 + np.roll(v2, 1, axis=1))
 
-    du1dt = du1dt + 0.25 * (zv1 + zv1[r,:])
-    du2dt = du2dt + 0.25 * (zv2 + zv2[r,:])
+    du1dt = du1dt + 0.25 * (zv1 + np.roll(zv1, -1, axis=0))
+    du2dt = du2dt + 0.25 * (zv2 + np.roll(zv2, -1, axis=0))
 
-    zu1 = zeta1 * (u1 + u1[l,:])
-    zu2 = zeta2 * (u2 + u2[l,:])
+    zu1 = zeta1 * (u1 + np.roll(u1, 1, axis=0))
+    zu2 = zeta2 * (u2 + np.roll(u2, 1, axis=0))
 
-    dv1dt = dv1dt - 0.25 * (zu1 + zu1[:,r])
-    dv2dt = dv2dt - 0.25 * (zu2 + zu2[:,r])
+    dv1dt = dv1dt - 0.25 * (zu1 + np.roll(zu1, -1, axis=1))
+    dv2dt = dv2dt - 0.25 * (zu2 + np.roll(zu2, -1, axis=1))
 
-    ### Cumulus Drag (D) ###
-    #du1dt = du1dt - (1 / dx) * u1 / dragf
-    #du2dt = du2dt - (1 / dx) * u2 / dragf
-    #dv1dt = dv1dt - (1 / dx) * v1 / dragf
-    #dv2dt = dv2dt - (1 / dx) * v2 / dragf
+    du1dt = du1dt - u1 / dragf
+    du2dt = du2dt - u2 / dragf
+    dv1dt = dv1dt - v1 / dragf
+    dv2dt = dv2dt - v2 / dragf
+                            
 
     B1p, B2p = hf.BernN2(u1, v1, u2, v2, gm, c22h, c12h, h1, h2, ord)
 
-    du1dtsq = du1dt - (1 / dx) * (B1p - B1p[:,l])
-    du2dtsq = du2dt - (1 / dx) * (B2p - B2p[:,l])
+    du1dtsq = du1dt - (1 / dx) * (B1p - np.roll(B1p, 1, axis=1))  
+    du2dtsq = du2dt - (1 / dx) * (B2p - np.roll(B2p, 1, axis=1))  
 
-    dv1dtsq = dv1dt - (1 / dx) * (B1p - B1p[l,:])
-    dv2dtsq = dv2dt - (1 / dx) * (B2p - B2p[l,:])
-
+    dv1dtsq = dv1dt - (1 / dx) * (B1p - np.roll(B1p, 1, axis=0))  
+    dv2dtsq = dv2dt - (1 / dx) * (B2p - np.roll(B2p, 1, axis=0))  
+    
     if AB == 2:
         u1sq = u1_p + dt * du1dtsq
         u2sq = u2_p + dt * du2dtsq
@@ -252,24 +250,23 @@ def timestep(u1,u2,v1,v2,h1,h2,Wmat, u1_p,u2_p,v1_p,v2_p,h1_p,h2_p, t):
         v2sq = v2_p + dt * dv2dtsq
 
 
-    Fx1 = hf.xflux(h1, u1) - kappa / dx * (h1 - h1[:,l])
-    Fy1 = hf.yflux(h1, v1) - kappa / dx * (h1 - h1[l,:])
-    dh1dt = -(1 / dx) * (Fx1[:,r] - Fx1 + Fy1[r,:] - Fy1)
+    Fx1 = hf.xflux(h1, u1, dx, dt) - kappa / dx * (h1 - np.roll(h1, 1, axis=1))
+    Fy1 = hf.yflux(h1, v1, dx, dt) - kappa / dx * (h1 - np.roll(h1, 1, axis=0))
+    dh1dt = -(1 / dx) * (np.roll(Fx1, -1, axis=1) - Fx1 + np.roll(Fy1, -1, axis=0) - Fy1)
 
     if layers == 2.5:
-        Fx2 = hf.xflux(h2, u2) - kappa / dx * (h2 - h2[:,l])
-        Fy2 = hf.yflux(h2, v2) - kappa / dx * (h2 - h2[l,:])
-
-        dh2dt = -(1 / dx) * (Fx2[:,r] - Fx2 + Fy2[r,:] - Fy2)
+        Fx2 = hf.xflux(h2, u2, dx, dt) - kappa / dx * (h2 - np.roll(h2, 1, axis=1))
+        Fy2 = hf.yflux(h2, v2, dx, dt) - kappa / dx * (h2 - np.roll(h2, 1, axis=0))
+        dh2dt = -(1 / dx) * (np.roll(Fx2, -1, axis=1) - Fx2 + np.roll(Fy2, -1, axis=0) - Fy2)
 
     if tradf > 0:
         dh1dt = dh1dt - 1 / tradf * (h1 - 1)
-        dh2dt = dh2dt - 1 / trad0f * (h2 - 1)
-
+        dh2dt = dh2dt - 1 / tradf * (h2 - 1)
+    
     if mode == 1:
-        dh1dt = dh1dt + Wmat.astype(np.float64)
+        dh1dt = dh1dt + Wmat
         if layers == 2.5:
-            dh2dt = dh2dt - H1H2 * Wmat.astype(np.float64)
+            dh2dt = dh2dt - H1H2 * Wmat
 
     if AB == 2:
         h1 = h1_p + dt * dh1dt

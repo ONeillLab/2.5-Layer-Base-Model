@@ -54,15 +54,10 @@ def viscND(vel, Re, n):
 
     if n == 2:
    
-        field = (2*vel[:,l][l,:] + 2*vel[:,r][l,:] + 2*vel[:,l][r,:] + 2*vel[:,r][r,:]
-                 - 8*vel[l,:] - 8*vel[r,:] - 8*vel[:,l] - 8*vel[:,r]
-                 + vel[l2,:] + vel[r2,:] + vel[:,l2] + vel[:,r2]
-                 + 20*vel
-        )
+        field = 2*np.roll(vel,(1,1),axis=(0,1)) + 2*np.roll(vel,(1,-1),axis=(0,1)) + 2*np.roll(vel,(-1,1),axis=(0,1)) + 2*np.roll(vel,(-1,-1),axis=(0,1)) - 8*np.roll(vel, 1, axis=0) - 8*np.roll(vel, -1, axis=0) - 8*np.roll(vel, 1, axis=1) - 8*np.roll(vel, -1, axis=1) + np.roll(vel, 2, axis=0) + np.roll(vel, -2, axis=0) + np.roll(vel, 2, axis=1) + np.roll(vel, -2, axis=1) + 20*vel
 
-        field = -1 / Re * (1 / dx**4) * field
+        field = -1/Re*(1/dx**4)*field
 
-    
     return field
 
 
@@ -96,28 +91,28 @@ def BernN2(u1, v1, u2, v2, gm, c22h, c12h, h1, h2, ord):
     """
     Bernoulli
     """
-    B1 = c12h * h1 + c22h * h2 + 0.25 * (u1**2 + u1[:,r]**2 + v1**2 + v1[r,:]**2)
+    B1 = c12h*h1 + c22h*h2 + 0.25*(u1**2 + np.roll(u1, -1, axis=1)**2 + v1**2 + np.roll(v1, -1, axis=0)**2)        
 
     if fixed == False:
         B2 = gm * c12h * h1 + c22h * h2 + 0.25 * (u1**2 + u1[:,r]**2 + v1**2 + v1[r,:]**2)
     else:
-        B2 = gm * c12h * h1 + c22h * h2 + 0.25 * (u2**2 + u2[:,r]**2 + v2**2 + v2[r,:]**2)
+        B2 = gm*c12h*h1 + c22h*h2 + 0.25*(u2**2 + np.roll(u2, -1, axis=1)**2 + v2**2 + np.roll(v2, -1, axis=0)**2)
 
     return B1, B2
 
-def xflux(f, u):  # removed dx, dt from input
-    fl = f[:,l]
+def xflux(f, u):
+    fl = np.roll(f, 1, axis=1)
     fr = f
 
-    fa = 0.5 * u * (fl + fr)
+    fa = 0.5 * u * (fl+fr)
 
     return fa
 
-def yflux(f, v):  # removed dx, dt from input
-    fl = f[l,:]
+def yflux(f, v):
+    fl = np.roll(f, 1, axis=0)
     fr = f
 
-    fa = 0.5 * v * (fl + fr)
+    fa = 0.5 * v * (fl+fr)
 
     return fa
 
@@ -174,7 +169,7 @@ def split(arr, offset, ranks, rank):
     n = offset
 
     # Initialize an (n+4)x(n+4) result array
-    result = np.full((n+4, n+4), np.nan, dtype=arr.dtype)
+    result = np.full((n+4, n+4), 0, dtype=arr.dtype)
     
     #Fill the center (n x n) part with the original n x n block
     for block_i in range(n):
