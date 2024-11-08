@@ -2,7 +2,7 @@ import numpy as np
 import math
 import helper_functions_MPI as hf
 import time
-from name_list_uranus import *
+from name_list_uranus2 import *
 from netCDF4 import Dataset
 import access_data as ad
 from mpi4py import MPI
@@ -200,10 +200,10 @@ def timestep(u1,u2,v1,v2,h1,h2,Wmat, u1_p,u2_p,v1_p,v2_p,h1_p,h2_p, t):
     #    h1 = h1 / hf.seasonalH1(t)
 
     # add friction
-    du1dt = hf.viscND(u1, Re, n, dx)    
-    du2dt = hf.viscND(u2, Re, n, dx)
-    dv1dt = hf.viscND(v1, Re, n, dx)
-    dv2dt = hf.viscND(v2, Re, n, dx)
+    du1dt = hf.viscND(u1, Re, n)    
+    du2dt = hf.viscND(u2, Re, n)
+    dv1dt = hf.viscND(v1, Re, n)
+    dv2dt = hf.viscND(v2, Re, n)
     
     if spongedrag1 > 0:
         du1dt = du1dt - spdrag1 * (u1)
@@ -228,11 +228,10 @@ def timestep(u1,u2,v1,v2,h1,h2,Wmat, u1_p,u2_p,v1_p,v2_p,h1_p,h2_p, t):
     dv1dt = dv1dt - 0.25 * (zu1 + np.roll(zu1, -1, axis=1))
     dv2dt = dv2dt - 0.25 * (zu2 + np.roll(zu2, -1, axis=1))
 
-    du1dt = du1dt - u1 / dragf
-    du2dt = du2dt - u2 / dragf
-    dv1dt = dv1dt - v1 / dragf
-    dv2dt = dv2dt - v2 / dragf
-                            
+    #du1dt = du1dt - u1 / dragf
+    #du2dt = du2dt - u2 / dragf
+    #dv1dt = dv1dt - v1 / dragf
+    #dv2dt = dv2dt - v2 / dragf                       
 
     B1p, B2p = hf.BernN2(u1, v1, u2, v2, gm, c22h, c12h, h1, h2, ord)
 
@@ -250,18 +249,18 @@ def timestep(u1,u2,v1,v2,h1,h2,Wmat, u1_p,u2_p,v1_p,v2_p,h1_p,h2_p, t):
         v2sq = v2_p + dt * dv2dtsq
 
 
-    Fx1 = hf.xflux(h1, u1, dx, dt) - kappa / dx * (h1 - np.roll(h1, 1, axis=1))
-    Fy1 = hf.yflux(h1, v1, dx, dt) - kappa / dx * (h1 - np.roll(h1, 1, axis=0))
+    Fx1 = hf.xflux(h1, u1) - kappa / dx * (h1 - np.roll(h1, 1, axis=1))
+    Fy1 = hf.yflux(h1, v1) - kappa / dx * (h1 - np.roll(h1, 1, axis=0))
     dh1dt = -(1 / dx) * (np.roll(Fx1, -1, axis=1) - Fx1 + np.roll(Fy1, -1, axis=0) - Fy1)
 
     if layers == 2.5:
-        Fx2 = hf.xflux(h2, u2, dx, dt) - kappa / dx * (h2 - np.roll(h2, 1, axis=1))
-        Fy2 = hf.yflux(h2, v2, dx, dt) - kappa / dx * (h2 - np.roll(h2, 1, axis=0))
+        Fx2 = hf.xflux(h2, u2) - kappa / dx * (h2 - np.roll(h2, 1, axis=1))
+        Fy2 = hf.yflux(h2, v2) - kappa / dx * (h2 - np.roll(h2, 1, axis=0))
         dh2dt = -(1 / dx) * (np.roll(Fx2, -1, axis=1) - Fx2 + np.roll(Fy2, -1, axis=0) - Fy2)
 
     if tradf > 0:
         dh1dt = dh1dt - 1 / tradf * (h1 - 1)
-        dh2dt = dh2dt - 1 / tradf * (h2 - 1)
+        dh2dt = dh2dt - 1 / trad0f * (h2 - 1)
     
     if mode == 1:
         dh1dt = dh1dt + Wmat
@@ -278,7 +277,7 @@ def timestep(u1,u2,v1,v2,h1,h2,Wmat, u1_p,u2_p,v1_p,v2_p,h1_p,h2_p, t):
     v1 = v1sq
     v2 = v2sq
 
-    if math.isnan(h1[0, 0]):
+    if np.isnan(h1).any():
         print(f"Rank: {rank}, h1 is nan")
         broke = True
 
@@ -334,8 +333,7 @@ while t <= tmax + lasttime + dt / 2:
     
     if broke == True:
         print(f"h1 Nan on rank {rank}")
-        MPI.Finalize()
-        MPI.COMM_WORLD.Abort()
+        sys.exit()
 
     simTimes.append(time.time()-simtimer)
 

@@ -1,5 +1,5 @@
 import numpy as np
-from name_list_uranus import *
+from name_list_uranus2 import *
 import time
 import sys
 
@@ -76,7 +76,7 @@ def pairshapeN2(locs, t, x, y, offset):
 
     for i in range(len(locs)):
         if np.abs(locs[i][0] - xcenter) < len(x)/2 + padding and np.abs(locs[i][1] - ycenter) < len(y)/2 + padding:
-            if (t-locs[i][-1]) <= locs[i][2] or t == 0:
+            if (t-locs[i][-1]) <= locs[i][2]:
                 #xloc = locs[i][0]
                 #yloc = locs[i][1]
                 #zonex = x[yloc-padding:yloc+padding, :][:, xloc-padding:xloc+padding]
@@ -150,7 +150,7 @@ def genlocs(num, N, t):
     final = np.append(final, newper, axis=1)
 
     if t == 0:
-        final = np.append(final, np.round(np.random.normal(0, tstf, (num,1))), axis=1).astype(np.int64)
+        final = np.append(final, np.round(np.random.normal(0, 2*tstpf, (num,1))), axis=1).astype(np.int64)
     else:
         final = np.append(final, np.ones((num, 1)) * t, axis=1).astype(np.int64)
 

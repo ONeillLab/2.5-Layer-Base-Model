@@ -1,6 +1,6 @@
 import numpy as np
 from netCDF4 import Dataset
-from name_list_uranus import *
+from name_list_uranus2 import *
 
 
 def display_data(data_name):
@@ -30,6 +30,7 @@ def create_file(data_name):
     rootgroup.tstf = tstf
     rootgroup.tstpf = tstpf
     rootgroup.trad0f = trad0f
+    rootgroup.tradf = tradf
     rootgroup.dragf = dragf
     rootgroup.Ar = Ar
     rootgroup.Re = Re
