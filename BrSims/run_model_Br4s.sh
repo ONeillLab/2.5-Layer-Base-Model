@@ -12,6 +12,6 @@ module load python/3.11.5 intel/2023.2.1 mpi4py StdEnv/2023 scipy-stack
 
 source ~/.virtualenvs/SimEnv/bin/activate
 
-srun python run_model_MPI2_Br4.py
+srun python run_model_MPI2_Br4s.py
 
 deactivate
