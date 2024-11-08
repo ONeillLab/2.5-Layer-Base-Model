@@ -15,7 +15,7 @@ tmax = 40000
 ani_interval = 100
 sampfreq = 100
 restart_name = None #"021124/winter_002.nc" #'jupiter100724_7.nc'
-new_name = 'Br1/winter_001.nc'
+new_name = 'BrSims/Br1/winter_001.nc'
 
 ### Dimensional, collected from papers, used for normalization ###
 f0 = 1.0124e-4    # coriolis parameter from Nasa planet facts [s]
@@ -67,7 +67,7 @@ tstf = round(tst*f0) # 48  # ND storm duration tst*f0
 tstpf = round(tstp*f0) # 60  # ND period between forced storms tstp*f0
 tradf = round(trad0f)  # ND Newtonian damping of layer thickness trad*f0
 dragf = drag*f0  # Cumulus drag time scale (Li and O'Neill) (D)
-Ar = 0.30  # ND areal storm coverage
+Ar = 0.25  # ND areal storm coverage
 Re = 5e6  # ND Reynolds number
 Wsh = Wst / (H10 * f0)  # ND convective Rossby number
 

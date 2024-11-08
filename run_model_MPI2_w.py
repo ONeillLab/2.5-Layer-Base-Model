@@ -1,10 +1,10 @@
 import numpy as np
 import math
-import helper_functions_MPI as hf
+import helper_functions_MPI_w as hf
 import time
-from name_list_uranus2_Br0p5w import *
+from name_list_uranus_w import *
 from netCDF4 import Dataset
-import access_data as ad
+import access_data_w as ad
 from mpi4py import MPI
 import psutil
 import sys

@@ -4,31 +4,27 @@ import numpy as np
 fixed = True
 saving = True
 seasonalsim = False
-season = "winter" # "summer" for summer settings and "winter" for winter settings
+season = "summer" # "summer" for summer settings and "winter" for winter settings
 
 
 TSEASON = 42 # Time in Uranian year, 84 will be summer solstice for the north pole, while 42 will be south pole solstice
 
-num_processors = 65 #10
+num_processors = 65
 
-tmax = 200
+tmax = 40000
 ani_interval = 100
-sampfreq = 1
-restart_name = "021124/winter_002.nc" #"test1.nc" #'jupiter100724_7.nc'
-new_name = '021124/wblowup_001.nc'
+sampfreq = 100
+restart_name = None #"021124/winter_002.nc" #'jupiter100724_7.nc'
+new_name = 'BrSims/Br1/summer_001.nc'
 
 ### Dimensional, collected from papers, used for normalization ###
 f0 = 1.0124e-4    # coriolis parameter from Nasa planet facts [s]
-a = 24973e3      # planetary radius from Nasa planet facts [m]
 g = 9.01         # Uranus' gravity from Nasa planet facts [m/s^2] 
-Ld2 = 1200e3      # 2nd baroclinic Rossby deformation radius [m] from O'Neill
 drag = 2*4320000 #100000     # 50 days Cumulus Drag (placeholder)
 
 ### Dimensional Seasonal Forcing Parameters ###
 T0 = 70 # From Clement (2024) (at 0.6 Bar) [K]
 Tamp = 4.1 # From Milcareck (2024) (at 0.3 Bar) [K]
-seasper = 84 # Nasa Facts [year]
-seasstd = 10 # Hueso et al. (big estimate) [year]
 M = 2.3e-3 # mean molecular weight of the atmosphere (Clement et al.) [kg/mol]
 R = 8.316 # ideal gas constant
 p0 = 1.1 # Top of upper layer from Sromovsky (2024) [bar]
@@ -43,25 +39,18 @@ sigma = 5.670e-8 # Stefan-Boltzmann constant
 eps = 0.3 # emissivity, estimated
 trad0 = (cp*ptop*(10**5)) / (4*g*sigma*eps*T0**3)
 deltatrad = (3*Tamp/T0)*trad0
-Wst = 0.01 #0.011 # RMS vertical velocity at 0.7 bar. (Clement et al.) [m/s]
+Wst = 0.015 #0.011 # RMS vertical velocity at 0.7 bar. (Clement et al.) [m/s]
 
 
-TIMESCALING = 10
-seasper = seasper/TIMESCALING
-seasstd = seasstd/TIMESCALING
+TIMESCALING = 100
 trad0 = trad0/TIMESCALING
-TSEASON = TSEASON/TIMESCALING
 
 ### Dimensionless Seasonal Forcing Parameters ###
-seasperf = round((seasper*365*24*60*60)*f0)
-seasstdf = round((seasstd*365*24*60*60)*f0)
 deltaH1 = deltaH1/H10
 trad0f = trad0*f0
 deltatrad = (3*Tamp/T0)*trad0 / trad0
-TSEASONf = (TSEASON*365*24*60*60)*f0
 
 ### Dimensional, Storm parameters ###
-Rst = 300e3 #350e3       # Storm size [m] calculated from Sromovsky (2024) [m]
 tst = 172800      # 2 day storm duration from Sromovsky (2024) [s]
 tstp = tst*2 #100*24*60*60 #tst*2   # 100 day Period between forced storms (Clement)
 
@@ -69,41 +58,33 @@ tstp = tst*2 #100*24*60*60 #tst*2   # 100 day Period between forced storms (Clem
 p1p2 = 0.95
 H1H2 = H10/H2
 
-# Dimensional, Derived Parameters ###
-c2 = Ld2 * f0 # Second baroclinic gravity wave speed
-
 ### ND Derived Parameters ###
-tstf = round(tst*f0)
-tstpf = round(tstp*f0)
-dragf = drag*f0
-Br2 = Ld2**2 / Rst**2   # Burger Number
-c22h = 3 # ND 2nd baroclinic gravity wave speed squared
-c12h = 4 # ND 1st baroclinic gravity wave speed squared
-Bt = (Ld2**2)/(2*a**2) # scaled beta (for beta plane)
-Ar = 0.20 # Calculated from Sromovsky
-Re = 5e4
-Wsh = Wst / (H10 * f0) # Calculated from O'Neill
+c22h = 3  # 9  # ND 2nd baroclinic gravity wave speed squared
+c12h = 4 # 10  # ND 1st baroclinic gravity wave speed squared
+Bt = (1**2) / 2 / (20**2)  # ND scaled beta Ld2^2/4a^2 ### adjust this
+Br2 = 1 #4  # 1.5  # ND scaled storm size: Burger number Ld2^2/Rst^2
+tstf = round(tst*f0) # 48  # ND storm duration tst*f0
+tstpf = round(tstp*f0) # 60  # ND period between forced storms tstp*f0
+tradf = round(trad0f)  # ND Newtonian damping of layer thickness trad*f0
+dragf = drag*f0  # Cumulus drag time scale (Li and O'Neill) (D)
+Ar = 0.25  # ND areal storm coverage
+Re = 5e6  # ND Reynolds number
+Wsh = Wst / (H10 * f0)  # ND convective Rossby number
 
 if season == "summer":
     H1H2 = (1+deltaH1)*H1H2
     Wsh = Wsh / (1+deltaH1)
-    tradf = (1-deltatrad)*trad0f
+    tradf = round((1-deltatrad)*trad0f)
 if season == "winter":
     tradf = trad0f
 
 #### Derived Quantities ###
-gm = p1p2*c22h/c12h*H1H2  # ND reduced gravity
-aOLd = a/Ld2;             # ND planetary radius to deformation radius ratio
+gm = p1p2 * c22h / c12h * H1H2  # ND reduced gravity
+aOLd = np.sqrt(1 / Bt / 2)  # ND planetary radius to deformation radius ratio ### adjust this
 deglim = (np.pi/6)*1.25   # domain size [degrees]
-L = 2*(deglim * a)/Ld2
-
+L = 2*(deglim * aOLd)
 num = round( (16*np.pi*aOLd**2 * deglim**2 * Ar) / (25*np.pi* 1/Br2) )
-
-num = 250
-
-Ar = (num*25*np.pi * 1/Br2) / (16*np.pi*aOLd**2 * deglim**2)
-
-Lst = L * Ld2/Rst
+Lst = L * np.sqrt(Br2)
 
 ################## engineering params ##########################
 AB = 2  # order of Adams-Bashforth scheme (2 or 3)
@@ -124,9 +105,9 @@ EpHat = (
 )
 
 #dx = 1 / 5 * round(min(1,L/Lst), 3)
-N  = 800
+N  = 480
 dx = round(L/N,4)
-dt = dx/(10*np.sqrt(c12h)) #1 / (2**8) # CHANGED TO dx/(10*c12h) SO THAT dt CHANGES TO MATCH dx
+dt = dx/(10*c12h) #1 / (2**8) # CHANGED TO dx/(10*c12h) SO THAT dt CHANGES TO MATCH dx
 dtinv = 1 / dt
 tpl = round(sampfreq * dtinv)
 tp1 = round(dtinv)
