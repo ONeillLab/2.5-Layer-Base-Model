@@ -143,10 +143,10 @@ def view_slice(data, slice):
 
 
 #### examples ####
-data = ['test_001.nc']
+data = ['testing_001.nc']
 set = Dataset(data[0], "r")
 
-print(set.variables['locsmat'][0])
+#print(set.variables['locsmat'][0])
 
 
 animate(data, "zeta2")

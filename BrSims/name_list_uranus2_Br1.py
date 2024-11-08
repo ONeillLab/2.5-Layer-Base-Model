@@ -2,20 +2,20 @@ import math
 import numpy as np
 
 fixed = True
-saving = False
+saving = True
 seasonalsim = False
 season = "winter" # "summer" for summer settings and "winter" for winter settings
 
 
 TSEASON = 42 # Time in Uranian year, 84 will be summer solstice for the north pole, while 42 will be south pole solstice
 
-num_processors = 10 #65
+num_processors = 65
 
-tmax = 10000
+tmax = 40000
 ani_interval = 100
 sampfreq = 100
 restart_name = None #"021124/winter_002.nc" #'jupiter100724_7.nc'
-new_name = 'testing_001.nc'
+new_name = 'Br1/winter_001.nc'
 
 ### Dimensional, collected from papers, used for normalization ###
 f0 = 1.0124e-4    # coriolis parameter from Nasa planet facts [s]
@@ -62,7 +62,7 @@ H1H2 = H10/H2
 c22h = 3  # 9  # ND 2nd baroclinic gravity wave speed squared
 c12h = 4 # 10  # ND 1st baroclinic gravity wave speed squared
 Bt = (1**2) / 2 / (20**2)  # ND scaled beta Ld2^2/4a^2 ### adjust this
-Br2 = 4 #4  # 1.5  # ND scaled storm size: Burger number Ld2^2/Rst^2
+Br2 = 1 #4  # 1.5  # ND scaled storm size: Burger number Ld2^2/Rst^2
 tstf = round(tst*f0) # 48  # ND storm duration tst*f0
 tstpf = round(tstp*f0) # 60  # ND period between forced storms tstp*f0
 tradf = round(trad0f)  # ND Newtonian damping of layer thickness trad*f0

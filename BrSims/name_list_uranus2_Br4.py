@@ -2,20 +2,20 @@ import math
 import numpy as np
 
 fixed = True
-saving = False
+saving = True
 seasonalsim = False
 season = "winter" # "summer" for summer settings and "winter" for winter settings
 
 
 TSEASON = 42 # Time in Uranian year, 84 will be summer solstice for the north pole, while 42 will be south pole solstice
 
-num_processors = 10 #65
+num_processors = 65
 
-tmax = 10000
+tmax = 40000
 ani_interval = 100
 sampfreq = 100
 restart_name = None #"021124/winter_002.nc" #'jupiter100724_7.nc'
-new_name = 'testing_001.nc'
+new_name = 'Br4/winter_001.nc'
 
 ### Dimensional, collected from papers, used for normalization ###
 f0 = 1.0124e-4    # coriolis parameter from Nasa planet facts [s]
